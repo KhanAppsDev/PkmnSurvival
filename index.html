@@ -1,1 +1,1780 @@
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Island Mon Registry — Field Research Terminal</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   ISLAND MON REGISTRY — Field Research Terminal v1.0.0
+   Dark, moody aesthetic — monospace, cyan/green accents, scanlines
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url(‘https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap’);
+
+:root {
+–bg-deep: #0a0d0f;
+–bg-panel: #0f1317;
+–bg-card: #141a1f;
+–bg-input: #0c1015;
+–bg-hover: #1a2229;
+–border: #1e2a32;
+–border-focus: #2a8a6e;
+–text-primary: #c8d6df;
+–text-secondary: #6b7f8e;
+–text-dim: #3a4a55;
+–cyan: #00e5c8;
+–cyan-dim: #00e5c840;
+–cyan-glow: #00e5c820;
+–green: #39ff7f;
+–green-dim: #39ff7f40;
+–red: #ff4a6a;
+–red-dim: #ff4a6a30;
+–amber: #ffb347;
+–amber-dim: #ffb34730;
+–purple: #b48eff;
+–font-mono: ‘IBM Plex Mono’, ‘Share Tech Mono’, ‘Courier New’, monospace;
+–font-display: ‘Share Tech Mono’, monospace;
+–scanline-opacity: 0.03;
+–radius: 4px;
+–toast-success: #39ff7f;
+–toast-error: #ff4a6a;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+height: 100%;
+overflow: hidden;
+background: var(–bg-deep);
+color: var(–text-primary);
+font-family: var(–font-mono);
+font-size: 13px;
+line-height: 1.5;
+}
+
+/* ── Scanline overlay ── */
+body::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 9999;
+background: repeating-linear-gradient(
+0deg,
+transparent,
+transparent 2px,
+rgba(0, 229, 200, var(–scanline-opacity)) 2px,
+rgba(0, 229, 200, var(–scanline-opacity)) 4px
+);
+}
+
+/* ── CRT flicker ── */
+@keyframes flicker {
+0%, 100% { opacity: 1; }
+92% { opacity: 1; }
+93% { opacity: 0.8; }
+94% { opacity: 1; }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(–bg-deep); }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(–text-dim); }
+
+/* ── Layout ── */
+#app {
+display: flex;
+flex-direction: column;
+height: 100vh;
+animation: flicker 8s infinite;
+}
+
+header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 10px 20px;
+background: var(–bg-panel);
+border-bottom: 1px solid var(–border);
+flex-shrink: 0;
+position: relative;
+}
+
+header::before {
+content: ‘’;
+position: absolute;
+bottom: 0;
+left: 0;
+right: 0;
+height: 1px;
+background: linear-gradient(90deg, transparent, var(–cyan-dim), transparent);
+}
+
+.logo {
+font-family: var(–font-display);
+font-size: 16px;
+color: var(–cyan);
+letter-spacing: 2px;
+text-transform: uppercase;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.logo-icon {
+width: 28px;
+height: 28px;
+border: 2px solid var(–cyan);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 14px;
+color: var(–cyan);
+position: relative;
+}
+
+.logo-icon::after {
+content: ‘’;
+position: absolute;
+inset: -4px;
+border: 1px solid var(–cyan-dim);
+border-radius: 50%;
+}
+
+.header-actions {
+display: flex;
+gap: 8px;
+align-items: center;
+}
+
+.btn {
+font-family: var(–font-mono);
+font-size: 11px;
+padding: 6px 14px;
+border: 1px solid var(–border);
+background: var(–bg-card);
+color: var(–text-secondary);
+cursor: pointer;
+border-radius: var(–radius);
+transition: all 0.15s ease;
+letter-spacing: 0.5px;
+text-transform: uppercase;
+}
+
+.btn:hover {
+border-color: var(–cyan);
+color: var(–cyan);
+background: var(–cyan-glow);
+}
+
+.btn-primary {
+border-color: var(–cyan);
+color: var(–cyan);
+background: var(–cyan-glow);
+}
+
+.btn-primary:hover {
+background: var(–cyan-dim);
+box-shadow: 0 0 12px var(–cyan-glow);
+}
+
+.btn-danger {
+border-color: var(–red);
+color: var(–red);
+}
+
+.btn-danger:hover {
+background: var(–red-dim);
+}
+
+/* ── Main columns ── */
+.main-content {
+display: flex;
+flex: 1;
+overflow: hidden;
+}
+
+/* ── Left Sidebar ── */
+.sidebar {
+width: 280px;
+min-width: 280px;
+background: var(–bg-panel);
+border-right: 1px solid var(–border);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+
+.sidebar-header {
+padding: 12px 14px;
+border-bottom: 1px solid var(–border);
+}
+
+.search-box {
+position: relative;
+}
+
+.search-box input {
+width: 100%;
+padding: 8px 10px 8px 30px;
+background: var(–bg-input);
+border: 1px solid var(–border);
+color: var(–text-primary);
+font-family: var(–font-mono);
+font-size: 12px;
+border-radius: var(–radius);
+outline: none;
+transition: border-color 0.15s;
+}
+
+.search-box input:focus {
+border-color: var(–cyan);
+}
+
+.search-box input::placeholder {
+color: var(–text-dim);
+}
+
+.search-box::before {
+content: ‘⌕’;
+position: absolute;
+left: 10px;
+top: 50%;
+transform: translateY(-50%);
+color: var(–text-dim);
+font-size: 13px;
+}
+
+.filter-row {
+display: flex;
+gap: 6px;
+margin-top: 8px;
+flex-wrap: wrap;
+}
+
+.filter-chip {
+font-family: var(–font-mono);
+font-size: 10px;
+padding: 3px 8px;
+border: 1px solid var(–border);
+background: transparent;
+color: var(–text-dim);
+cursor: pointer;
+border-radius: 2px;
+transition: all 0.15s;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.filter-chip:hover, .filter-chip.active {
+border-color: var(–cyan);
+color: var(–cyan);
+background: var(–cyan-glow);
+}
+
+.mon-list {
+flex: 1;
+overflow-y: auto;
+padding: 6px;
+}
+
+.mon-item {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 10px 12px;
+cursor: pointer;
+border-radius: var(–radius);
+transition: all 0.12s;
+border: 1px solid transparent;
+margin-bottom: 2px;
+}
+
+.mon-item:hover {
+background: var(–bg-hover);
+border-color: var(–border);
+}
+
+.mon-item.selected {
+background: var(–bg-card);
+border-color: var(–cyan);
+box-shadow: inset 3px 0 0 var(–cyan);
+}
+
+.mon-dot {
+width: 8px;
+height: 8px;
+border-radius: 50%;
+flex-shrink: 0;
+background: var(–text-dim);
+transition: all 0.2s;
+}
+
+.mon-dot.complete {
+background: var(–green);
+box-shadow: 0 0 6px var(–green-dim);
+}
+
+.mon-dot.partial {
+background: var(–amber);
+box-shadow: 0 0 6px var(–amber-dim);
+}
+
+.mon-name {
+font-size: 12px;
+color: var(–text-primary);
+flex: 1;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.mon-biome-tags {
+display: flex;
+gap: 3px;
+}
+
+.biome-dot {
+width: 5px;
+height: 5px;
+border-radius: 50%;
+opacity: 0.6;
+}
+
+.sidebar-footer {
+padding: 10px 14px;
+border-top: 1px solid var(–border);
+}
+
+.sidebar-footer .btn {
+width: 100%;
+text-align: center;
+}
+
+.mon-count {
+font-size: 10px;
+color: var(–text-dim);
+text-align: center;
+padding: 4px 0 0;
+letter-spacing: 1px;
+}
+
+/* ── Right Panel ── */
+.editor-panel {
+flex: 1;
+overflow-y: auto;
+padding: 20px 28px;
+background: var(–bg-deep);
+}
+
+.empty-state {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+height: 100%;
+color: var(–text-dim);
+gap: 16px;
+}
+
+.empty-state-icon {
+font-size: 48px;
+opacity: 0.3;
+}
+
+.empty-state p {
+font-size: 13px;
+letter-spacing: 1px;
+}
+
+/* ── Section blocks ── */
+.section {
+margin-bottom: 24px;
+background: var(–bg-panel);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+overflow: hidden;
+}
+
+.section-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 10px 16px;
+background: var(–bg-card);
+border-bottom: 1px solid var(–border);
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 1.5px;
+color: var(–cyan);
+}
+
+.section-body {
+padding: 16px;
+}
+
+/* ── Form fields ── */
+.field-group {
+margin-bottom: 14px;
+}
+
+.field-group:last-child {
+margin-bottom: 0;
+}
+
+.field-label {
+display: block;
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 1px;
+color: var(–text-secondary);
+margin-bottom: 6px;
+}
+
+.field-input {
+width: 100%;
+padding: 8px 12px;
+background: var(–bg-input);
+border: 1px solid var(–border);
+color: var(–text-primary);
+font-family: var(–font-mono);
+font-size: 12px;
+border-radius: var(–radius);
+outline: none;
+transition: border-color 0.15s;
+}
+
+.field-input:focus {
+border-color: var(–cyan);
+}
+
+textarea.field-input {
+resize: vertical;
+min-height: 80px;
+}
+
+/* ── Behavior selector ── */
+.behavior-options {
+display: flex;
+gap: 8px;
+}
+
+.behavior-btn {
+flex: 1;
+padding: 10px 8px;
+background: var(–bg-input);
+border: 1px solid var(–border);
+color: var(–text-secondary);
+font-family: var(–font-mono);
+font-size: 11px;
+cursor: pointer;
+border-radius: var(–radius);
+transition: all 0.15s;
+text-align: center;
+}
+
+.behavior-btn:hover {
+border-color: var(–text-dim);
+}
+
+.behavior-btn.selected {
+border-color: var(–cyan);
+color: var(–cyan);
+background: var(–cyan-glow);
+}
+
+.behavior-btn .beh-icon {
+display: block;
+font-size: 18px;
+margin-bottom: 4px;
+}
+
+.behavior-btn .beh-label {
+display: block;
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.behavior-btn .beh-desc {
+display: block;
+font-size: 9px;
+color: var(–text-dim);
+margin-top: 3px;
+}
+
+/* ── Biome checkboxes ── */
+.biome-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+gap: 8px;
+}
+
+.biome-check {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 8px 10px;
+background: var(–bg-input);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+cursor: pointer;
+transition: all 0.15s;
+}
+
+.biome-check:hover {
+border-color: var(–text-dim);
+}
+
+.biome-check.checked {
+border-color: var(–green);
+background: rgba(57, 255, 127, 0.05);
+}
+
+.biome-check input { display: none; }
+
+.biome-indicator {
+width: 14px;
+height: 14px;
+border: 1px solid var(–border);
+border-radius: 2px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 10px;
+color: transparent;
+transition: all 0.15s;
+flex-shrink: 0;
+}
+
+.biome-check.checked .biome-indicator {
+border-color: var(–green);
+color: var(–green);
+background: rgba(57, 255, 127, 0.1);
+}
+
+.biome-label-text {
+font-size: 11px;
+color: var(–text-secondary);
+}
+
+.biome-check.checked .biome-label-text {
+color: var(–text-primary);
+}
+
+.biome-color {
+width: 8px;
+height: 8px;
+border-radius: 50%;
+flex-shrink: 0;
+}
+
+/* ── Moves list ── */
+.moves-list {
+display: flex;
+flex-direction: column;
+gap: 6px;
+}
+
+.move-row {
+display: flex;
+gap: 8px;
+align-items: center;
+}
+
+.move-row input {
+flex: 1;
+}
+
+.move-num {
+font-size: 10px;
+color: var(–text-dim);
+width: 20px;
+text-align: right;
+flex-shrink: 0;
+}
+
+.btn-icon {
+width: 28px;
+height: 28px;
+display: flex;
+align-items: center;
+justify-content: center;
+border: 1px solid var(–border);
+background: var(–bg-input);
+color: var(–text-dim);
+cursor: pointer;
+border-radius: var(–radius);
+font-size: 14px;
+transition: all 0.15s;
+flex-shrink: 0;
+}
+
+.btn-icon:hover {
+border-color: var(–red);
+color: var(–red);
+}
+
+.btn-icon.add:hover {
+border-color: var(–green);
+color: var(–green);
+}
+
+/* ── Sprite upload grid ── */
+.sprite-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+gap: 10px;
+}
+
+.sprite-slot {
+background: var(–bg-input);
+border: 1px dashed var(–border);
+border-radius: var(–radius);
+padding: 12px;
+text-align: center;
+cursor: pointer;
+transition: all 0.15s;
+position: relative;
+min-height: 80px;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 6px;
+}
+
+.sprite-slot:hover {
+border-color: var(–cyan);
+background: var(–cyan-glow);
+}
+
+.sprite-slot.uploaded {
+border-style: solid;
+border-color: var(–green);
+background: rgba(57, 255, 127, 0.03);
+}
+
+.sprite-slot.uploading {
+border-color: var(–amber);
+opacity: 0.7;
+}
+
+.sprite-slot.error {
+border-color: var(–red);
+}
+
+.sprite-filename {
+font-size: 10px;
+color: var(–text-secondary);
+letter-spacing: 0.5px;
+}
+
+.sprite-status {
+font-size: 14px;
+}
+
+.sprite-slot input[type=“file”] {
+display: none;
+}
+
+.sprite-progress {
+position: absolute;
+bottom: 0;
+left: 0;
+height: 2px;
+background: var(–cyan);
+border-radius: 0 0 var(–radius) var(–radius);
+transition: width 0.3s;
+}
+
+/* ── Animation Preview ── */
+.preview-container {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 12px;
+}
+
+.preview-canvas-wrap {
+position: relative;
+border: 1px solid var(–border);
+border-radius: var(–radius);
+overflow: hidden;
+}
+
+/* checkerboard background */
+.preview-canvas-wrap canvas {
+display: block;
+image-rendering: pixelated;
+}
+
+.preview-controls {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.dir-btn {
+width: 32px;
+height: 32px;
+display: flex;
+align-items: center;
+justify-content: center;
+border: 1px solid var(–border);
+background: var(–bg-card);
+color: var(–text-secondary);
+cursor: pointer;
+border-radius: var(–radius);
+font-size: 14px;
+transition: all 0.15s;
+}
+
+.dir-btn:hover {
+border-color: var(–cyan);
+color: var(–cyan);
+}
+
+.dir-label {
+font-size: 11px;
+color: var(–text-secondary);
+min-width: 80px;
+text-align: center;
+text-transform: uppercase;
+letter-spacing: 1px;
+}
+
+.anim-select {
+background: var(–bg-input);
+border: 1px solid var(–border);
+color: var(–text-primary);
+font-family: var(–font-mono);
+font-size: 11px;
+padding: 4px 8px;
+border-radius: var(–radius);
+outline: none;
+}
+
+.anim-select:focus {
+border-color: var(–cyan);
+}
+
+/* ── Portrait Preview ── */
+.portrait-grid {
+display: flex;
+gap: 8px;
+flex-wrap: wrap;
+justify-content: center;
+}
+
+.portrait-frame {
+border: 1px solid var(–border);
+border-radius: 2px;
+image-rendering: pixelated;
+}
+
+/* ── Settings Modal ── */
+.modal-overlay {
+position: fixed;
+inset: 0;
+background: rgba(0, 0, 0, 0.75);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 1000;
+backdrop-filter: blur(4px);
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal {
+background: var(–bg-panel);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+width: 460px;
+max-width: 90vw;
+box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 1px var(–cyan-dim);
+}
+
+.modal-header {
+padding: 16px 20px;
+border-bottom: 1px solid var(–border);
+font-size: 13px;
+text-transform: uppercase;
+letter-spacing: 1.5px;
+color: var(–cyan);
+}
+
+.modal-body {
+padding: 20px;
+}
+
+.modal-footer {
+padding: 12px 20px;
+border-top: 1px solid var(–border);
+display: flex;
+justify-content: flex-end;
+gap: 8px;
+}
+
+/* ── Toast notifications ── */
+.toast-container {
+position: fixed;
+bottom: 20px;
+right: 20px;
+z-index: 2000;
+display: flex;
+flex-direction: column;
+gap: 8px;
+pointer-events: none;
+}
+
+.toast {
+padding: 10px 16px;
+background: var(–bg-card);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+font-size: 11px;
+color: var(–text-primary);
+box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+animation: toastIn 0.3s ease;
+pointer-events: auto;
+max-width: 360px;
+}
+
+.toast.success { border-color: var(–green); }
+.toast.error { border-color: var(–red); }
+.toast.info { border-color: var(–cyan); }
+
+.toast-icon {
+margin-right: 8px;
+}
+
+@keyframes toastIn {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+from { opacity: 1; transform: translateY(0); }
+to { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ── Delete confirm ── */
+.delete-zone {
+margin-top: 20px;
+padding-top: 16px;
+border-top: 1px solid var(–border);
+display: flex;
+justify-content: flex-end;
+}
+
+/* ── Version footer ── */
+footer {
+padding: 4px 20px;
+background: var(–bg-panel);
+border-top: 1px solid var(–border);
+font-size: 9px;
+color: var(–text-dim);
+letter-spacing: 1px;
+text-align: right;
+flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+.sidebar { width: 220px; min-width: 220px; }
+.editor-panel { padding: 16px; }
+.sprite-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+
+@media (max-width: 600px) {
+.main-content { flex-direction: column; }
+.sidebar { width: 100%; min-width: 100%; max-height: 40vh; border-right: none; border-bottom: 1px solid var(–border); }
+.editor-panel { padding: 12px; }
+.behavior-options { flex-direction: column; }
+.biome-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── Token masked display ── */
+.token-display {
+font-size: 11px;
+color: var(–text-dim);
+margin-top: 4px;
+}
+</style>
+
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">◈</div>
+      <span>Island Mon Registry</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn" onclick="openSettings()" title="GitHub Settings">⚙ SETTINGS</button>
+      <button class="btn btn-primary" onclick="exportJSON()" title="Export mons.json">↓ EXPORT JSON</button>
+    </div>
+  </header>
+
+  <div class="main-content">
+    <!-- Left sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search mons..." oninput="renderMonList()">
+        </div>
+        <div class="filter-row">
+          <button class="filter-chip active" data-filter="all" onclick="setFilter('all', this)">All</button>
+          <button class="filter-chip" data-filter="complete" onclick="setFilter('complete', this)">Complete</button>
+          <button class="filter-chip" data-filter="incomplete" onclick="setFilter('incomplete', this)">Incomplete</button>
+        </div>
+      </div>
+      <div class="mon-list" id="monList"></div>
+      <div class="sidebar-footer">
+        <button class="btn btn-primary" onclick="addMon()">+ ADD MON</button>
+        <div class="mon-count" id="monCount">0 mons registered</div>
+      </div>
+    </div>
+
+```
+<!-- Right panel -->
+<div class="editor-panel" id="editorPanel">
+  <div class="empty-state" id="emptyState">
+    <div class="empty-state-icon">◈</div>
+    <p>SELECT OR ADD A MON TO BEGIN</p>
+    <p style="font-size:10px; color:var(--text-dim);">Field research terminal ready</p>
+  </div>
+  <div id="editorContent" style="display:none;"></div>
+</div>
+```
+
+  </div>
+
+  <footer>ISLAND MON REGISTRY v1.0.0 — FIELD RESEARCH TERMINAL</footer>
+</div>
+
+<!-- Settings Modal -->
+
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">GitHub Integration Settings</div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label class="field-label">Personal Access Token (repo scope)</label>
+        <input type="password" class="field-input" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+        <div class="token-display" id="tokenPreview"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">GitHub Username</label>
+        <input type="text" class="field-input" id="ghUser" placeholder="your-username">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Repository Name</label>
+        <input type="text" class="field-input" id="ghRepo" placeholder="island-mon-game">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Branch</label>
+        <input type="text" class="field-input" id="ghBranch" placeholder="main" value="main">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ISLAND MON REGISTRY — Logic
+   ═══════════════════════════════════════════════════════════════ */
+
+// ── Constants ──
+const SPRITE_FILES = [
+  'Walk-Anim.png', 'Idle-Anim.png', 'Sleep-Anim.png', 'Hurt-Anim.png',
+  'Attack-Anim.png', 'Charge-Anim.png', 'Shoot-Anim.png', 'Strike-Anim.png',
+  'AnimData.xml'
+];
+
+const BIOMES = [
+  { id: 'forest_floor', label: 'Forest Floor', color: '#2d7a3a' },
+  { id: 'canopy', label: 'Canopy', color: '#5cb85c' },
+  { id: 'cave', label: 'Cave', color: '#7b6ba5' },
+  { id: 'riverbank', label: 'Riverbank', color: '#3a8fd6' },
+  { id: 'mountain', label: 'Mountain', color: '#8e7c6a' }
+];
+
+const BEHAVIORS = [
+  { id: 'docile', label: 'Docile', icon: '♥', desc: 'Walk up & pet to recruit' },
+  { id: 'curious', label: 'Curious', icon: '?', desc: 'Needs food or item' },
+  { id: 'aggressive', label: 'Aggressive', icon: '⚔', desc: 'Must weaken in combat' }
+];
+
+const PMD_DIRECTIONS = [
+  'South', 'South-East', 'East', 'North-East',
+  'North', 'North-West', 'West', 'South-West'
+];
+
+const STORAGE_KEY = 'islandMonRegistry';
+const GH_SETTINGS_KEY = 'islandMonGH';
+
+// ── State ──
+let mons = [];
+let selectedMonId = null;
+let currentFilter = 'all';
+let animationState = null; // { frameTimer, direction, animType }
+
+// ── Persistence ──
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) mons = JSON.parse(raw);
+  } catch(e) { mons = []; }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(mons));
+}
+
+function loadGHSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(GH_SETTINGS_KEY)) || {};
+  } catch(e) { return {}; }
+}
+
+function saveGHSettings(s) {
+  localStorage.setItem(GH_SETTINGS_KEY, JSON.stringify(s));
+}
+
+// ── Toast ──
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  const icons = { success: '✓', error: '✗', info: 'ℹ' };
+  t.innerHTML = '<span class="toast-icon">' + (icons[type]||'') + '</span>' + escapeHTML(msg);
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(() => t.remove(), 300);
+  }, 3500);
+}
+
+function escapeHTML(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Mon helpers ──
+function generateId() {
+  return 'mon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+}
+
+function folderName(name) {
+  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+}
+
+function isComplete(mon) {
+  if (!mon.name || !mon.behavior || !mon.biomes.length || !mon.moves.length) return false;
+  return SPRITE_FILES.every(f => mon.sprites && mon.sprites[f]);
+}
+
+function isPartial(mon) {
+  if (!mon.name) return false;
+  const hasSprites = SPRITE_FILES.some(f => mon.sprites && mon.sprites[f]);
+  return mon.behavior || mon.biomes.length || mon.moves.length || hasSprites;
+}
+
+function completionStatus(mon) {
+  if (isComplete(mon)) return 'complete';
+  if (isPartial(mon)) return 'partial';
+  return 'empty';
+}
+
+// ── Filter & Search ──
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderMonList();
+}
+
+function getFilteredMons() {
+  let list = mons;
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  if (q) list = list.filter(m => m.name.toLowerCase().includes(q));
+  if (currentFilter === 'complete') list = list.filter(m => isComplete(m));
+  if (currentFilter === 'incomplete') list = list.filter(m => !isComplete(m));
+  return list;
+}
+
+// ── Render Mon List ──
+function renderMonList() {
+  const list = getFilteredMons();
+  const container = document.getElementById('monList');
+  container.innerHTML = list.map(m => {
+    const status = completionStatus(m);
+    const sel = m.id === selectedMonId ? 'selected' : '';
+    const biomeDots = m.biomes.map(b => {
+      const biome = BIOMES.find(x => x.id === b);
+      return biome ? '<span class="biome-dot" style="background:' + biome.color + '"></span>' : '';
+    }).join('');
+    return '<div class="mon-item ' + sel + '" onclick="selectMon(\'' + m.id + '\')">' +
+      '<span class="mon-dot ' + status + '"></span>' +
+      '<span class="mon-name">' + escapeHTML(m.name || 'Unnamed') + '</span>' +
+      '<span class="mon-biome-tags">' + biomeDots + '</span>' +
+    '</div>';
+  }).join('');
+
+  const total = mons.length;
+  const complete = mons.filter(isComplete).length;
+  document.getElementById('monCount').textContent = total + ' registered · ' + complete + ' complete';
+}
+
+// ── Add Mon ──
+function addMon() {
+  const mon = {
+    id: generateId(),
+    name: '',
+    behavior: '',
+    biomes: [],
+    moves: [''],
+    notes: '',
+    sprites: {}
+  };
+  mons.push(mon);
+  saveData();
+  selectedMonId = mon.id;
+  renderMonList();
+  renderEditor();
+  // Focus the name input
+  setTimeout(() => {
+    const nameInput = document.getElementById('monNameInput');
+    if (nameInput) nameInput.focus();
+  }, 50);
+}
+
+// ── Select Mon ──
+function selectMon(id) {
+  stopAnimation();
+  selectedMonId = id;
+  renderMonList();
+  renderEditor();
+}
+
+// ── Delete Mon ──
+function deleteMon(id) {
+  if (!confirm('Delete this mon permanently?')) return;
+  mons = mons.filter(m => m.id !== id);
+  saveData();
+  if (selectedMonId === id) {
+    selectedMonId = null;
+    renderEditor();
+  }
+  renderMonList();
+  toast('Mon deleted', 'info');
+}
+
+// ── Render Editor ──
+function renderEditor() {
+  const empty = document.getElementById('emptyState');
+  const content = document.getElementById('editorContent');
+  const mon = mons.find(m => m.id === selectedMonId);
+
+  if (!mon) {
+    empty.style.display = 'flex';
+    content.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  content.style.display = 'block';
+
+  content.innerHTML = buildEditorHTML(mon);
+  // Rebind biome checkboxes visual state
+  document.querySelectorAll('.biome-check').forEach(el => {
+    if (mon.biomes.includes(el.dataset.biome)) el.classList.add('checked');
+  });
+}
+
+function buildEditorHTML(mon) {
+  let html = '';
+
+  // ── Identity Section ──
+  html += '<div class="section"><div class="section-header"><span>◈ Identity</span></div><div class="section-body">';
+  html += '<div class="field-group"><label class="field-label">Mon Name</label>';
+  html += '<input type="text" class="field-input" id="monNameInput" value="' + escapeHTML(mon.name) + '" placeholder="e.g. Flamegecko" oninput="updateField(\'name\', this.value)">';
+  html += '</div>';
+
+  // Behavior
+  html += '<div class="field-group"><label class="field-label">Behavior</label><div class="behavior-options">';
+  BEHAVIORS.forEach(b => {
+    const sel = mon.behavior === b.id ? 'selected' : '';
+    html += '<button class="behavior-btn ' + sel + '" onclick="updateField(\'behavior\', \'' + b.id + '\')">' +
+      '<span class="beh-icon">' + b.icon + '</span>' +
+      '<span class="beh-label">' + b.label + '</span>' +
+      '<span class="beh-desc">' + b.desc + '</span>' +
+    '</button>';
+  });
+  html += '</div></div>';
+  html += '</div></div>';
+
+  // ── Biomes Section ──
+  html += '<div class="section"><div class="section-header"><span>⬡ Biomes</span></div><div class="section-body">';
+  html += '<div class="biome-grid">';
+  BIOMES.forEach(b => {
+    const checked = mon.biomes.includes(b.id);
+    html += '<label class="biome-check' + (checked ? ' checked' : '') + '" data-biome="' + b.id + '" onclick="toggleBiome(\'' + b.id + '\', this)">' +
+      '<input type="checkbox"' + (checked ? ' checked' : '') + '>' +
+      '<span class="biome-indicator">✓</span>' +
+      '<span class="biome-color" style="background:' + b.color + '"></span>' +
+      '<span class="biome-label-text">' + b.label + '</span>' +
+    '</label>';
+  });
+  html += '</div></div></div>';
+
+  // ── Moves Section ──
+  html += '<div class="section"><div class="section-header"><span>⚡ Moves</span>';
+  html += '<button class="btn-icon add" onclick="addMove()" title="Add move">+</button>';
+  html += '</div><div class="section-body"><div class="moves-list">';
+  mon.moves.forEach((mv, i) => {
+    html += '<div class="move-row">' +
+      '<span class="move-num">' + (i + 1) + '</span>' +
+      '<input type="text" class="field-input" value="' + escapeHTML(mv) + '" placeholder="Move name..." oninput="updateMove(' + i + ', this.value)">' +
+      '<button class="btn-icon" onclick="removeMove(' + i + ')" title="Remove">×</button>' +
+    '</div>';
+  });
+  html += '</div></div></div>';
+
+  // ── Notes Section ──
+  html += '<div class="section"><div class="section-header"><span>📋 Notes / Flavor Text</span></div><div class="section-body">';
+  html += '<textarea class="field-input" placeholder="Lore, design notes, spawn conditions..." oninput="updateField(\'notes\', this.value)">' + escapeHTML(mon.notes) + '</textarea>';
+
+html += ‘</div></div>’;
+
+// ── Sprites Section ──
+html += ‘<div class="section"><div class="section-header"><span>🎨 Sprites</span></div><div class="section-body">’;
+html += ‘<div class="sprite-grid">’;
+SPRITE_FILES.forEach(f => {
+const uploaded = mon.sprites && mon.sprites[f];
+const cls = uploaded ? ‘uploaded’ : ‘’;
+html += ‘<div class="sprite-slot ' + cls + '" id="slot_' + f.replace(/\./g, '_') + '" onclick="triggerUpload(\'' + escapeHTML(f) + '\')">’ +
+‘<span class="sprite-status">’ + (uploaded ? ‘✓’ : ‘↑’) + ‘</span>’ +
+‘<span class="sprite-filename">’ + escapeHTML(f) + ‘</span>’ +
+‘<input type="file" accept="' + (f.endsWith('.xml') ? '.xml' : '.png') + '" onchange="handleSpriteUpload(\'' + escapeHTML(f) + '\', this)">’ +
+‘</div>’;
+});
+html += ‘</div></div></div>’;
+
+// ── Animation Preview Section ──
+html += ‘<div class="section"><div class="section-header"><span>▶ Animation Preview</span></div><div class="section-body">’;
+if (mon.sprites && mon.sprites[‘Walk-Anim.png’] && mon.sprites[‘AnimData.xml’]) {
+html += ‘<div class="preview-container">’ +
+‘<div class="preview-controls">’ +
+‘<select class="anim-select" id="animTypeSelect" onchange="restartAnimation()">’ +
+‘<option value="Walk">Walk</option><option value="Idle">Idle</option>’ +
+‘<option value="Sleep">Sleep</option><option value="Hurt">Hurt</option>’ +
+‘<option value="Attack">Attack</option><option value="Charge">Charge</option>’ +
+‘<option value="Shoot">Shoot</option><option value="Strike">Strike</option>’ +
+‘</select>’ +
+‘<button class="dir-btn" onclick="changeDirection(-1)">◀</button>’ +
+‘<span class="dir-label" id="dirLabel">South</span>’ +
+‘<button class="dir-btn" onclick="changeDirection(1)">▶</button>’ +
+‘</div>’ +
+‘<div class="preview-canvas-wrap"><canvas id="previewCanvas"></canvas></div>’ +
+‘</div>’;
+} else {
+html += ‘<div style="color:var(--text-dim); text-align:center; padding:20px; font-size:11px;">Upload Walk-Anim.png and AnimData.xml to enable preview</div>’;
+}
+html += ‘</div></div>’;
+
+// ── Portrait Preview Section ──
+html += ‘<div class="section"><div class="section-header"><span>🖼 Portrait Preview</span></div><div class="section-body">’;
+html += ‘<div style="text-align:center;">’;
+html += ‘<div class="sprite-slot" style="display:inline-flex; min-width:200px;" onclick="triggerPortraitUpload()">’ +
+‘<span class="sprite-status">↑</span>’ +
+‘<span class="sprite-filename">Portrait Sheet</span>’ +
+‘<input type="file" id="portraitFileInput" accept=".png" onchange="handlePortraitUpload(this)">’ +
+‘</div>’;
+html += ‘<div class="portrait-grid" id="portraitGrid" style="margin-top:12px;"></div>’;
+html += ‘</div></div></div>’;
+
+// ── Delete Zone ──
+html += ‘<div class="delete-zone"><button class="btn btn-danger" onclick="deleteMon(\'' + mon.id + '\')">✗ DELETE MON</button></div>’;
+
+return html;
+}
+
+// ── Field updates ──
+function updateField(field, value) {
+const mon = mons.find(m => m.id === selectedMonId);
+if (!mon) return;
+mon[field] = value;
+saveData();
+if (field === ‘name’ || field === ‘behavior’) renderMonList();
+if (field === ‘behavior’) renderEditor();
+}
+
+function toggleBiome(biomeId, el) {
+const mon = mons.find(m => m.id === selectedMonId);
+if (!mon) return;
+const idx = mon.biomes.indexOf(biomeId);
+if (idx >= 0) {
+mon.biomes.splice(idx, 1);
+el.classList.remove(‘checked’);
+} else {
+mon.biomes.push(biomeId);
+el.classList.add(‘checked’);
+}
+saveData();
+renderMonList();
+}
+
+function addMove() {
+const mon = mons.find(m => m.id === selectedMonId);
+if (!mon) return;
+mon.moves.push(’’);
+saveData();
+renderEditor();
+}
+
+function removeMove(idx) {
+const mon = mons.find(m => m.id === selectedMonId);
+if (!mon) return;
+mon.moves.splice(idx, 1);
+if (mon.moves.length === 0) mon.moves.push(’’);
+saveData();
+renderEditor();
+}
+
+function updateMove(idx, val) {
+const mon = mons.find(m => m.id === selectedMonId);
+if (!mon) return;
+mon.moves[idx] = val;
+saveData();
+}
+
+// ── Sprite Upload ──
+function triggerUpload(filename) {
+const slotId = ‘slot_’ + filename.replace(/./g, ‘_’);
+const slot = document.getElementById(slotId);
+if (slot) slot.querySelector(‘input[type=“file”]’).click();
+}
+
+async function handleSpriteUpload(filename, input) {
+if (!input.files || !input.files[0]) return;
+const file = input.files[0];
+const mon = mons.find(m => m.id === selectedMonId);
+if (!mon || !mon.name) {
+toast(‘Set a mon name before uploading sprites’, ‘error’);
+return;
+}
+
+const slotId = ‘slot_’ + filename.replace(/./g, ‘_’);
+const slot = document.getElementById(slotId);
+if (slot) { slot.classList.add(‘uploading’); slot.classList.remove(‘error’); }
+
+try {
+const base64 = await fileToBase64(file);
+const gh = loadGHSettings();
+if (!gh.token || !gh.user || !gh.repo) {
+toast(‘Configure GitHub settings first’, ‘error’);
+if (slot) slot.classList.remove(‘uploading’);
+return;
+}
+
+```
+const folder = folderName(mon.name);
+const path = 'resources/pokemon/' + folder + '/sprites/' + filename;
+
+// Check if file exists (to get SHA for update)
+let sha = null;
+try {
+  const checkResp = await fetch('https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/contents/' + path + '?ref=' + (gh.branch || 'main'), {
+    headers: { 'Authorization': 'token ' + gh.token }
+  });
+  if (checkResp.ok) {
+    const existing = await checkResp.json();
+    sha = existing.sha;
+  }
+} catch(e) { /* file doesn't exist yet, fine */ }
+
+const body = {
+  message: 'Update ' + filename + ' for ' + mon.name,
+  content: base64,
+  branch: gh.branch || 'main'
+};
+if (sha) body.sha = sha;
+
+const resp = await fetch('https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/contents/' + path, {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'token ' + gh.token,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(body)
+});
+
+if (!resp.ok) {
+  const errData = await resp.json().catch(() => ({}));
+  throw new Error(errData.message || 'HTTP ' + resp.status);
+}
+
+// Mark as uploaded
+if (!mon.sprites) mon.sprites = {};
+mon.sprites[filename] = true;
+saveData();
+renderMonList();
+
+if (slot) {
+  slot.classList.remove('uploading');
+  slot.classList.add('uploaded');
+  slot.querySelector('.sprite-status').textContent = '✓';
+}
+
+toast(filename + ' committed to ' + path, 'success');
+
+// If walk-anim or animdata changed, re-render to show preview
+if (filename === 'Walk-Anim.png' || filename === 'AnimData.xml') {
+  renderEditor();
+}
+
+// Store base64 locally for preview (walk anim + animdata)
+if (['Walk-Anim.png','Idle-Anim.png','AnimData.xml'].includes(filename)) {
+  storeLocalAsset(mon.id, filename, filename.endsWith('.xml') ? await file.text() : base64);
+}
+```
+
+} catch(err) {
+if (slot) { slot.classList.remove(‘uploading’); slot.classList.add(‘error’); }
+toast(’Upload failed: ’ + err.message, ‘error’);
+}
+}
+
+function fileToBase64(file) {
+return new Promise((resolve, reject) => {
+const r = new FileReader();
+r.onload = () => resolve(r.result.split(’,’)[1]);
+r.onerror = () => reject(new Error(‘File read error’));
+r.readAsDataURL(file);
+});
+}
+
+// ── Local asset cache for preview ──
+function storeLocalAsset(monId, filename, data) {
+try {
+localStorage.setItem(‘asset_’ + monId + ‘_’ + filename, data);
+} catch(e) { /* storage full, non-critical */ }
+}
+
+function getLocalAsset(monId, filename) {
+return localStorage.getItem(‘asset_’ + monId + ‘_’ + filename);
+}
+
+// ── Animation Preview ──
+function stopAnimation() {
+if (animationState && animationState.frameTimer) {
+clearInterval(animationState.frameTimer);
+}
+animationState = null;
+}
+
+function restartAnimation() {
+const mon = mons.find(m => m.id === selectedMonId);
+if (!mon) return;
+stopAnimation();
+startAnimationPreview(mon);
+}
+
+function startAnimationPreview(mon) {
+const canvas = document.getElementById(‘previewCanvas’);
+if (!canvas) return;
+const ctx = canvas.getContext(‘2d’);
+
+const xmlData = getLocalAsset(mon.id, ‘AnimData.xml’);
+const animSelect = document.getElementById(‘animTypeSelect’);
+const animType = animSelect ? animSelect.value : ‘Walk’;
+const spriteFile = animType + ‘-Anim.png’;
+const imgData = getLocalAsset(mon.id, spriteFile);
+
+if (!xmlData || !imgData) {
+// Try Walk-Anim.png as fallback
+const walkData = getLocalAsset(mon.id, ‘Walk-Anim.png’);
+if (!xmlData || !walkData) return;
+}
+
+// Parse AnimData.xml
+const parser = new DOMParser();
+const xml = parser.parseFromString(xmlData, ‘text/xml’);
+
+// Find the anim node
+let animNode = null;
+const anims = xml.querySelectorAll(‘Anim’);
+for (const a of anims) {
+const nameEl = a.querySelector(‘Name’);
+if (nameEl && nameEl.textContent === animType) {
+animNode = a;
+break;
+}
+}
+
+if (!animNode) {
+// Fallback: try first anim
+animNode = xml.querySelector(‘Anim’);
+if (!animNode) return;
+}
+
+const frameWidthEl = animNode.querySelector(‘FrameWidth’);
+const frameHeightEl = animNode.querySelector(‘FrameHeight’);
+if (!frameWidthEl || !frameHeightEl) return;
+
+const frameWidth = parseInt(frameWidthEl.textContent);
+const frameHeight = parseInt(frameHeightEl.textContent);
+
+// Get durations
+let durations = [];
+const durNodes = animNode.querySelectorAll(‘Durations > Duration’);
+if (durNodes.length > 0) {
+durNodes.forEach(d => durations.push(parseInt(d.textContent)));
+} else {
+// Default: 8 ticks per frame
+durations = [8, 8, 8, 8];
+}
+
+const scale = 3;
+canvas.width = frameWidth * scale;
+canvas.height = frameHeight * scale;
+ctx.imageSmoothingEnabled = false;
+
+// Load spritesheet image
+const img = new Image();
+const actualImgData = getLocalAsset(mon.id, spriteFile) || getLocalAsset(mon.id, ‘Walk-Anim.png’);
+if (!actualImgData) return;
+img.src = ‘data:image/png;base64,’ + actualImgData;
+
+img.onload = () => {
+// Spritesheet: columns = total width / frameWidth (usually 4 or more)
+const cols = Math.floor(img.width / frameWidth);
+const totalFrames = durations.length || cols;
+
+```
+let currentFrame = 0;
+let tickCounter = 0;
+const direction = animationState ? animationState.direction : 0;
+
+animationState = {
+  frameTimer: null,
+  direction: direction,
+  animType: animType,
+  img, frameWidth, frameHeight, cols, totalFrames, durations, scale, ctx, canvas
+};
+
+function drawFrame() {
+  const dir = animationState.direction;
+  const fw = animationState.frameWidth;
+  const fh = animationState.frameHeight;
+  const s = animationState.scale;
+  const c = animationState.ctx;
+  const cv = animationState.canvas;
+
+  // Clear with checkerboard
+  c.clearRect(0, 0, cv.width, cv.height);
+  const tileSize = 8 * s;
+  for (let y = 0; y < cv.height; y += tileSize) {
+    for (let x = 0; x < cv.width; x += tileSize) {
+      c.fillStyle = ((x / tileSize + y / tileSize) % 2 === 0) ? '#1a1a2e' : '#16162a';
+      c.fillRect(x, y, tileSize, tileSize);
+    }
+  }
+
+  // Draw sprite frame
+  const sx = currentFrame * fw;
+  const sy = dir * fh;
+  c.drawImage(animationState.img, sx, sy, fw, fh, 0, 0, fw * s, fh * s);
+}
+
+// PMD tick is ~16ms
+animationState.frameTimer = setInterval(() => {
+  tickCounter++;
+  const dur = durations[currentFrame % durations.length] || 8;
+  if (tickCounter >= dur) {
+    tickCounter = 0;
+    currentFrame = (currentFrame + 1) % totalFrames;
+  }
+  drawFrame();
+}, 16);
+
+drawFrame();
+updateDirLabel();
+```
+
+};
+}
+
+function changeDirection(delta) {
+if (!animationState) return;
+animationState.direction = ((animationState.direction + delta) + 8) % 8;
+updateDirLabel();
+}
+
+function updateDirLabel() {
+const lbl = document.getElementById(‘dirLabel’);
+if (lbl && animationState) {
+lbl.textContent = PMD_DIRECTIONS[animationState.direction] || ‘South’;
+}
+}
+
+// ── Watch for preview data after editor render ──
+const editorObserver = new MutationObserver(() => {
+const canvas = document.getElementById(‘previewCanvas’);
+if (canvas && !animationState) {
+const mon = mons.find(m => m.id === selectedMonId);
+if (mon) startAnimationPreview(mon);
+}
+});
+
+// ── Portrait ──
+function triggerPortraitUpload() {
+document.getElementById(‘portraitFileInput’).click();
+}
+
+function handlePortraitUpload(input) {
+if (!input.files || !input.files[0]) return;
+const file = input.files[0];
+const reader = new FileReader();
+reader.onload = (e) => {
+const img = new Image();
+img.onload = () => {
+const frameSize = 40;
+const cols = Math.floor(img.width / frameSize);
+const rows = Math.floor(img.height / frameSize);
+const maxFrames = Math.min(cols * rows, 12);
+const grid = document.getElementById(‘portraitGrid’);
+if (!grid) return;
+grid.innerHTML = ‘’;
+
+```
+  const scale = 3;
+  for (let i = 0; i < maxFrames; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const c = document.createElement('canvas');
+    c.width = frameSize * scale;
+    c.height = frameSize * scale;
+    c.className = 'portrait-frame';
+    const cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    cx.drawImage(img, col * frameSize, row * frameSize, frameSize, frameSize, 0, 0, frameSize * scale, frameSize * scale);
+    grid.appendChild(c);
+  }
+};
+img.src = e.target.result;
+```
+
+};
+reader.readAsDataURL(file);
+}
+
+// ── Settings ──
+function openSettings() {
+const gh = loadGHSettings();
+document.getElementById(‘ghToken’).value = gh.token || ‘’;
+document.getElementById(‘ghUser’).value = gh.user || ‘’;
+document.getElementById(‘ghRepo’).value = gh.repo || ‘’;
+document.getElementById(‘ghBranch’).value = gh.branch || ‘main’;
+updateTokenPreview(gh.token);
+document.getElementById(‘settingsModal’).classList.remove(‘hidden’);
+}
+
+function closeSettings() {
+document.getElementById(‘settingsModal’).classList.add(‘hidden’);
+}
+
+function saveSettings() {
+const s = {
+token: document.getElementById(‘ghToken’).value.trim(),
+user: document.getElementById(‘ghUser’).value.trim(),
+repo: document.getElementById(‘ghRepo’).value.trim(),
+branch: document.getElementById(‘ghBranch’).value.trim() || ‘main’
+};
+saveGHSettings(s);
+closeSettings();
+toast(‘GitHub settings saved’, ‘success’);
+}
+
+function updateTokenPreview(token) {
+const el = document.getElementById(‘tokenPreview’);
+if (!el) return;
+if (token && token.length > 8) {
+el.textContent = ’Stored: ’ + token.substring(0, 4) + ‘····’ + token.substring(token.length - 4);
+} else {
+el.textContent = ‘’;
+}
+}
+
+// ── Export ──
+function exportJSON() {
+const exportData = mons.map(m => ({
+name: m.name,
+behavior: m.behavior,
+biomes: m.biomes,
+moves: m.moves.filter(mv => mv.trim()),
+notes: m.notes,
+spriteFolder: m.name ? ‘resources/pokemon/’ + folderName(m.name) + ‘/sprites/’ : null,
+assets: Object.fromEntries(SPRITE_FILES.map(f => [f, !!(m.sprites && m.sprites[f])]))
+}));
+
+const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: ‘application/json’ });
+const url = URL.createObjectURL(blob);
+const a = document.createElement(‘a’);
+a.href = url;
+a.download = ‘mons.json’;
+a.click();
+URL.revokeObjectURL(url);
+toast(‘Exported mons.json (’ + exportData.length + ’ mons)’, ‘success’);
+}
+
+// ── On first load, check if settings exist ──
+function checkFirstRun() {
+const gh = loadGHSettings();
+if (!gh.token && !gh.user) {
+openSettings();
+}
+}
+
+// ── Init ──
+function init() {
+loadData();
+renderMonList();
+renderEditor();
+checkFirstRun();
+
+// Observe editor for canvas insertion
+const editorContent = document.getElementById(‘editorContent’);
+if (editorContent) {
+editorObserver.observe(editorContent, { childList: true, subtree: true });
+}
+
+// Token preview live update
+document.getElementById(‘ghToken’).addEventListener(‘input’, function() {
+updateTokenPreview(this.value);
+});
+}
+
+init();
+</script>
+
+</body>
+</html>
