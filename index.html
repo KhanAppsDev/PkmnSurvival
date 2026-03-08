@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Island Mon Registry</title>
+<title>Island Mon Registry v2.1.0</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -38,47 +38,41 @@ input:focus, select:focus, textarea:focus {
   border-color: #0cb;
 }
 textarea { resize: vertical; min-height: 70px; }
-
-/* ── Views ── */
 .view { display: none; }
 .view.active { display: block; }
-
-/* ── Top bar ── */
 .topbar {
-background: #181818;
-border-bottom: 1px solid #333;
-padding: 10px 14px;
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: 8px;
-position: sticky;
-top: 0;
-z-index: 10;
+  background: #181818;
+  border-bottom: 1px solid #333;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .topbar h1 {
-font-size: 15px;
-font-weight: 600;
-color: #0cb;
-white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0cb;
+  white-space: nowrap;
 }
 .topbar-btns { display: flex; gap: 6px; }
-
-/* ── Buttons ── */
 .btn {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-gap: 4px;
-padding: 10px 14px;
-min-height: 44px;
-min-width: 44px;
-background: #222;
-border: 1px solid #444;
-color: #ccc;
-border-radius: 6px;
-font-size: 13px;
-white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 14px;
+  min-height: 44px;
+  min-width: 44px;
+  background: #222;
+  border: 1px solid #444;
+  color: #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 .btn:active { background: #333; }
 .btn-primary { background: #0a3; border-color: #0a3; color: #fff; }
@@ -87,141 +81,128 @@ white-space: nowrap;
 .btn-danger:active { background: #311; }
 .btn-sm { padding: 6px 10px; min-height: 36px; font-size: 12px; }
 .btn-block { width: 100%; }
-
-/* ── Mon list ── */
 .list-search {
-padding: 10px 14px;
-background: #181818;
-border-bottom: 1px solid #282828;
+  padding: 10px 14px;
+  background: #181818;
+  border-bottom: 1px solid #282828;
 }
 .mon-item {
-display: flex;
-align-items: center;
-gap: 10px;
-padding: 14px;
-border-bottom: 1px solid #222;
-cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid #222;
+  cursor: pointer;
 }
 .mon-item:active { background: #1a1a1a; }
 .mon-dot {
-width: 10px;
-height: 10px;
-border-radius: 50%;
-flex-shrink: 0;
-background: #444;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #444;
 }
 .mon-dot.complete { background: #0a3; }
 .mon-dot.partial { background: #da3; }
 .mon-item-name { flex: 1; font-size: 15px; }
 .mon-item-arrow { color: #555; font-size: 18px; }
-
-/* ── Editor ── */
 .editor-back {
-padding: 10px 14px;
-background: #181818;
-border-bottom: 1px solid #333;
-display: flex;
-align-items: center;
-justify-content: space-between;
-position: sticky;
-top: 0;
-z-index: 10;
+  padding: 10px 14px;
+  background: #181818;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .editor-back-btn {
-background: none;
-border: none;
-color: #0cb;
-font-size: 15px;
-padding: 10px 4px;
-min-height: 44px;
+  background: none;
+  border: none;
+  color: #0cb;
+  font-size: 15px;
+  padding: 10px 4px;
+  min-height: 44px;
 }
-
 .section {
-padding: 14px;
-border-bottom: 1px solid #222;
+  padding: 14px;
+  border-bottom: 1px solid #222;
 }
 .section-title {
-font-size: 11px;
-text-transform: uppercase;
-letter-spacing: 1px;
-color: #888;
-margin-bottom: 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888;
+  margin-bottom: 10px;
 }
 .field-label {
-display: block;
-font-size: 12px;
-color: #888;
-margin-bottom: 4px;
-margin-top: 10px;
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+  margin-top: 10px;
 }
 .field-label:first-child { margin-top: 0; }
-
-/* ── Behavior ── */
 .beh-group { display: flex; gap: 6px; margin-top: 6px; }
 .beh-btn {
-flex: 1;
-padding: 10px 6px;
-background: #1a1a1a;
-border: 2px solid #333;
-border-radius: 6px;
-text-align: center;
-font-size: 12px;
-min-height: 44px;
-color: #ccc;
+  flex: 1;
+  padding: 10px 6px;
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 12px;
+  min-height: 44px;
+  color: #ccc;
 }
 .beh-btn.selected { border-color: #0cb; color: #0cb; }
 .beh-btn:active { background: #222; }
-
-/* ── Biomes ── */
 .biome-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .biome-row {
-display: flex;
-align-items: center;
-gap: 10px;
-padding: 10px;
-background: #1a1a1a;
-border: 1px solid #333;
-border-radius: 4px;
-min-height: 44px;
-cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  min-height: 44px;
+  cursor: pointer;
 }
 .biome-row:active { background: #222; }
 .biome-row.checked { border-color: #0a3; }
 .biome-check-box {
-width: 20px;
-height: 20px;
-border: 2px solid #555;
-border-radius: 3px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 14px;
-color: transparent;
-flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #555;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: transparent;
+  flex-shrink: 0;
 }
 .biome-row.checked .biome-check-box { border-color: #0a3; color: #0a3; }
-
-/* ── Moves ── */
 .move-row {
-display: flex;
-gap: 6px;
-align-items: center;
-margin-bottom: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
 }
 .move-row input { flex: 1; }
-
-/* ── Sprites ── */
 .sprite-list { display: flex; flex-direction: column; gap: 6px; }
 .sprite-row {
-display: flex;
-align-items: center;
-gap: 10px;
-padding: 10px 12px;
-background: #1a1a1a;
-border: 1px solid #333;
-border-radius: 4px;
-min-height: 48px;
-cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  min-height: 48px;
+  cursor: pointer;
 }
 .sprite-row:active { background: #222; }
 .sprite-row.uploaded { border-color: #0a3; }
@@ -229,125 +210,160 @@ cursor: pointer;
 .sprite-row.error { border-color: #c33; }
 .sprite-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
 .sprite-name { flex: 1; font-size: 13px; }
-.sprite-row input[type=“file”] { display: none; }
-
-/* ── Animation preview ── */
+.sprite-row input[type="file"] { display: none; }
 .preview-wrap {
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 .preview-controls {
-display: flex;
-align-items: center;
-gap: 10px;
-flex-wrap: wrap;
-justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .preview-canvas {
-image-rendering: pixelated;
-border: 1px solid #333;
-border-radius: 4px;
+  image-rendering: pixelated;
+  border: 1px solid #333;
+  border-radius: 4px;
 }
 .dir-label {
-min-width: 80px;
-text-align: center;
-font-size: 13px;
-color: #aaa;
+  min-width: 80px;
+  text-align: center;
+  font-size: 13px;
+  color: #aaa;
 }
 .preview-msg {
-text-align: center;
-color: #666;
-padding: 20px;
-font-size: 13px;
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  font-size: 13px;
 }
-
-/* ── Portrait ── */
 .portrait-grid {
-display: flex;
-flex-wrap: wrap;
-gap: 6px;
-justify-content: center;
-margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 10px;
 }
 .portrait-grid canvas {
-image-rendering: pixelated;
-border: 1px solid #333;
-border-radius: 2px;
+  image-rendering: pixelated;
+  border: 1px solid #333;
+  border-radius: 2px;
 }
-
-/* ── Modal ── */
 .modal-bg {
-display: none;
-position: fixed;
-top: 0; left: 0; right: 0; bottom: 0;
-background: rgba(0,0,0,0.8);
-z-index: 100;
-align-items: center;
-justify-content: center;
-padding: 20px;
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 .modal-bg.open { display: flex; }
 .modal-box {
-background: #1a1a1a;
-border: 1px solid #444;
-border-radius: 8px;
-width: 100%;
-max-width: 420px;
-max-height: 90vh;
-overflow-y: auto;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 .modal-head {
-padding: 14px 16px;
-border-bottom: 1px solid #333;
-font-weight: 600;
-color: #0cb;
+  padding: 14px 16px;
+  border-bottom: 1px solid #333;
+  font-weight: 600;
+  color: #0cb;
 }
 .modal-body { padding: 16px; }
 .modal-foot {
-padding: 12px 16px;
-border-top: 1px solid #333;
-display: flex;
-gap: 8px;
-justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid #333;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
-
-/* ── Toast ── */
 .toast-wrap {
-position: fixed;
-bottom: 16px;
-left: 16px;
-right: 16px;
-z-index: 200;
-display: flex;
-flex-direction: column;
-gap: 6px;
-pointer-events: none;
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
 }
 .toast {
-padding: 10px 14px;
-background: #222;
-border: 1px solid #444;
-border-radius: 6px;
-font-size: 13px;
-animation: fadeIn 0.2s;
+  padding: 10px 14px;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 6px;
+  font-size: 13px;
+  animation: fadeIn 0.2s;
 }
 .toast.success { border-color: #0a3; }
 .toast.error { border-color: #c33; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-
-/* ── Footer ── */
 .app-footer {
-text-align: center;
-padding: 8px;
-font-size: 10px;
-color: #555;
+  text-align: center;
+  padding: 8px;
+  font-size: 10px;
+  color: #555;
+}
+
+/* ── DEBUG PANEL ── */
+#debugPanel {
+background: #1a0a0a;
+border: 2px solid #f80;
+border-radius: 6px;
+margin: 10px;
+padding: 10px;
+font-size: 12px;
+font-family: monospace;
+max-height: 300px;
+overflow-y: auto;
+}
+#debugPanel h3 {
+color: #f80;
+font-size: 13px;
+margin-bottom: 8px;
+}
+.dbg-line {
+padding: 2px 0;
+border-bottom: 1px solid #2a1a1a;
+}
+.dbg-ok { color: #0a3; }
+.dbg-err { color: #f44; }
+.dbg-info { color: #aaa; }
+.dbg-warn { color: #da3; }
+#debugTapTest {
+display: inline-block;
+padding: 12px 20px;
+background: #333;
+border: 2px solid #f80;
+color: #f80;
+border-radius: 6px;
+margin-top: 8px;
+font-size: 14px;
+font-family: monospace;
 }
 </style>
 
 </head>
 <body>
+
+<!-- ============ DEBUG PANEL — REMOVE AFTER DIAGNOSIS ============ -->
+
+<div id="debugPanel">
+  <h3>DIAGNOSTIC v2.1.0</h3>
+  <div id="debugLog"></div>
+  <div id="debugTapTest" onclick="dbgTap()">TAP THIS TO TEST CLICKS</div>
+</div>
 
 <!-- ============ LIST VIEW ============ -->
 
@@ -377,7 +393,7 @@ color: #555;
     <button class="btn btn-sm btn-danger" onclick="deleteMon(selectedMonId)">Delete</button>
   </div>
   <div id="editorBody"></div>
-  <div class="app-footer">v2.0.0</div>
+  <div class="app-footer">v2.1.0</div>
 </div>
 
 <!-- ============ SETTINGS MODAL ============ -->
@@ -409,7 +425,38 @@ color: #555;
 
 <script>
 /* ══════════════════════════════════════════
-   Island Mon Registry v2.0.0
+   DIAGNOSTIC LOGGING — runs first
+   ══════════════════════════════════════════ */
+var dbgTapCount = 0;
+function dbg(msg, type) {
+  var el = document.getElementById('debugLog');
+  if (!el) return;
+  var line = document.createElement('div');
+  line.className = 'dbg-line dbg-' + (type || 'info');
+  line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+function dbgTap() {
+  dbgTapCount++;
+  dbg('TAP #' + dbgTapCount + ' registered OK', 'ok');
+  document.getElementById('debugTapTest').textContent = 'TAPS: ' + dbgTapCount + ' (working!)';
+}
+
+// Catch ALL errors globally
+window.onerror = function(msg, src, line, col, err) {
+  dbg('ERROR: ' + msg + ' (line ' + line + ')', 'err');
+  return false;
+};
+window.addEventListener('unhandledrejection', function(e) {
+  dbg('PROMISE ERROR: ' + (e.reason ? e.reason.message || e.reason : 'unknown'), 'err');
+});
+
+dbg('Script tag started executing', 'ok');
+dbg('UA: ' + navigator.userAgent.substring(0, 80), 'info');
+
+/* ══════════════════════════════════════════
+   Island Mon Registry v2.1.0
    ══════════════════════════════════════════ */
 
 var SPRITE_FILES = [
@@ -435,6 +482,8 @@ var ANIM_TYPES = ['Walk','Idle','Sleep','Hurt','Attack','Charge','Shoot','Strike
 var mons = [];
 var selectedMonId = null;
 var animState = null;
+
+dbg('Constants defined OK', 'ok');
 
 // ── Persistence ──
 function load() {
@@ -463,6 +512,8 @@ function isPartial(m) {
 }
 function dotClass(m) { return isComplete(m) ? 'complete' : isPartial(m) ? 'partial' : ''; }
 
+dbg('Functions defined OK', 'ok');
+
 // ── Toast ──
 function toast(msg, type) {
   var w = document.getElementById('toastWrap');
@@ -475,6 +526,7 @@ function toast(msg, type) {
 
 // ── Views ──
 function showView(id) {
+  dbg('showView(' + id + ')', 'info');
   document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
@@ -488,6 +540,7 @@ function goBack() {
 
 // ── List ──
 function renderList() {
+  dbg('renderList() called, mons: ' + mons.length, 'info');
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
   var list = mons;
   if (q) list = list.filter(function(m) { return m.name.toLowerCase().indexOf(q) >= 0; });
@@ -500,23 +553,25 @@ function renderList() {
       return '<div class="mon-item" onclick="selectMon(\'' + m.id + '\')">' +
         '<span class="mon-dot ' + dotClass(m) + '"></span>' +
         '<span class="mon-item-name">' + esc(m.name || 'Unnamed') + '</span>' +
-        '<span class="mon-item-arrow">›</span>' +
+        '<span class="mon-item-arrow">&rsaquo;</span>' +
       '</div>';
     }).join('');
   }
   var total = mons.length;
   var comp = mons.filter(isComplete).length;
-  document.getElementById('monCount').textContent = total + ' mons · ' + comp + ' complete · v2.0.0';
+  document.getElementById('monCount').textContent = total + ' mons | ' + comp + ' complete | v2.1.0';
 }
 
 // ── Add / Select / Delete ──
 function addMon() {
+  dbg('addMon() called', 'ok');
   var m = { id: genId(), name: '', behavior: '', biomes: [], moves: [''], notes: '', sprites: {} };
   mons.push(m);
   save();
   selectMon(m.id);
 }
 function selectMon(id) {
+  dbg('selectMon(' + id + ')', 'info');
   stopAnim();
   selectedMonId = id;
   showView('viewEditor');
@@ -534,17 +589,16 @@ function deleteMon(id) {
 // ── Editor ──
 function renderEditor() {
   var m = getMon(selectedMonId);
-  if (!m) return;
+  if (!m) { dbg('renderEditor: mon not found!', 'err'); return; }
+  dbg('renderEditor for: ' + (m.name || 'unnamed'), 'info');
   var h = '';
 
-  // Name
   h += '<div class="section">';
   h += '<div class="section-title">Identity</div>';
   h += '<label class="field-label">Name</label>';
   h += '<input type="text" id="ed_name" value="' + esc(m.name) + '" placeholder="e.g. Flamegecko" oninput="updField(\'name\',this.value)">';
   h += '</div>';
 
-  // Behavior
   h += '<div class="section">';
   h += '<div class="section-title">Behavior</div>';
   h += '<div class="beh-group">';
@@ -554,41 +608,37 @@ function renderEditor() {
   });
   h += '</div></div>';
 
-  // Biomes
   h += '<div class="section">';
   h += '<div class="section-title">Biomes</div>';
   h += '<div class="biome-list">';
   BIOMES.forEach(function(b) {
     var chk = m.biomes.indexOf(b.id) >= 0;
     h += '<div class="biome-row' + (chk ? ' checked' : '') + '" onclick="toggleBiome(\'' + b.id + '\')">';
-    h += '<span class="biome-check-box">' + (chk ? '✓' : '') + '</span>';
+    h += '<span class="biome-check-box">' + (chk ? '&#10003;' : '') + '</span>';
     h += '<span>' + b.label + '</span>';
     h += '</div>';
   });
   h += '</div></div>';
 
-  // Moves
   h += '<div class="section">';
   h += '<div class="section-title">Moves</div>';
   m.moves.forEach(function(mv, i) {
     h += '<div class="move-row">';
     h += '<input type="text" value="' + esc(mv) + '" placeholder="Move ' + (i + 1) + '..." oninput="updMove(' + i + ',this.value)">';
-    h += '<button class="btn btn-sm btn-danger" onclick="rmMove(' + i + ')">✕</button>';
+    h += '<button class="btn btn-sm btn-danger" onclick="rmMove(' + i + ')">X</button>';
     h += '</div>';
   });
   h += '<button class="btn btn-sm" onclick="addMove()" style="margin-top:4px;">+ Add Move</button>';
   h += '</div>';
 
-  // Notes
   h += '<div class="section">';
   h += '<div class="section-title">Notes</div>';
   h += '<textarea placeholder="Lore, spawn conditions..." oninput="updField(\'notes\',this.value)">' + esc(m.notes) + '</textarea>';
 
 h += ‘</div>’;
 
-// Sprites
 h += ‘<div class="section">’;
-h += ‘<div class="section-title">Sprites — tap to upload</div>’;
+h += ‘<div class="section-title">Sprites (tap to upload)</div>’;
 h += ‘<div class="sprite-list">’;
 SPRITE_FILES.forEach(function(f) {
 var up = m.sprites && m.sprites[f];
@@ -602,7 +652,6 @@ h += ‘</div>’;
 });
 h += ‘</div></div>’;
 
-// Animation Preview
 h += ‘<div class="section">’;
 h += ‘<div class="section-title">Animation Preview</div>’;
 var hasWalk = getAsset(m.id, ‘Walk-Anim.png’);
@@ -615,9 +664,9 @@ ANIM_TYPES.forEach(function(a) {
 h += ‘<option value="' + a + '">’ + a + ‘</option>’;
 });
 h += ‘</select>’;
-h += ‘<button class="btn btn-sm" onclick="chgDir(-1)">◀</button>’;
+h += ‘<button class="btn btn-sm" onclick="chgDir(-1)"><</button>’;
 h += ‘<span class="dir-label" id="dirLabel">South</span>’;
-h += ‘<button class="btn btn-sm" onclick="chgDir(1)">▶</button>’;
+h += ‘<button class="btn btn-sm" onclick="chgDir(1)">></button>’;
 h += ‘</div>’;
 h += ‘<canvas id="prevCanvas" class="preview-canvas"></canvas>’;
 h += ‘</div>’;
@@ -626,7 +675,6 @@ h += ‘<div class="preview-msg">Upload Walk-Anim.png + AnimData.xml to preview<
 }
 h += ‘</div>’;
 
-// Portrait
 h += ‘<div class="section">’;
 h += ‘<div class="section-title">Portrait Preview</div>’;
 h += ‘<div style="text-align:center;">’;
@@ -637,7 +685,6 @@ h += ‘</div></div>’;
 
 document.getElementById(‘editorBody’).innerHTML = h;
 
-// Start animation if assets available
 if (hasWalk && hasXml) {
 setTimeout(function() { startAnim(m); }, 50);
 }
@@ -683,14 +730,23 @@ save();
 
 // ── Sprite upload ──
 function pickFile(filename) {
+dbg(’pickFile: ’ + filename, ‘info’);
 var sid = ‘sp_’ + filename.replace(/./g, ‘_’);
 var el = document.getElementById(sid);
-if (el) el.querySelector(‘input[type=“file”]’).click();
+if (el) {
+var inp = el.querySelector(‘input[type=“file”]’);
+if (inp) { inp.click(); dbg(‘file input .click() fired’, ‘ok’); }
+else { dbg(‘file input NOT FOUND in row’, ‘err’); }
+} else {
+dbg(’sprite row element not found: ’ + sid, ‘err’);
+}
 }
 
 function uploadSprite(filename, input) {
-if (!input.files || !input.files[0]) return;
+dbg(‘uploadSprite: ’ + filename, ‘info’);
+if (!input.files || !input.files[0]) { dbg(‘no file selected’, ‘warn’); return; }
 var file = input.files[0];
+dbg(‘file: ’ + file.name + ’ (’ + file.size + ’ bytes)’, ‘info’);
 var m = getMon(selectedMonId);
 if (!m || !m.name) { toast(‘Set a name first’, ‘error’); return; }
 
@@ -698,13 +754,12 @@ var sid = ‘sp_’ + filename.replace(/./g, ‘_’);
 var row = document.getElementById(sid);
 if (row) row.className = ‘sprite-row uploading’;
 
-// Read as dataURL for base64
 var reader = new FileReader();
 reader.onload = function(e) {
 var b64 = e.target.result.split(’,’)[1];
+dbg(’base64 ready, length: ’ + b64.length, ‘ok’);
 
 ```
-// Also cache locally for preview
 if (filename.endsWith('.xml')) {
   var tr = new FileReader();
   tr.onload = function(te) { storeAsset(m.id, filename, te.target.result); };
@@ -713,11 +768,11 @@ if (filename.endsWith('.xml')) {
   storeAsset(m.id, filename, b64);
 }
 
-// Push to GitHub
 pushToGH(m, filename, b64, row);
 ```
 
 };
+reader.onerror = function() { dbg(‘FileReader error!’, ‘err’); };
 reader.readAsDataURL(file);
 }
 
@@ -725,6 +780,7 @@ function pushToGH(m, filename, b64, row) {
 var gh = ghLoad();
 if (!gh.token || !gh.user || !gh.repo) {
 toast(‘Configure GitHub settings first’, ‘error’);
+dbg(‘GitHub not configured’, ‘warn’);
 if (row) row.className = ‘sprite-row error’;
 return;
 }
@@ -732,8 +788,8 @@ return;
 var path = ‘resources/pokemon/’ + toFolder(m.name) + ‘/sprites/’ + filename;
 var branch = gh.branch || ‘main’;
 var headers = { ‘Authorization’: ’token ’ + gh.token, ‘Content-Type’: ‘application/json’ };
+dbg(’pushing to: ’ + path, ‘info’);
 
-// Check existing file for SHA
 fetch(‘https://api.github.com/repos/’ + gh.user + ‘/’ + gh.repo + ‘/contents/’ + path + ‘?ref=’ + branch, { headers: headers })
 .then(function(r) { return r.ok ? r.json() : null; })
 .catch(function() { return null; })
@@ -753,8 +809,9 @@ if (existing && existing.sha) body.sha = existing.sha;
   if (!m.sprites) m.sprites = {};
   m.sprites[filename] = true;
   save();
-  if (row) { row.className = 'sprite-row uploaded'; row.querySelector('.sprite-icon').textContent = '✓'; }
+  if (row) { row.className = 'sprite-row uploaded'; row.querySelector('.sprite-icon').textContent = '\u2713'; }
   toast(filename + ' committed', 'success');
+  dbg(filename + ' committed OK', 'ok');
   if (filename === 'Walk-Anim.png' || filename === 'AnimData.xml') {
     setTimeout(function() { renderEditor(); }, 300);
   }
@@ -762,6 +819,7 @@ if (existing && existing.sha) body.sha = existing.sha;
 .catch(function(err) {
   if (row) row.className = 'sprite-row error';
   toast('Failed: ' + err.message, 'error');
+  dbg('GH push failed: ' + err.message, 'err');
 });
 ```
 
@@ -769,7 +827,7 @@ if (existing && existing.sha) body.sha = existing.sha;
 
 // ── Asset cache ──
 function storeAsset(mid, f, data) {
-try { localStorage.setItem(‘asset_’ + mid + ‘*’ + f, data); } catch(e) {}
+try { localStorage.setItem(‘asset_’ + mid + ‘*’ + f, data); } catch(e) { dbg(’storeAsset fail: ’ + e.message, ‘err’); }
 }
 function getAsset(mid, f) {
 return localStorage.getItem(’asset*’ + mid + ‘_’ + f);
@@ -908,13 +966,18 @@ reader.readAsDataURL(input.files[0]);
 
 // ── Settings ──
 function openSettings() {
+dbg(‘openSettings() called’, ‘ok’);
 var g = ghLoad();
 document.getElementById(‘ghToken’).value = g.token || ‘’;
 document.getElementById(‘ghUser’).value = g.user || ‘’;
 document.getElementById(‘ghRepo’).value = g.repo || ‘’;
 document.getElementById(‘ghBranch’).value = g.branch || ‘main’;
 showTokenPreview(g.token);
-document.getElementById(‘settingsModal’).classList.add(‘open’);
+var modal = document.getElementById(‘settingsModal’);
+dbg(’modal element: ’ + (modal ? ‘found’ : ‘NOT FOUND’), modal ? ‘ok’ : ‘err’);
+dbg(’modal classes before: ’ + modal.className, ‘info’);
+modal.classList.add(‘open’);
+dbg(’modal classes after: ’ + modal.className, ‘ok’);
 }
 function closeSettings() {
 document.getElementById(‘settingsModal’).classList.remove(‘open’);
@@ -928,11 +991,12 @@ branch: document.getElementById(‘ghBranch’).value.trim() || ‘main’
 });
 closeSettings();
 toast(‘Settings saved’, ‘success’);
+dbg(‘Settings saved’, ‘ok’);
 }
 function showTokenPreview(t) {
 var el = document.getElementById(‘tokenPreview’);
 if (!el) return;
-el.textContent = (t && t.length > 8) ? ’Stored: ’ + t.substring(0, 4) + ‘····’ + t.substring(t.length - 4) : ‘’;
+el.textContent = (t && t.length > 8) ? ’Stored: ’ + t.substring(0, 4) + ‘…..’ + t.substring(t.length - 4) : ‘’;
 }
 
 // ── Export ──
@@ -956,14 +1020,42 @@ toast(‘Exported ’ + data.length + ’ mons’, ‘success’);
 }
 
 // ── Init ──
+dbg(‘About to run init()…’, ‘info’);
 function init() {
+try {
+dbg(‘init() started’, ‘ok’);
+
+```
+dbg('Testing localStorage...', 'info');
+localStorage.setItem('_test', '1');
+localStorage.removeItem('_test');
+dbg('localStorage: OK', 'ok');
+
 load();
+dbg('Data loaded, mons: ' + mons.length, 'ok');
+
 renderList();
+dbg('renderList() done', 'ok');
+
 var g = ghLoad();
-if (!g.token && !g.user) openSettings();
-document.getElementById(‘ghToken’).addEventListener(‘input’, function() { showTokenPreview(this.value); });
+dbg('GH settings: token=' + (g.token ? 'yes' : 'no') + ' user=' + (g.user || 'none'), 'info');
+
+if (!g.token && !g.user) {
+  dbg('No GH config, opening settings...', 'warn');
+  openSettings();
+}
+
+document.getElementById('ghToken').addEventListener('input', function() { showTokenPreview(this.value); });
+dbg('init() COMPLETE', 'ok');
+```
+
+} catch(e) {
+dbg(’init() CRASHED: ’ + e.message, ‘err’);
+dbg(’Stack: ’ + (e.stack || ‘n/a’).substring(0, 200), ‘err’);
+}
 }
 init();
+dbg(‘Script finished executing’, ‘ok’);
 </script>
 
 </body>
