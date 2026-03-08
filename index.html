@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v11</title>
+    <title>Island Mon Registry v12 - Cloud</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,10 +13,10 @@
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; margin: 0; padding: 0; width: 100vw; overflow-x: hidden; }
-        body::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)); z-index: 9999; background-size: 100% 3px, 2px 100%; pointer-events: none; }
+        body::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03)); z-index: 9999; background-size: 100% 3px, 2px 100%; pointer-events: none; }
         header { padding: 10px 15px; border-bottom: 1px solid var(--accent-cyan); background: var(--surface); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
         .btn { background: transparent; border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 0.75rem; text-transform: uppercase; }
-        #grid-view, #island-view { padding: 15px; }
+        #grid-view, #island-view, #cloud-view { padding: 15px; }
         .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-bar { background: #000; border: 1px solid var(--border); color: var(--accent-green); padding: 12px; width: 100%; font-family: inherit; font-size: 1rem; }
         .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
@@ -28,16 +28,13 @@
         #detail-view { display: none; padding: 15px; padding-bottom: 50px; }
         .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
         h3 { margin: 0 0 12px 0; font-size: 0.8rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
-        label { display: block; font-size: 0.65rem; color: #888; margin-bottom: 4px; text-transform: uppercase; }
-        input[type="text"] { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; font-family: inherit; font-size: 0.9rem; }
-        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        input[type="text"], input[type="number"] { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; font-family: inherit; font-size: 0.9rem; }
         .upload-zone { background: #000; border: 1px dashed var(--border); padding: 8px; font-size: 0.6rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
         .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
         .portrait-slot { aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.5rem; color: #555; cursor: pointer; position: relative; overflow: hidden; }
         .portrait-slot.active { border-color: var(--accent-green); color: var(--accent-green); }
         .portrait-slot img { width: 100%; height: 100%; object-fit: none; image-rendering: pixelated; }
-        .slot-label { position: absolute; bottom: 2px; width: 100%; text-align: center; background: rgba(0,0,0,0.7); pointer-events: none; }
         .tabs { display: flex; overflow-x: auto; gap: 6px; margin-bottom: 12px; padding-bottom: 4px; }
         .tab { padding: 8px 14px; background: #000; border: 1px solid var(--border); font-size: 0.7rem; white-space: nowrap; }
         .tab.active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
@@ -47,23 +44,32 @@
         .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.2); color: var(--accent-cyan); }
         .batch-btn { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0, 242, 255, 0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-family: inherit; font-weight: bold; }
         .hidden { display: none !important; }
-        #island-view { flex-direction: column; align-items: center; display: none; }
-        #island-view.active { display: flex; }
+        #island-view.active { display: flex; flex-direction: column; align-items: center; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V11</div>
+    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V12_CLOUD</div>
     <div style="display: flex; gap: 6px;">
+        <button class="btn" onclick="showView('cloud')" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">Cloud</button>
         <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber); color: var(--accent-amber);">Island</button>
-        <button class="btn" onclick="document.getElementById('import-input').click()">Load</button>
-        <button class="btn" onclick="exportData()">Exp</button>
         <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add</button>
     </div>
 </header>
 
-<input type="file" id="import-input" class="hidden" accept=".json" onchange="importData(this.files[0])">
+<div id="cloud-view" class="hidden">
+    <div class="editor-section">
+        <h3>CLOUD_SYNC</h3>
+        <p style="font-size: 0.7rem; color: #888;">Enter a code to load a world, or save your current one.</p>
+        <input type="text" id="cloud-code-input" placeholder="REGISTRY_CODE (e.g. ALPHA_1)">
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn" onclick="loadFromCloud()" style="flex:1">LOAD_CLOUD</button>
+            <button class="btn" onclick="saveToCloud()" style="flex:1; border-color: var(--accent-green); color: var(--accent-green);">SAVE_CLOUD</button>
+        </div>
+        <div id="cloud-status" style="margin-top: 15px; font-size: 0.7rem; color: var(--accent-amber);">Ready.</div>
+    </div>
+</div>
 
 <div id="grid-view">
     <div class="controls">
@@ -73,11 +79,11 @@
     <div class="mon-grid" id="mon-grid"></div>
 </div>
 
-<div id="island-view">
+<div id="island-view" class="hidden">
     <div style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 15px;">
         <button class="btn" onclick="showView('grid')">&lt; REGISTRY</button>
         <div style="display: flex; gap: 5px;">
-            <input type="number" id="map-seed" value="12345" style="width: 80px; background: #000; border: 1px solid var(--border); color: var(--accent-cyan); padding: 5px; font-family: inherit;">
+            <input type="number" id="map-seed" value="12345" style="width: 80px;">
             <button class="btn" onclick="initIslandGen()" style="border-color: var(--accent-green); color: var(--accent-green);">GENERATE</button>
         </div>
     </div>
@@ -96,12 +102,11 @@
         <button class="btn" onclick="showView('grid')">&lt; BACK</button>
         <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">WIPE</button>
     </div>
-    <button class="batch-btn" onclick="document.getElementById('batch-input').click()">BATCH UPLOAD (SPRITES + XML)</button>
     <div class="editor-section">
         <h3>ENTITY_DATA</h3>
         <input type="text" id="edit-name" onchange="updateCurrentMon('name', this.value)">
         <div id="habitat-select" class="filter-row" style="margin-top:10px"></div>
-        <h3>PORTRAIT_RECORDS</h3>
+        <h3>PORTRAIT_RECORDS (Auto-Upload to ImgBB)</h3>
         <div class="portrait-manager" id="portrait-manager"></div>
         <h3 style="margin-top:15px">SPRITE_DATA</h3>
         <div class="upload-grid" id="upload-zones"></div>
@@ -113,38 +118,41 @@
             <canvas id="sprite-canvas"></canvas>
             <div id="portrait-view" class="hidden" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:2px; width:100%;"></div>
         </div>
-        <div id="anim-controls" style="display:flex; justify-content: space-between; margin-top:10px; align-items: center;">
-            <button class="btn" onclick="changeDir(-1)">◀</button>
-            <div id="dir-label" style="font-size:0.7rem; color:var(--accent-cyan)">Down-Right</div>
-            <button class="btn" onclick="changeDir(1)">▶</button>
-        </div>
     </div>
 </div>
 
-<input type="file" id="batch-input" class="hidden" multiple onchange="handleBatchUpload(this.files)">
 <input type="file" id="portrait-input" class="hidden" accept=".png">
 <input type="file" id="single-file-input" class="hidden">
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyANWSTb5grj5F1aUj0XV59edJ1Vx6dKaew",
+    authDomain: "pkmn-island.firebaseapp.com",
+    projectId: "pkmn-island",
+    storageBucket: "pkmn-island.firebasestorage.app",
+    messagingSenderId: "521942701562",
+    appId: "1:521942701562:web:000b66549f77db36f84043"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  window.db = getFirestore(app);
+  window.fbDoc = doc; window.fbGet = getDoc; window.fbSet = setDoc;
+</script>
+
 <script>
+    const IMGBB_KEY = 'bd7416e31a82ad846b1e4d3cc30eded6';
     const HABITATS = ['Forest', 'Canopy', 'Cave', 'River', 'Beach'];
     const ANIMS = ['Walk', 'Hop', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
-    const DIRS = ['Down-Right', 'Right', 'Up-Right', 'Up', 'Up-Left', 'Left', 'Down-Left', 'Down'];
-    const TERRAIN = {
-        OPEN_FOREST: { name: 'Open Forest', color: '#44a044', biome: 'Forest' },
-        DENSE_FOREST: { name: 'Dense Forest', color: '#1a5e1a', biome: 'Canopy' },
-        CAVE: { name: 'Cave System', color: '#555555', biome: 'Cave' },
-        RIVERBANK: { name: 'Riverbank', color: '#4488ff', biome: 'River' },
-        SHORE: { name: 'Shoreline', color: '#d2b48c', biome: 'Beach' },
-        OCEAN: { name: 'Ocean', color: '#00008b', biome: 'None' }
-    };
+    const TERRAIN = { OPEN_FOREST: { name: 'Open Forest', color: '#44a044', biome: 'Forest' }, DENSE_FOREST: { name: 'Dense Forest', color: '#1a5e1a', biome: 'Canopy' }, CAVE: { name: 'Cave System', color: '#555555', biome: 'Cave' }, RIVERBANK: { name: 'Riverbank', color: '#4488ff', biome: 'River' }, SHORE: { name: 'Shoreline', color: '#d2b48c', biome: 'Beach' }, OCEAN: { name: 'Ocean', color: '#00008b', biome: 'None' } };
 
-    let mons = JSON.parse(localStorage.getItem('island_mons_v11') || '[]');
-    let currentMonId = null, activeTab = 'Portrait', currentDir = 0, currentTargetSlot = 0;
-    let globalDirRow = 0, globalPortraitIdx = 0, gridAnims = [], lastRotation = 0, lastPortraitShift = 0, activeHabitatFilter = null;
+    let mons = JSON.parse(localStorage.getItem('island_mons_v12') || '[]');
+    let currentMonId = null, activeTab = 'Portrait', globalPortraitIdx = 0, lastPortraitShift = 0, activeHabitatFilter = null;
     let currentIsland = null, islandWalkers = [], detailWalkers = [], islandLoop = null, detailRequest = null;
 
     const canvas = document.getElementById('sprite-canvas'), ctx = canvas.getContext('2d');
-    let detailLoop = null;
 
     function init() { renderHabitatFilters(); renderGrid(); setupUploadZones(); renderTabs(); requestAnimationFrame(runGlobalLoop); }
 
@@ -152,20 +160,61 @@
         document.getElementById('grid-view').classList.add('hidden');
         document.getElementById('detail-view').style.display = 'none';
         document.getElementById('island-view').classList.remove('active');
+        document.getElementById('cloud-view').classList.add('hidden');
         cancelAnimationFrame(islandLoop); cancelAnimationFrame(detailRequest);
-        if (viewId === 'grid') { document.getElementById('grid-view').classList.remove('hidden'); renderGrid(); }
+        if (viewId === 'grid') document.getElementById('grid-view').classList.remove('hidden');
         else if (viewId === 'island') { document.getElementById('island-view').classList.add('active'); initIslandGen(); }
-        else if (viewId === 'detail') { document.getElementById('detail-view').style.display = 'block'; }
+        else if (viewId === 'detail') document.getElementById('detail-view').style.display = 'block';
+        else if (viewId === 'cloud') document.getElementById('cloud-view').classList.remove('hidden');
     }
 
+    // CLOUD LOGIC
+    async function saveToCloud() {
+        const code = document.getElementById('cloud-code-input').value.toUpperCase();
+        if(!code) return alert("Enter a code name!");
+        const status = document.getElementById('cloud-status');
+        status.innerText = "UPLOADING WORLD...";
+        try {
+            await window.fbSet(window.fbDoc(window.db, "registries", code), {
+                seed: document.getElementById('map-seed').value,
+                mons: mons,
+                updated: Date.now()
+            });
+            status.innerText = `SAVED TO CLOUD: ${code}`;
+        } catch (e) { status.innerText = "UPLOAD FAILED."; }
+    }
+
+    async function loadFromCloud() {
+        const code = document.getElementById('cloud-code-input').value.toUpperCase();
+        const status = document.getElementById('cloud-status');
+        status.innerText = "FETCHING DATA...";
+        const snap = await window.fbGet(window.fbDoc(window.db, "registries", code));
+        if(snap.exists()) {
+            const data = snap.data();
+            mons = data.mons;
+            document.getElementById('map-seed').value = data.seed;
+            save();
+            renderGrid();
+            status.innerText = "CLOUD SYNC COMPLETE.";
+            showView('grid');
+        } else { status.innerText = "CODE NOT FOUND."; }
+    }
+
+    async function uploadToImgBB(blob) {
+        const formData = new FormData();
+        formData.append('image', blob);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: formData });
+        const data = await res.json();
+        return data.data.url;
+    }
+
+    // Existing Map/Logic fixes from v11
     function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
 
     function initIslandGen() {
         const seed = parseInt(document.getElementById('map-seed').value) || 12345;
         const random = mulberry32(seed);
-        const saved = localStorage.getItem(`island_seed_${seed}`);
-        currentIsland = saved ? JSON.parse(saved) : generateIslandData(random);
-        if(!saved) localStorage.setItem(`island_seed_${seed}`, JSON.stringify(currentIsland));
+        currentIsland = generateIslandData(random);
         spawnMonsOnIsland(random); renderIslandMain();
         document.getElementById('tile-panel').classList.add('hidden');
     }
@@ -193,18 +242,13 @@
     function spawnMonsOnIsland(rng) {
         islandWalkers = [];
         currentIsland.forEach(tile => {
-            tile.mons = [];
             const species = mons.filter(m => m.habitat === TERRAIN[tile.type].biome);
             if (species.length > 0) {
                 const count = Math.floor(rng() * 2) + 1;
                 for (let i = 0; i < count; i++) {
                     const s = species[Math.floor(rng() * species.length)];
                     const isSleeping = rng() > 0.8;
-                    const mon = {
-                        id: s.id, name: s.name, color: stringToColor(s.name), isSleeping,
-                        tx: tile.x, ty: tile.y, lx: rng() * 15 + 5, ly: rng() * 15 + 5,
-                        vx: isSleeping ? 0 : (rng() - 0.5) * 0.2, vy: isSleeping ? 0 : (rng() - 0.5) * 0.2
-                    };
+                    const mon = { id: s.id, name: s.name, color: stringToColor(s.name), isSleeping, tx: tile.x, ty: tile.y, lx: rng() * 15 + 5, ly: rng() * 15 + 5, vx: isSleeping ? 0 : (rng() - 0.5) * 0.2, vy: isSleeping ? 0 : (rng() - 0.5) * 0.2 };
                     tile.mons.push(mon); islandWalkers.push(mon);
                 }
             }
@@ -216,8 +260,6 @@
         function loop() {
             ictx.clearRect(0,0,260,260);
             currentIsland.forEach(t => { ictx.fillStyle = TERRAIN[t.type].color; ictx.fillRect(t.x * 26, t.y * 26, 25, 25); });
-            ictx.strokeStyle = "rgba(255,255,255,0.8)"; ictx.lineWidth = 1;
-            for(let i=1; i<10; i++) { ictx.beginPath(); ictx.moveTo(i*26-1, 0); ictx.lineTo(i*26-1, 260); ictx.stroke(); ictx.beginPath(); ictx.moveTo(0, i*26-1); ictx.lineTo(260, i*26-1); ictx.stroke(); }
             islandWalkers.forEach(m => {
                 m.lx += m.vx; m.ly += m.vy;
                 if(m.lx < 2 || m.lx > 23) m.vx *= -1; if(m.ly < 2 || m.ly > 23) m.vy *= -1;
@@ -237,19 +279,13 @@
 
     function openTileDetail(tile) {
         document.getElementById('tile-panel').classList.remove('hidden');
-        document.getElementById('tile-terrain-label').innerText = `${tile.type}: SECTOR ${tile.x},${tile.y}`;
         document.getElementById('tile-mon-list').innerText = `POPULATION: ` + (tile.mons.map(m=>m.name).join(", ") || "EMPTY");
         const dctx = document.getElementById('tile-detail-canvas').getContext('2d');
         detailWalkers = []; cancelAnimationFrame(detailRequest);
         tile.mons.forEach(m => {
             const species = mons.find(s => s.id === m.id);
             const animType = m.isSleeping ? 'Sleep' : 'Walk';
-            detailWalkers.push({
-                x: Math.random()*140+30, y: Math.random()*140+30,
-                vx: m.vx * 4, vy: m.vy * 4, isSleeping: m.isSleeping,
-                data: species, frame: 0, lastF: 0, animType,
-                xml: getAnimData(species.xmlData, animType)
-            });
+            detailWalkers.push({ x: Math.random()*140+30, y: Math.random()*140+30, vx: m.vx * 4, vy: m.vy * 4, isSleeping: m.isSleeping, data: species, frame: 0, lastF: 0, animType, xml: getAnimData(species.xmlData, animType) });
         });
         function dLoop(t) {
             dctx.fillStyle = TERRAIN[tile.type].color; dctx.fillRect(0,0,200,200);
@@ -258,12 +294,12 @@
                 if(dw.x < 10 || dw.x > 160) dw.vx *= -1; if(dw.y < 10 || dw.y > 160) dw.vy *= -1;
                 const sheet = dw.data.assets[dw.animType + '-Anim'];
                 if(sheet) {
-                    const img = new Image(); img.src = sheet;
+                    const img = new Image(); img.crossOrigin = "anonymous"; img.src = sheet;
                     const fw = dw.xml ? dw.xml.fw : 32, fh = dw.xml ? dw.xml.fh : 32;
                     const row = dw.isSleeping ? 7 : getDirRow(dw.vx, dw.vy);
                     dctx.drawImage(img, dw.frame * fw, row * fh, fw, fh, dw.x - fw/2, dw.y - fh/2, fw, fh);
                     if(t - dw.lastF > 150) { dw.frame = (dw.frame+1) % (dw.xml ? dw.xml.durs.length : 4); dw.lastF = t; }
-                } else { dctx.fillStyle = dw.isSleeping ? "#fff" : stringToColor(dw.data.name); dctx.fillRect(dw.x, dw.y, 10, 10); }
+                }
             });
             detailRequest = requestAnimationFrame(dLoop);
         }
@@ -271,27 +307,18 @@
     }
 
     function renderGrid() {
-        const grid = document.getElementById('mon-grid'), search = document.getElementById('search').value.toLowerCase();
-        grid.innerHTML = ''; gridAnims = [];
-        mons.filter(m => m.name.toLowerCase().includes(search) && (!activeHabitatFilter || m.habitat === activeHabitatFilter)).forEach(mon => {
+        const grid = document.getElementById('mon-grid');
+        grid.innerHTML = '';
+        mons.forEach(mon => {
             const card = document.createElement('div'); card.className = 'mon-card'; card.onclick = () => openDetail(mon.id);
-            const portraits = mon.portraits.filter(p => !!p);
-            card.innerHTML = `<img src="${portraits.length ? portraits[globalPortraitIdx % portraits.length] : ''}" style="width:48px; height:48px; object-fit:none; border:1px solid #333; image-rendering: pixelated; background:#000;"><div class="name">${mon.name || 'UNKNOWN'}</div><div class="card-previews">${['Walk','Hop','Attack'].map(t => `<div style="text-align:center"><canvas id="prev-${t}-${mon.id}" class="mini-preview"></canvas></div>`).join('')}</div>`;
+            const p = mon.portraits.find(x => !!x) || '';
+            card.innerHTML = `<img src="${p}" style="width:48px; height:48px; image-rendering: pixelated; background:#000;"><div class="name">${mon.name}</div>`;
             grid.appendChild(card);
-            ['Walk','Hop','Attack'].forEach(type => { if (mon.assets[type + '-Anim'] && mon.xmlData) { const img = new Image(); img.src = mon.assets[type + '-Anim']; gridAnims.push({ canvas: document.getElementById(`prev-${type}-${mon.id}`), mon, type, img, frame: 0, last: 0 }); } });
         });
     }
 
     function runGlobalLoop(now) {
-        if (now - lastRotation > 1500) { globalDirRow = (globalDirRow + 1) % 8; lastRotation = now; }
-        if (now - lastPortraitShift > 2000) { globalPortraitIdx++; lastPortraitShift = now; renderGrid(); }
-        gridAnims.forEach(a => {
-            const data = getAnimData(a.mon.xmlData, a.type); if (!data) return;
-            if (now - a.last >= data.durs[a.frame] * 16) { a.frame = (a.frame + 1) % data.durs.length; a.last = now; }
-            const c = a.canvas, cx = c.getContext('2d'); c.width = 46; c.height = 46; cx.imageSmoothingEnabled = false; cx.clearRect(0,0,46,46);
-            const scale = Math.min(46 / data.fw, 46 / data.fh);
-            cx.drawImage(a.img, a.frame * data.fw, globalDirRow * data.fh, data.fw, data.fh, (46-data.fw*scale)/2, (46-data.fh*scale)/2, data.fw*scale, data.fh*scale);
-        });
+        if (now - lastPortraitShift > 3000) { globalPortraitIdx++; lastPortraitShift = now; renderGrid(); }
         requestAnimationFrame(runGlobalLoop);
     }
 
@@ -302,9 +329,7 @@
         if (!t) return null; const copy = t.querySelector('CopyOf'); if (copy) return getAnimData(xml, copy.textContent);
         return { fw: parseInt(t.querySelector('FrameWidth').textContent), fh: parseInt(t.querySelector('FrameHeight').textContent), durs: Array.from(t.getElementsByTagName('Duration')).map(d => parseInt(d.textContent)) };
     }
-    function save() { localStorage.setItem('island_mons_v11', JSON.stringify(mons)); }
-    function exportData() { const blob = new Blob([JSON.stringify(mons, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Registry_Backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
-    function importData(f) { const r = new FileReader(); r.onload = (e) => { mons = JSON.parse(e.target.result); save(); location.reload(); }; r.readAsText(f); }
+    function save() { localStorage.setItem('island_mons_v12', JSON.stringify(mons)); }
     function stringToColor(s) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return `hsl(${Math.abs(h % 360)}, 70%, 60%)`; }
     function addNewMon() { const id = Date.now().toString(); mons.push({ id, name: 'NEW_ENTITY', habitat: 'Forest', portraits: [null,null,null,null,null], assets: {}, xmlData: null }); save(); openDetail(id); }
     function updateCurrentMon(k, v) { const i = mons.findIndex(m => m.id === currentMonId); mons[i][k] = v; save(); }
@@ -313,25 +338,22 @@
     function renderHabitatSelectors() { const mon = mons.find(m => m.id === currentMonId); document.getElementById('habitat-select').innerHTML = HABITATS.map(h => `<div class="filter-chip ${mon.habitat === h ? 'active' : ''}" onclick="updateCurrentMon('habitat','${h}');renderHabitatSelectors();">${h}</div>`).join(''); }
     function renderPortraitManager() {
         const mon = mons.find(m => m.id === currentMonId), cont = document.getElementById('portrait-manager'); cont.innerHTML = '';
-        for (let i = 0; i < 5; i++) { const s = document.createElement('div'); s.className = `portrait-slot ${mon.portraits[i]?'active':''}`; s.onclick = () => { currentTargetSlot=i; document.getElementById('portrait-input').click(); }; s.innerHTML = (mon.portraits[i] ? `<img src="${mon.portraits[i]}">` : `<span>+</span>`) + `<div class="slot-label">${i+1}/5</div>`; cont.appendChild(s); }
+        for (let i = 0; i < 5; i++) { const s = document.createElement('div'); s.className = `portrait-slot ${mon.portraits[i]?'active':''}`; s.onclick = () => { window.currentTargetSlot=i; document.getElementById('portrait-input').click(); }; s.innerHTML = (mon.portraits[i] ? `<img src="${mon.portraits[i]}">` : `<span>+</span>`) + `<div class="slot-label">${i+1}/5</div>`; cont.appendChild(s); }
     }
-    document.getElementById('portrait-input').onchange = (e) => { const r = new FileReader(); r.onload = (ev) => { mons.find(m=>m.id===currentMonId).portraits[currentTargetSlot]=ev.target.result; save(); renderPortraitManager(); }; r.readAsDataURL(e.target.files[0]); };
+    document.getElementById('portrait-input').onchange = async (e) => {
+        const url = await uploadToImgBB(e.target.files[0]);
+        mons.find(m=>m.id===currentMonId).portraits[window.currentTargetSlot]=url; save(); renderPortraitManager();
+    };
     function setupUploadZones() { document.getElementById('upload-zones').innerHTML = [...ANIMS.map(a=>a+'-Anim'), 'AnimData.xml'].map(z => `<div class="upload-zone" id="z-${z}" onclick="triggerSingleUpload('${z}')"><span>${z}</span><span class="chk"></span></div>`).join(''); }
-    function triggerSingleUpload(k) { const inp = document.getElementById('single-file-input'); inp.onchange = (e) => { const r = new FileReader(); r.onload = (ev) => { const m = mons.find(mon=>mon.id===currentMonId); if(k==='AnimData.xml') m.xmlData = ev.target.result; else m.assets[k] = ev.target.result; save(); updateUploadCheckmarks(); setPreviewTab(activeTab); }; k==='AnimData.xml' ? r.readAsText(e.target.files[0]) : r.readAsDataURL(e.target.files[0]); }; inp.click(); }
+    function triggerSingleUpload(k) { const inp = document.getElementById('single-file-input'); inp.onchange = async (e) => {
+        const mon = mons.find(m=>m.id===currentMonId);
+        if(k==='AnimData.xml') { const text = await e.target.files[0].text(); mon.xmlData = text; }
+        else { const url = await uploadToImgBB(e.target.files[0]); mon.assets[k] = url; }
+        save(); updateUploadCheckmarks();
+    }; inp.click(); }
     function updateUploadCheckmarks() { const m = mons.find(mon => mon.id === currentMonId); if(!m) return; document.querySelectorAll('.upload-zone').forEach(z => { const k = z.id.replace('z-',''); const has = k==='AnimData.xml'?!!m.xmlData:!!m.assets[k]; z.classList.toggle('loaded', has); z.querySelector('.chk').innerText = has ? '✓' : ''; }); }
-    async function handleBatchUpload(files) {
-        const mon = mons.find(m => m.id === currentMonId);
-        for (let f of files) { const n = f.name.toLowerCase(); if (n.endsWith('.xml')) mon.xmlData = await f.text(); else if (n.endsWith('.png')) { const d = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(f); }); if (n.includes('portrait')) { let i = mon.portraits.findIndex(p=>!p); if(i!==-1) mon.portraits[i]=d; } else { const a = ANIMS.find(an => n.includes(an.toLowerCase())); if(a) mon.assets[a+'-Anim'] = d; } } }
-        save(); updateUploadCheckmarks(); renderPortraitManager(); renderGrid(); setPreviewTab(activeTab);
-    }
-    function setPreviewTab(t) { activeTab = t; document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.name === t)); const pv = document.getElementById('portrait-view'), ac = document.getElementById('anim-controls'); if (t === 'Portrait') { canvas.classList.add('hidden'); pv.classList.remove('hidden'); ac.classList.add('hidden'); renderPortraitGrid(); } else { canvas.classList.remove('hidden'); pv.classList.add('hidden'); ac.classList.remove('hidden'); startDetailAnim(); } }
-    function startDetailAnim() {
-        const m = mons.find(mon => mon.id === currentMonId); cancelAnimationFrame(detailLoop); const d = getAnimData(m.xmlData, activeTab); if(!d || !m.assets[activeTab+'-Anim']) return;
-        const img = new Image(); img.src = m.assets[activeTab+'-Anim'];
-        img.onload = () => { let f = 0, last = 0; function L(t) { if (t - last >= d.durs[f] * 16) { f = (f+1)%d.durs.length; last = t; } ctx.clearRect(0,0,160,160); ctx.drawImage(img, f*d.fw, currentDir*d.fh, d.fw, d.fh, (160-d.fw*2)/2, (160-d.fh*2)/2, d.fw*2, d.fh*2); detailLoop = requestAnimationFrame(L); } detailLoop = requestAnimationFrame(L); };
-    }
+    function setPreviewTab(t) { activeTab = t; document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.name === t)); const pv = document.getElementById('portrait-view'); if (t === 'Portrait') { canvas.classList.add('hidden'); pv.classList.remove('hidden'); renderPortraitGrid(); } else { canvas.classList.remove('hidden'); pv.classList.add('hidden'); } }
     function renderPortraitGrid() { const m = mons.find(mon => mon.id === currentMonId), v = document.getElementById('portrait-view'); v.innerHTML = ''; const s = m.portraits.find(p => !!p); if(!s) return; for (let i=0; i<16; i++) { const f = document.createElement('div'); f.style.aspectRatio = '1/1'; f.style.background = `url(${s})`; f.style.backgroundSize = '400% 400%'; f.style.imageRendering = 'pixelated'; f.style.backgroundPosition = `${(i%4)*33.3}% ${Math.floor(i/4)*33.3}%`; f.style.border = '1px solid #222'; v.appendChild(f); } }
-    function changeDir(d) { currentDir = (currentDir + d + 8) % 8; document.getElementById('dir-label').innerText = DIRS[currentDir]; }
     function renderTabs() { document.getElementById('preview-tabs').innerHTML = ['Portrait', ...ANIMS].map(t => `<div class="tab" data-name="${t}" onclick="setPreviewTab('${t}')">${t}</div>`).join(''); }
 
     init();
