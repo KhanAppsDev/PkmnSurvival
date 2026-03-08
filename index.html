@@ -47,7 +47,6 @@
             font-family: inherit; font-size: 0.75rem; text-transform: uppercase;
         }
 
-        /* Grid View */
         #grid-view { padding: 15px; }
         .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-bar {
@@ -68,18 +67,16 @@
         }
         .status-light.complete { background: var(--accent-green); box-shadow: 0 0 5px var(--accent-green); }
 
-        /* Card Animation Previews */
         .card-previews {
             display: flex; gap: 6px; margin-top: 10px; padding-top: 10px;
             border-top: 1px solid var(--border); width: 100%; justify-content: center;
         }
         .mini-preview { 
-            width: 44px; height: 44px; background: #000; image-rendering: pixelated; 
+            width: 48px; height: 48px; background: #000; image-rendering: pixelated; 
             border: 1px solid #222; display: block;
         }
         .prev-label { font-size: 0.5rem; color: #666; text-align: center; margin-top: 2px; }
 
-        /* Detail View */
         #detail-view { display: none; padding: 15px; padding-bottom: 50px; }
         .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 20px; }
         h3 { margin: 0 0 12px 0; font-size: 0.85rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
@@ -107,7 +104,6 @@
         }
         .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
 
-        /* Visualizer */
         .tabs { display: flex; overflow-x: auto; gap: 6px; margin-bottom: 12px; padding-bottom: 4px; }
         .tab { padding: 8px 14px; background: #000; border: 1px solid var(--border); font-size: 0.75rem; white-space: nowrap; }
         .tab.active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
@@ -196,14 +192,16 @@
 
 <script>
     const BIOMES = ['Forest Floor', 'Canopy', 'Cave', 'Riverbank', 'Mountain'];
-    const ANIMS = ['Walk', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
+    const ANIMS = ['Walk', 'Hop', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
     const DIRS = ['Down-Right', 'Right', 'Up-Right', 'Up', 'Up-Left', 'Left', 'Down-Left', 'Down'];
     
-    let mons = JSON.parse(localStorage.getItem('island_mons_v3') || '[]');
+    let mons = JSON.parse(localStorage.getItem('island_mons_v4') || '[]');
     let currentMonId = null;
     let activeTab = 'Portrait';
     let currentDir = 0;
+    let globalDirRow = 0;
     let gridAnims = [];
+    let lastRotationTime = 0;
 
     const canvas = document.getElementById('sprite-canvas');
     const ctx = canvas.getContext('2d');
@@ -217,21 +215,16 @@
         requestAnimationFrame(runGlobalLoop);
     }
 
-    // --- XML PARSER (PMD Specific) ---
     function getAnimData(xmlString, animName) {
         if (!xmlString) return null;
         const parser = new DOMParser();
         const xml = parser.parseFromString(xmlString, "text/xml");
         const anims = Array.from(xml.getElementsByTagName('Anim'));
-        
         let target = anims.find(a => a.querySelector('Name').textContent === animName);
         if (!target) return null;
-
-        // Handle CopyOf
         const copyOf = target.querySelector('CopyOf');
-        if (copyOf) {
-            target = anims.find(a => a.querySelector('Name').textContent === copyOf.textContent);
-        }
+        if (copyOf) target = anims.find(a => a.querySelector('Name').textContent === copyOf.textContent);
+        if (!target) return null;
 
         return {
             fw: parseInt(target.querySelector('FrameWidth').textContent),
@@ -240,7 +233,6 @@
         };
     }
 
-    // --- REGISTRY GRID ---
     function renderGrid() {
         const grid = document.getElementById('mon-grid');
         const search = document.getElementById('search').value.toLowerCase();
@@ -261,17 +253,17 @@
                 <img src="${mon.assets.Portrait || ''}" style="width:40px; height:40px; object-fit:none; border:1px solid #333;">
                 <div class="name">${mon.name || 'NEW_MON'}</div>
                 <div class="card-previews">
-                    ${['Walk','Idle','Attack'].map(t => `
+                    ${['Walk','Hop','Attack'].map(t => `
                         <div style="text-align:center">
                             <canvas id="prev-${t}-${mon.id}" class="mini-preview"></canvas>
-                            <div class="prev-label">${t[0]}</div>
+                            <div class="prev-label">${t}</div>
                         </div>
                     `).join('')}
                 </div>
             `;
             grid.appendChild(card);
 
-            ['Walk','Idle','Attack'].forEach(type => {
+            ['Walk','Hop','Attack'].forEach(type => {
                 const key = type + '-Anim';
                 if (mon.assets[key] && mon.xmlData) {
                     const img = new Image(); img.src = mon.assets[key];
@@ -282,22 +274,40 @@
     }
 
     function runGlobalLoop(now) {
+        // Handle Automatic Rotation (Spin) every 1.5 seconds
+        if (now - lastRotationTime > 1500) {
+            globalDirRow = (globalDirRow + 1) % 8;
+            lastRotationTime = now;
+        }
+
         gridAnims.forEach(a => {
             const data = getAnimData(a.mon.xmlData, a.type);
             if (!data) return;
+
             if (now - a.last >= data.durs[a.frame] * 16) {
                 a.frame = (a.frame + 1) % data.durs.length; a.last = now;
             }
-            const c = a.canvas; c.width = 44; c.height = 44;
+
+            const c = a.canvas; c.width = 48; c.height = 48;
             const cx = c.getContext('2d');
-            cx.imageSmoothingEnabled = false; cx.clearRect(0,0,44,44);
-            // Draw row 0 (Down-Right)
-            cx.drawImage(a.img, a.frame * data.fw, 0, data.fw, data.fh, 0, 0, 44, 44);
+            cx.imageSmoothingEnabled = false; cx.clearRect(0,0,48,48);
+
+            // Scale logic: Ensure same scale by fitting to the box while maintaining center
+            const scale = Math.min(c.width / data.fw, c.height / data.fh);
+            const drawW = data.fw * scale;
+            const drawH = data.fh * scale;
+            const offsetX = (c.width - drawW) / 2;
+            const offsetY = (c.height - drawH) / 2;
+
+            cx.drawImage(
+                a.img, 
+                a.frame * data.fw, globalDirRow * data.fh, data.fw, data.fh, 
+                offsetX, offsetY, drawW, drawH
+            );
         });
         requestAnimationFrame(runGlobalLoop);
     }
 
-    // --- DETAIL VIEW ---
     function openDetail(id) {
         currentMonId = id; const mon = mons.find(m => m.id === id);
         document.getElementById('grid-view').classList.add('hidden');
@@ -337,12 +347,19 @@
 
         const img = new Image(); img.src = mon.assets[activeTab + '-Anim'];
         img.onload = () => {
-            canvas.width = data.fw * 3; canvas.height = data.fh * 3;
+            // Keep preview box consistent
+            const displaySize = 160;
+            canvas.width = displaySize; canvas.height = displaySize;
             let frame = 0; let last = performance.now();
             function loop(now) {
                 if (now - last >= data.durs[frame] * 16) { frame = (frame + 1) % data.durs.length; last = now; }
                 ctx.imageSmoothingEnabled = false; ctx.clearRect(0,0,canvas.width,canvas.height);
-                ctx.drawImage(img, frame * data.fw, currentDir * data.fh, data.fw, data.fh, 0, 0, canvas.width, canvas.height);
+                
+                const scale = Math.min(canvas.width / data.fw, canvas.height / data.fh);
+                const dw = data.fw * scale; const dh = data.fh * scale;
+                const ox = (canvas.width - dw) / 2; const oy = (canvas.height - dh) / 2;
+
+                ctx.drawImage(img, frame * data.fw, currentDir * data.fh, data.fw, data.fh, ox, oy, dw, dh);
                 detailLoop = requestAnimationFrame(loop);
             }
             detailLoop = requestAnimationFrame(loop);
@@ -362,7 +379,6 @@
         }
     }
 
-    // --- LOGIC HELPERS ---
     function setupUploadZones() {
         const zones = ['Portrait', ...ANIMS.map(a => a + '-Anim'), 'AnimData.xml'];
         document.getElementById('upload-zones').innerHTML = zones.map(z => `
@@ -403,7 +419,7 @@
         save(); openDetail(id);
     }
 
-    function save() { localStorage.setItem('island_mons_v3', JSON.stringify(mons)); }
+    function save() { localStorage.setItem('island_mons_v4', JSON.stringify(mons)); }
     function updateCurrentMon(k, v) { const idx = mons.findIndex(m => m.id === currentMonId); mons[idx][k] = v; save(); }
     function setBehavior(v) { updateCurrentMon('behavior', v); document.querySelectorAll('.behavior-btn').forEach(b => b.classList.toggle('active', b.dataset.val === v)); }
     function changeDir(d) { currentDir = (currentDir + d + 8) % 8; document.getElementById('dir-label').innerText = DIRS[currentDir]; }
@@ -430,7 +446,7 @@
             <div class="filter-chip ${mon?.biomes.includes(b) ? 'active' : ''}" onclick="toggleBiome('${b}')">${b}</div>
         `).join('');
     }
-    
+
     function toggleBiome(b) {
         const mon = mons.find(m => m.id === currentMonId);
         mon.biomes = mon.biomes.includes(b) ? mon.biomes.filter(x => x !== b) : [...mon.biomes, b];
