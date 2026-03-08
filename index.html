@@ -78,16 +78,9 @@ textarea{resize:vertical;min-height:70px}
 .tt.ok{border-color:#0a3}
 .tt.er{border-color:#c33}
 .ft{text-align:center;padding:8px;font-size:10px;color:#555}
-#dbg{background:#1a0a0a;border:2px solid #f80;margin:10px;padding:10px;font-size:11px;font-family:monospace;max-height:200px;overflow-y:auto;border-radius:6px}
-#dbg b{color:#f80}
-.dok{color:#0a3}
-.der{color:#f44}
-.din{color:#aaa}
 </style>
 </head>
 <body>
-
-<div id="dbg"><b>DIAG v3.0.0</b><br></div>
 
 <div id="vList">
   <div class="topbar">
@@ -111,7 +104,7 @@ textarea{resize:vertical;min-height:70px}
     <button class="b bs bd" id="btnDel">Delete</button>
   </div>
   <div id="editBody"></div>
-  <div class="ft">v3.0.0</div>
+  <div class="ft">v3.0.1</div>
 </div>
 
 <div class="mo" id="modal">
@@ -138,28 +131,13 @@ textarea{resize:vertical;min-height:70px}
 <div class="tw" id="toasts"></div>
 
 <script>
-// Diagnostic logger
-var D = document.getElementById('dbg');
-function dlog(m, t) {
-  if (!D) return;
-  var s = document.createElement('span');
-  s.className = t === 1 ? 'dok' : t === 2 ? 'der' : 'din';
-  s.textContent = m;
-  D.appendChild(s);
-  D.appendChild(document.createElement('br'));
-  D.scrollTop = D.scrollHeight;
-}
-
-// Global error trap
-window.onerror = function(m, s, l) { dlog('ERR: ' + m + ' L' + l, 2); return false; };
-window.addEventListener('unhandledrejection', function(e) {
-  dlog('PERR: ' + String(e.reason).substring(0, 100), 2);
-});
+// Debug logging (disabled for production)
+function dlog() {}
 
 dlog('JS executing...', 1);
 dlog('UA: ' + navigator.userAgent.substring(0, 60), 0);
 
-// ── Data ──
+// -- Data --
 var SPRITES = ['Walk-Anim.png','Idle-Anim.png','Sleep-Anim.png','Hurt-Anim.png','Attack-Anim.png','Charge-Anim.png','Shoot-Anim.png','Strike-Anim.png','AnimData.xml'];
 var BIOMES = [{id:'forest_floor',l:'Forest Floor'},{id:'canopy',l:'Canopy'},{id:'cave',l:'Cave'},{id:'riverbank',l:'Riverbank'},{id:'mountain',l:'Mountain'}];
 var BEHS = [{id:'docile',l:'Docile',d:'Walk up & pet'},{id:'curious',l:'Curious',d:'Needs food/item'},{id:'aggressive',l:'Aggressive',d:'Weaken first'}];
@@ -194,7 +172,7 @@ function dc(m) { return isFull(m) ? 'c' : isPart(m) ? 'p' : ''; }
 
 dlog('Helpers defined', 1);
 
-// ── Toast ──
+// -- Toast --
 function toast(msg, ok) {
   var w = document.getElementById('toasts');
   var t = document.createElement('div');
@@ -204,7 +182,7 @@ function toast(msg, ok) {
   setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 3000);
 }
 
-// ── Views ──
+// -- Views --
 function showList() {
   document.getElementById('vList').className = '';
   document.getElementById('vEdit').className = 'hide';
@@ -216,7 +194,7 @@ function showEdit() {
   window.scrollTo(0, 0);
 }
 
-// ── Render list ──
+// -- Render list --
 function renderList() {
   var q = document.getElementById('searchIn').value.toLowerCase().trim();
   var ls = [];
@@ -251,10 +229,10 @@ function renderList() {
   }
   var tot = mons.length, comp = 0;
   for (var n = 0; n < mons.length; n++) { if (isFull(mons[n])) comp++; }
-  document.getElementById('countLabel').textContent = tot + ' mons | ' + comp + ' complete | v3.0.0';
+  document.getElementById('countLabel').textContent = tot + ' mons | ' + comp + ' complete | v3.0.1';
 }
 
-// ── Render editor ──
+// -- Render editor --
 function renderEdit() {
   var m = gm(selId);
   if (!m) return;
@@ -325,7 +303,7 @@ h += ‘</div></div>’;
 
 document.getElementById(‘editBody’).innerHTML = h;
 
-// ── Attach ALL event listeners via JS ──
+// – Attach ALL event listeners via JS –
 // Name
 document.getElementById(‘eName’).addEventListener(‘input’, function() {
 m.name = this.value; sv();
@@ -419,7 +397,7 @@ pIn.addEventListener(‘change’, function() { doPortrait(this); });
 if (hw && hx) setTimeout(function() { startA(m); }, 50);
 }
 
-// ── Upload sprite ──
+// – Upload sprite –
 function doUpload(m, fname, file, row) {
 if (!m.name) { toast(‘Set a name first’, false); return; }
 row.className = ‘sr ug’;
@@ -484,11 +462,11 @@ dlog(’push fail: ’ + err.message, 2);
 });
 }
 
-// ── Asset cache ──
+// – Asset cache –
 function stA(mid, f, d) { try { localStorage.setItem(‘a_’ + mid + ‘*’ + f, d); } catch(e) {} }
 function getA(mid, f) { return localStorage.getItem(’a*’ + mid + ‘_’ + f); }
 
-// ── Animation ──
+// – Animation –
 function stopA() { if (anim && anim.t) clearInterval(anim.t); anim = null; }
 function startA(m) {
 var cv = document.getElementById(‘prevC’);
@@ -558,7 +536,7 @@ var dl = document.getElementById(‘dirLbl’);
 if (dl) dl.textContent = DIRS[anim.d] || ‘South’;
 }
 
-// ── Portrait ──
+// – Portrait –
 function doPortrait(inp) {
 if (!inp.files || !inp.files[0]) return;
 var reader = new FileReader();
@@ -584,7 +562,7 @@ img.src = e.target.result;
 reader.readAsDataURL(inp.files[0]);
 }
 
-// ── Settings ──
+// – Settings –
 function openModal() {
 dlog(‘openModal()’, 1);
 var g = ghl();
@@ -597,7 +575,7 @@ tp.textContent = (g.token && g.token.length > 8) ? g.token.substring(0, 4) + ‘
 document.getElementById(‘modal’).classList.add(‘open’);
 }
 
-// ── Export ──
+// – Export –
 function doExport() {
 var data = [];
 for (var i = 0; i < mons.length; i++) {
@@ -616,7 +594,7 @@ URL.revokeObjectURL(a.href);
 toast(‘Exported ’ + data.length + ’ mons’, true);
 }
 
-// ── INIT — all listeners attached here ──
+// – INIT - all listeners attached here –
 dlog(‘Attaching listeners…’, 0);
 
 document.getElementById(‘btnSettings’).addEventListener(‘click’, function() {
