@@ -14,6 +14,7 @@ margin:auto;
 canvas{
 border:2px solid white;
 image-rendering:pixelated;
+width:100%;
 }
 
 #dialogueBox{
@@ -29,16 +30,36 @@ justify-content:space-between;
 margin-top:10px;
 }
 
-.dpad button,
-.buttons button{
+#joystickBase{
+width:120px;
+height:120px;
+background:#333;
+border-radius:60px;
+position:relative;
+touch-action:none;
+}
+
+#joystickStick{
 width:50px;
 height:50px;
-margin:3px;
-font-size:18px;
+background:#777;
+border-radius:25px;
+position:absolute;
+left:35px;
+top:35px;
 }
 
 .buttons{
 display:grid;
-grid-template-columns:repeat(2,60px);
-grid-gap:5px;
+grid-template-columns:repeat(2,70px);
+grid-gap:6px;
+}
+
+.buttons button{
+height:50px;
+font-size:16px;
+}
+
+.wide{
+grid-column:span 2;
 }
