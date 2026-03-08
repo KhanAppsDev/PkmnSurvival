@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v5</title>
+    <title>Island Mon Registry v6</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -85,9 +85,20 @@
         .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .upload-zone {
             background: #000; border: 1px dashed var(--border); padding: 8px; font-size: 0.6rem;
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
         }
         .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
+
+        .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
+        .portrait-slot { 
+            aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.5rem; color: #555; cursor: pointer; position: relative;
+            overflow: hidden;
+        }
+        .portrait-slot.active { border-color: var(--accent-green); color: var(--accent-green); }
+        .portrait-slot img { width: 100%; height: 100%; object-fit: none; image-rendering: pixelated; }
+        .slot-label { position: absolute; bottom: 2px; width: 100%; text-align: center; background: rgba(0,0,0,0.7); }
 
         .tabs { display: flex; overflow-x: auto; gap: 6px; margin-bottom: 12px; padding-bottom: 4px; }
         .tab { padding: 8px 14px; background: #000; border: 1px solid var(--border); font-size: 0.7rem; white-space: nowrap; }
@@ -114,7 +125,7 @@
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V5</div>
+    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V6</div>
     <div style="display: flex; gap: 8px;">
         <button class="btn" onclick="exportData()">Exp</button>
         <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ New</button>
@@ -135,7 +146,7 @@
         <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">WIPE</button>
     </div>
 
-    <button class="batch-btn" onclick="document.getElementById('batch-input').click()">UPLOAD BATCH (FILES + XML)</button>
+    <button class="batch-btn" onclick="document.getElementById('batch-input').click()">UPLOAD BATCH (SPRITES + XML)</button>
     <input type="file" id="batch-input" class="hidden" multiple onchange="handleBatchUpload(this.files)">
 
     <div class="editor-section">
@@ -148,8 +159,12 @@
             <label>PRIMARY_HABITAT</label>
             <div id="habitat-select" class="filter-row"></div>
         </div>
+
+        <h3>PORTRAIT_RECORDS (1-5)</h3>
+        <div class="portrait-manager" id="portrait-manager"></div>
+        <input type="file" id="portrait-input" class="hidden" accept=".png">
         
-        <h3>ASSET_STATUS</h3>
+        <h3 style="margin-top:15px">SPRITE_DATA</h3>
         <div class="upload-grid" id="upload-zones"></div>
         <input type="file" id="single-file-input" class="hidden">
     </div>
@@ -174,10 +189,11 @@
     const ANIMS = ['Walk', 'Hop', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
     const DIRS = ['Down-Right', 'Right', 'Up-Right', 'Up', 'Up-Left', 'Left', 'Down-Left', 'Down'];
     
-    let mons = JSON.parse(localStorage.getItem('island_mons_v5') || '[]');
+    let mons = JSON.parse(localStorage.getItem('island_mons_v6') || '[]');
     let currentMonId = null;
     let activeTab = 'Portrait';
     let currentDir = 0;
+    let currentTargetSlot = 0;
     
     let globalDirRow = 0;
     let globalPortraitIdx = 0;
@@ -198,7 +214,6 @@
         requestAnimationFrame(runGlobalLoop);
     }
 
-    // --- SMART PARSER ---
     function getAnimData(xmlString, animName) {
         if (!xmlString) return null;
         const parser = new DOMParser();
@@ -216,6 +231,46 @@
             durs: Array.from(target.getElementsByTagName('Duration')).map(d => parseInt(d.textContent))
         };
     }
+
+    // --- PORTRAIT LOGIC ---
+    function renderPortraitManager() {
+        const mon = mons.find(m => m.id === currentMonId);
+        const container = document.getElementById('portrait-manager');
+        container.innerHTML = '';
+        
+        for (let i = 0; i < 5; i++) {
+            const slot = document.createElement('div');
+            const imgData = mon.portraits[i];
+            slot.className = `portrait-slot ${imgData ? 'active' : ''}`;
+            slot.onclick = () => triggerSlotUpload(i);
+            
+            if (imgData) {
+                slot.innerHTML = `<img src="${imgData}"><div class="slot-label">${i+1}/5</div>`;
+            } else {
+                slot.innerHTML = `<span>+</span><div class="slot-label">${i+1}/5</div>`;
+            }
+            container.appendChild(slot);
+        }
+    }
+
+    function triggerSlotUpload(index) {
+        currentTargetSlot = index;
+        document.getElementById('portrait-input').click();
+    }
+
+    document.getElementById('portrait-input').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const mon = mons.find(m => m.id === currentMonId);
+            mon.portraits[currentTargetSlot] = ev.target.result;
+            save();
+            renderPortraitManager();
+            renderGrid();
+        };
+        reader.readAsDataURL(file);
+    };
 
     // --- BATCH UPLOAD ENGINE ---
     async function handleBatchUpload(files) {
@@ -235,8 +290,13 @@
                 });
 
                 if (name.includes('portrait')) {
-                    if (!mon.portraits) mon.portraits = [];
-                    if (mon.portraits.length < 5) mon.portraits.push(dataUrl);
+                    // Find first empty slot or add to end if < 5
+                    let emptyIdx = mon.portraits.findIndex(p => !p);
+                    if (emptyIdx === -1 && mon.portraits.length < 5) {
+                        mon.portraits.push(dataUrl);
+                    } else if (emptyIdx !== -1) {
+                        mon.portraits[emptyIdx] = dataUrl;
+                    }
                 } else {
                     const matchedAnim = ANIMS.find(a => name.includes(a.toLowerCase()));
                     if (matchedAnim) mon.assets[matchedAnim + '-Anim'] = dataUrl;
@@ -245,6 +305,7 @@
         }
         save();
         updateUploadCheckmarks();
+        renderPortraitManager();
         renderGrid();
         setPreviewTab(activeTab);
     }
@@ -264,13 +325,14 @@
             card.className = 'mon-card';
             card.onclick = () => openDetail(mon.id);
             
-            // Portrait cycling logic
-            const currentPortrait = (mon.portraits && mon.portraits.length > 0) 
-                ? mon.portraits[globalPortraitIdx % mon.portraits.length] 
+            // Cycle through existing portraits only
+            const validPortraits = mon.portraits.filter(p => !!p);
+            const currentPortrait = (validPortraits.length > 0) 
+                ? validPortraits[globalPortraitIdx % validPortraits.length] 
                 : '';
 
             card.innerHTML = `
-                <img src="${currentPortrait}" style="width:48px; height:48px; object-fit:none; border:1px solid #333; image-rendering: pixelated;">
+                <img src="${currentPortrait}" style="width:48px; height:48px; object-fit:none; border:1px solid #333; image-rendering: pixelated; background:#000;">
                 <div class="name">${mon.name || 'UNKNOWN'}</div>
                 <div class="card-previews">
                     ${['Walk','Hop','Attack'].map(t => `
@@ -294,13 +356,11 @@
     }
 
     function runGlobalLoop(now) {
-        // Spin rotations every 1.5s
         if (now - lastRotation > 1500) { globalDirRow = (globalDirRow + 1) % 8; lastRotation = now; }
-        // Cycle portraits every 2s
         if (now - lastPortraitShift > 2000) { 
             globalPortraitIdx++; 
             lastPortraitShift = now;
-            renderGrid(); // Redraw grid to update portraits
+            renderGrid(); 
         }
 
         gridAnims.forEach(a => {
@@ -313,7 +373,6 @@
             const cx = c.getContext('2d');
             cx.imageSmoothingEnabled = false; cx.clearRect(0,0,46,46);
 
-            // AUTO-SCALE CENTERED
             const scale = Math.min(c.width / data.fw, c.height / data.fh);
             const dw = data.fw * scale; const dh = data.fh * scale;
             const ox = (c.width - dw) / 2; const oy = (c.height - dh) / 2;
@@ -323,13 +382,13 @@
         requestAnimationFrame(runGlobalLoop);
     }
 
-    // --- DETAIL & NAVIGATION ---
     function openDetail(id) {
         currentMonId = id; const mon = mons.find(m => m.id === id);
         document.getElementById('grid-view').classList.add('hidden');
         document.getElementById('detail-view').style.display = 'block';
         document.getElementById('edit-name').value = mon.name;
         renderHabitatSelectors();
+        renderPortraitManager();
         updateUploadCheckmarks(); setPreviewTab('Portrait'); window.scrollTo(0,0);
     }
 
@@ -348,7 +407,7 @@
 
         if (tab === 'Portrait') {
             canvas.classList.add('hidden'); pv.classList.remove('hidden'); ac.classList.add('hidden');
-            renderPortrait();
+            renderPortraitGrid();
         } else {
             canvas.classList.remove('hidden'); pv.classList.add('hidden'); ac.classList.remove('hidden');
             startDetailAnim();
@@ -380,10 +439,11 @@
         };
     }
 
-    function renderPortrait() {
+    function renderPortraitGrid() {
         const mon = mons.find(m => m.id === currentMonId);
         const view = document.getElementById('portrait-view'); view.innerHTML = '';
-        const pSource = (mon.portraits && mon.portraits.length > 0) ? mon.portraits[0] : null;
+        // Show the 4x4 grid for the first available portrait
+        const pSource = mon.portraits.find(p => !!p);
         if (!pSource) return;
         for (let i = 0; i < 16; i++) {
             const f = document.createElement('div');
@@ -394,14 +454,30 @@
         }
     }
 
-    // --- STORAGE & UI ---
     function setupUploadZones() {
-        const zones = ['Portrait', ...ANIMS.map(a => a + '-Anim'), 'AnimData.xml'];
+        const zones = [...ANIMS.map(a => a + '-Anim'), 'AnimData.xml'];
         document.getElementById('upload-zones').innerHTML = zones.map(z => `
-            <div class="upload-zone" id="z-${z}">
+            <div class="upload-zone" id="z-${z}" onclick="triggerSingleUpload('${z}')">
                 <span>${z.replace('-Anim','')}</span><span class="chk"></span>
             </div>
         `).join('');
+    }
+
+    function triggerSingleUpload(key) {
+        const input = document.getElementById('single-file-input');
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = (ev) => {
+                const mon = mons.find(m => m.id === currentMonId);
+                if (key === 'AnimData.xml') mon.xmlData = ev.target.result;
+                else mon.assets[key] = ev.target.result;
+                save(); updateUploadCheckmarks(); setPreviewTab(activeTab);
+            };
+            key === 'AnimData.xml' ? r.readAsText(file) : r.readAsDataURL(file);
+        };
+        input.click();
     }
 
     function updateUploadCheckmarks() {
@@ -409,21 +485,19 @@
         if (!mon) return;
         document.querySelectorAll('.upload-zone').forEach(z => {
             const key = z.id.replace('z-', '');
-            let has = false;
-            if (key === 'AnimData.xml') has = !!mon.xmlData;
-            else if (key === 'Portrait') has = mon.portraits && mon.portraits.length > 0;
-            else has = !!mon.assets[key];
+            const has = (key === 'AnimData.xml') ? !!mon.xmlData : !!mon.assets[key];
             z.classList.toggle('loaded', has); z.querySelector('.chk').innerText = has ? '✓' : '';
         });
     }
 
     function addNewMon() {
         const id = Date.now().toString();
-        mons.push({ id, name: 'NEW_ENTITY', habitat: null, portraits: [], assets: {}, xmlData: null });
+        // Initialize with 5 empty portrait slots
+        mons.push({ id, name: 'NEW_ENTITY', habitat: null, portraits: [null, null, null, null, null], assets: {}, xmlData: null });
         save(); openDetail(id);
     }
 
-    function save() { localStorage.setItem('island_mons_v5', JSON.stringify(mons)); }
+    function save() { localStorage.setItem('island_mons_v6', JSON.stringify(mons)); }
     function updateCurrentMon(k, v) { const idx = mons.findIndex(m => m.id === currentMonId); mons[idx][k] = v; save(); }
     function changeDir(d) { currentDir = (currentDir + d + 8) % 8; document.getElementById('dir-label').innerText = DIRS[currentDir]; }
     function deleteCurrentMon() { if(confirm('ERASE RECORD?')) { mons = mons.filter(m => m.id !== currentMonId); save(); showGrid(); } }
