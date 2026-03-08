@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v10</title>
+    <title>Island Mon Registry v11</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0b;
-            --surface: #141417;
-            --accent-cyan: #00f2ff;
-            --accent-green: #39ff14;
-            --accent-amber: #ffb100;
-            --accent-red: #ff3e3e;
-            --text: #e0e0e0;
-            --border: #2a2a2e;
+            --bg: #0a0a0b; --surface: #141417; --accent-cyan: #00f2ff;
+            --accent-green: #39ff14; --accent-amber: #ffb100; --accent-red: #ff3e3e;
+            --text: #e0e0e0; --border: #2a2a2e;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; margin: 0; padding: 0; width: 100vw; overflow-x: hidden; }
@@ -33,7 +28,6 @@
         #detail-view { display: none; padding: 15px; padding-bottom: 50px; }
         .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
         h3 { margin: 0 0 12px 0; font-size: 0.8rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
-        .field-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.65rem; color: #888; margin-bottom: 4px; text-transform: uppercase; }
         input[type="text"] { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; font-family: inherit; font-size: 0.9rem; }
         .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -49,7 +43,7 @@
         .tab.active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
         #canvas-container { background: #000; border: 1px solid var(--border); display: flex; justify-content: center; align-items: center; width: 100%; aspect-ratio: 1/1; position: relative; overflow: hidden; }
         canvas { image-rendering: pixelated; }
-        .filter-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.7rem; white-space: nowrap;}
+        .filter-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.7rem; white-space: nowrap; cursor: pointer;}
         .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.2); color: var(--accent-cyan); }
         .batch-btn { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0, 242, 255, 0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-family: inherit; font-weight: bold; }
         .hidden { display: none !important; }
@@ -60,7 +54,7 @@
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V10</div>
+    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V11</div>
     <div style="display: flex; gap: 6px;">
         <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber); color: var(--accent-amber);">Island</button>
         <button class="btn" onclick="document.getElementById('import-input').click()">Load</button>
@@ -144,7 +138,7 @@
         OCEAN: { name: 'Ocean', color: '#00008b', biome: 'None' }
     };
 
-    let mons = JSON.parse(localStorage.getItem('island_mons_v10') || '[]');
+    let mons = JSON.parse(localStorage.getItem('island_mons_v11') || '[]');
     let currentMonId = null, activeTab = 'Portrait', currentDir = 0, currentTargetSlot = 0;
     let globalDirRow = 0, globalPortraitIdx = 0, gridAnims = [], lastRotation = 0, lastPortraitShift = 0, activeHabitatFilter = null;
     let currentIsland = null, islandWalkers = [], detailWalkers = [], islandLoop = null, detailRequest = null;
@@ -192,7 +186,7 @@
     function getDirRow(vx, vy) {
         const angle = Math.atan2(vy, vx) * (180 / Math.PI);
         const normalized = (angle + 360 + 22.5) % 360;
-        const directions = [1, 2, 3, 4, 5, 6, 7, 0]; // Mapping to Down-Right, Right, Up-Right...
+        const directions = [1, 2, 3, 4, 5, 6, 7, 0]; 
         return directions[Math.floor(normalized / 45)];
     }
 
@@ -266,7 +260,7 @@
                 if(sheet) {
                     const img = new Image(); img.src = sheet;
                     const fw = dw.xml ? dw.xml.fw : 32, fh = dw.xml ? dw.xml.fh : 32;
-                    const row = dw.isSleeping ? 0 : getDirRow(dw.vx, dw.vy);
+                    const row = dw.isSleeping ? 7 : getDirRow(dw.vx, dw.vy);
                     dctx.drawImage(img, dw.frame * fw, row * fh, fw, fh, dw.x - fw/2, dw.y - fh/2, fw, fh);
                     if(t - dw.lastF > 150) { dw.frame = (dw.frame+1) % (dw.xml ? dw.xml.durs.length : 4); dw.lastF = t; }
                 } else { dctx.fillStyle = dw.isSleeping ? "#fff" : stringToColor(dw.data.name); dctx.fillRect(dw.x, dw.y, 10, 10); }
@@ -308,7 +302,7 @@
         if (!t) return null; const copy = t.querySelector('CopyOf'); if (copy) return getAnimData(xml, copy.textContent);
         return { fw: parseInt(t.querySelector('FrameWidth').textContent), fh: parseInt(t.querySelector('FrameHeight').textContent), durs: Array.from(t.getElementsByTagName('Duration')).map(d => parseInt(d.textContent)) };
     }
-    function save() { localStorage.setItem('island_mons_v10', JSON.stringify(mons)); }
+    function save() { localStorage.setItem('island_mons_v11', JSON.stringify(mons)); }
     function exportData() { const blob = new Blob([JSON.stringify(mons, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Registry_Backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
     function importData(f) { const r = new FileReader(); r.onload = (e) => { mons = JSON.parse(e.target.result); save(); location.reload(); }; r.readAsText(f); }
     function stringToColor(s) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return `hsl(${Math.abs(h % 360)}, 70%, 60%)`; }
