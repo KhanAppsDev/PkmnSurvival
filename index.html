@@ -23,233 +23,173 @@
             background-color: var(--bg);
             color: var(--text);
             font-family: 'Share Tech Mono', monospace;
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            overflow-x: hidden;
-            line-height: 1.2;
+            margin: 0; padding: 0; width: 100vw; overflow-x: hidden;
         }
 
         /* Scanline Overlay */
         body::before {
-            content: " ";
-            display: block;
-            position: fixed;
+            content: " "; display: block; position: fixed;
             top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
                         linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 9999;
-            background-size: 100% 3px, 2px 100%;
-            pointer-events: none;
+            z-index: 9999; background-size: 100% 3px, 2px 100%; pointer-events: none;
         }
 
         header {
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--accent-cyan);
-            background: var(--surface);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: 10px 15px; border-bottom: 1px solid var(--accent-cyan);
+            background: var(--surface); position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .logo { font-size: 1rem; color: var(--accent-cyan); font-weight: bold; }
 
         .btn {
-            background: transparent;
-            border: 1px solid var(--accent-cyan);
-            color: var(--accent-cyan);
-            padding: 6px 10px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.7rem;
-            text-transform: uppercase;
+            background: transparent; border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan); padding: 6px 12px; cursor: pointer;
+            font-family: inherit; font-size: 0.75rem; text-transform: uppercase;
         }
-
-        .btn:active { background: var(--accent-cyan); color: var(--bg); }
 
         /* Grid View */
-        #grid-view { padding: 15px; width: 100%; }
+        #grid-view { padding: 15px; }
         .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        
         .search-bar {
-            background: #000;
-            border: 1px solid var(--border);
-            color: var(--accent-green);
-            padding: 10px;
-            width: 100%;
-            font-family: inherit;
+            background: #000; border: 1px solid var(--border); color: var(--accent-green);
+            padding: 12px; width: 100%; font-family: inherit; font-size: 1rem;
         }
-
-        .filter-row { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; white-space: nowrap; }
-        
-        .mon-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 15px;
-        }
+        .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+        .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; }
 
         .mon-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 10px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 12px; position: relative; display: flex; flex-direction: column; align-items: center;
         }
-
-        .mon-card img { width: 40px; height: 40px; image-rendering: pixelated; margin-bottom: 8px; }
-        .mon-card .name { font-size: 0.9rem; color: var(--accent-cyan); margin-bottom: 4px; }
-        
+        .mon-card .name { font-size: 1rem; color: var(--accent-cyan); margin: 8px 0; }
         .status-light {
             width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 8px; right: 8px;
             background: #333;
         }
         .status-light.complete { background: var(--accent-green); box-shadow: 0 0 5px var(--accent-green); }
 
-        .badge { font-size: 0.6rem; padding: 2px 5px; border: 1px solid #444; margin: 2px; display: inline-block; }
-
         /* Card Animation Previews */
         .card-previews {
-            display: flex;
-            gap: 4px;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid var(--border);
-            width: 100%;
-            justify-content: center;
+            display: flex; gap: 6px; margin-top: 10px; padding-top: 10px;
+            border-top: 1px solid var(--border); width: 100%; justify-content: center;
         }
-        .mini-prev-box { text-align: center; }
-        .mini-preview { width: 40px; height: 40px; background: #000; image-rendering: pixelated; border: 1px solid #222; }
-        .prev-label { font-size: 0.5rem; color: #666; margin-top: 2px; }
+        .mini-preview { 
+            width: 44px; height: 44px; background: #000; image-rendering: pixelated; 
+            border: 1px solid #222; display: block;
+        }
+        .prev-label { font-size: 0.5rem; color: #666; text-align: center; margin-top: 2px; }
 
         /* Detail View */
-        #detail-view { display: none; padding: 15px; width: 100%; padding-bottom: 100px; }
-        .detail-grid { display: flex; flex-direction: column; gap: 20px; }
-
-        .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); }
-        h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
-
-        .field-group { margin-bottom: 12px; }
+        #detail-view { display: none; padding: 15px; padding-bottom: 50px; }
+        .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 20px; }
+        h3 { margin: 0 0 12px 0; font-size: 0.85rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
+        
+        .field-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.7rem; color: #888; margin-bottom: 4px; }
         input[type="text"], textarea {
-            width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 8px; font-family: inherit; font-size: 0.9rem;
+            width: 100%; background: #000; border: 1px solid var(--border); color: #fff; 
+            padding: 10px; font-family: inherit; font-size: 0.9rem;
         }
 
         .behavior-selector { display: flex; gap: 4px; }
         .behavior-btn {
-            flex: 1; padding: 8px 0; border: 1px solid var(--border); text-align: center; cursor: pointer; font-size: 0.7rem; opacity: 0.4;
+            flex: 1; padding: 10px 0; border: 1px solid var(--border); text-align: center; font-size: 0.7rem; opacity: 0.4;
         }
         .behavior-btn.active { opacity: 1; border-color: currentColor; }
         .behavior-btn[data-val="Docile"] { color: var(--accent-green); }
         .behavior-btn[data-val="Curious"] { color: var(--accent-amber); }
         .behavior-btn[data-val="Aggressive"] { color: var(--accent-red); }
 
-        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .upload-zone {
-            background: #000; border: 1px dashed var(--border); padding: 8px; font-size: 0.6rem;
+            background: #000; border: 1px dashed var(--border); padding: 10px; font-size: 0.65rem;
             display: flex; justify-content: space-between; align-items: center;
         }
         .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
 
-        /* Detail Visualizer */
-        .tabs { display: flex; overflow-x: auto; gap: 4px; margin-bottom: 10px; padding-bottom: 5px; }
-        .tab { padding: 6px 12px; background: #000; border: 1px solid var(--border); font-size: 0.7rem; white-space: nowrap; }
+        /* Visualizer */
+        .tabs { display: flex; overflow-x: auto; gap: 6px; margin-bottom: 12px; padding-bottom: 4px; }
+        .tab { padding: 8px 14px; background: #000; border: 1px solid var(--border); font-size: 0.75rem; white-space: nowrap; }
         .tab.active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
         
         #canvas-container {
-            background: #111; border: 1px solid var(--border); 
-            display: flex; justify-content: center; align-items: center;
-            width: 100%; aspect-ratio: 1/1; position: relative; overflow: hidden;
+            background: #111; border: 1px solid var(--border); display: flex; 
+            justify-content: center; align-items: center; width: 100%; 
+            aspect-ratio: 1/1; position: relative; overflow: hidden;
         }
-        #sprite-canvas { max-width: 100%; max-height: 100%; }
+        canvas { image-rendering: pixelated; }
 
-        .portrait-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; width: 100%; }
-        .portrait-frame { aspect-ratio: 1/1; background: #000; border: 1px solid #333; image-rendering: pixelated; background-size: cover; }
-
-        .dir-controls { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-
-        .filter-chip { padding: 4px 10px; border: 1px solid var(--border); border-radius: 15px; font-size: 0.7rem; }
+        .dir-controls { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .filter-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 0.75rem; white-space: nowrap;}
         .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.1); }
 
         .move-row { display: flex; gap: 5px; margin-bottom: 5px; }
         .hidden { display: none !important; }
-
-        /* Responsive scaling */
-        @media (min-width: 900px) {
-            .detail-grid { flex-direction: row; align-items: flex-start; }
-            .editor-section { flex: 1; }
-        }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-top">
-        <div class="logo">MON_REGISTRY_V1</div>
-        <div style="display: flex; gap: 5px;">
-            <button class="btn" onclick="exportData()">Export</button>
-            <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add</button>
-        </div>
+    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.9rem;">MON_REGISTRY_V1</div>
+    <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="exportData()">Export</button>
+        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add</button>
     </div>
 </header>
 
 <div id="grid-view">
     <div class="controls">
-        <input type="text" id="search" class="search-bar" placeholder="SEARCH_MON_NAME..." oninput="renderGrid()">
+        <input type="text" id="search" class="search-bar" placeholder="SEARCH_BY_NAME..." oninput="renderGrid()">
         <div id="biome-filters" class="filter-row"></div>
     </div>
     <div class="mon-grid" id="mon-grid"></div>
 </div>
 
 <div id="detail-view">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-        <button class="btn" onclick="showGrid()">&lt; BACK</button>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+        <button class="btn" onclick="showGrid()">&lt; REGISTRY</button>
         <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">DELETE</button>
     </div>
 
-    <div class="detail-grid">
-        <div class="editor-section">
-            <h3>CORE_DATA</h3>
-            <div class="field-group">
-                <label>IDENTIFIER</label>
-                <input type="text" id="edit-name" onchange="updateCurrentMon('name', this.value)">
-            </div>
-            <div class="field-group">
-                <label>BEHAVIOR_TYPE</label>
-                <div class="behavior-selector">
-                    <div class="behavior-btn" data-val="Docile" onclick="setBehavior('Docile')">DOCILE</div>
-                    <div class="behavior-btn" data-val="Curious" onclick="setBehavior('Curious')">CURIOUS</div>
-                    <div class="behavior-btn" data-val="Aggressive" onclick="setBehavior('Aggressive')">AGGRESSIVE</div>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>BIOMES</label>
-                <div id="biome-select" class="filter-row"></div>
-            </div>
-            <div class="field-group">
-                <label>MOVES</label>
-                <div id="moves-list"></div>
-                <button class="btn" onclick="addMove()" style="margin-top:5px; width:100%">+ ADD_MOVE</button>
-            </div>
-            <h3>ASSETS</h3>
-            <div class="upload-grid" id="upload-zones"></div>
-            <input type="file" id="file-input" class="hidden" accept=".png,.xml">
+    <div class="editor-section">
+        <h3>CORE_DATA</h3>
+        <div class="field-group">
+            <label>NAME</label>
+            <input type="text" id="edit-name" onchange="updateCurrentMon('name', this.value)">
         </div>
+        <div class="field-group">
+            <label>BEHAVIOR</label>
+            <div class="behavior-selector">
+                <div class="behavior-btn" data-val="Docile" onclick="setBehavior('Docile')">DOCILE</div>
+                <div class="behavior-btn" data-val="Curious" onclick="setBehavior('Curious')">CURIOUS</div>
+                <div class="behavior-btn" data-val="Aggressive" onclick="setBehavior('Aggressive')">AGGRESSIVE</div>
+            </div>
+        </div>
+        <div class="field-group">
+            <label>BIOMES</label>
+            <div id="biome-select" class="filter-row"></div>
+        </div>
+        <div class="field-group">
+            <label>MOVES</label>
+            <div id="moves-list"></div>
+            <button class="btn" onclick="addMove()" style="margin-top:8px; width:100%">+ ADD MOVE</button>
+        </div>
+        <h3>FILES</h3>
+        <div class="upload-grid" id="upload-zones"></div>
+        <input type="file" id="file-input" class="hidden" accept=".png,.xml">
+    </div>
 
-        <div class="editor-section">
-            <h3>VISUAL_PREVIEW</h3>
-            <div class="tabs" id="preview-tabs"></div>
-            <div id="canvas-container">
-                <canvas id="sprite-canvas"></canvas>
-                <div id="portrait-view" class="portrait-grid hidden"></div>
-            </div>
-            <div class="dir-controls" id="anim-controls">
-                <button class="btn" onclick="changeDir(-1)">◀</button>
-                <div id="dir-label" style="font-size:0.7rem; color:var(--accent-cyan)">Down-Right</div>
-                <button class="btn" onclick="changeDir(1)">▶</button>
-            </div>
+    <div class="editor-section">
+        <h3>ANIM_PREVIEW</h3>
+        <div class="tabs" id="preview-tabs"></div>
+        <div id="canvas-container">
+            <canvas id="sprite-canvas"></canvas>
+            <div id="portrait-view" class="hidden" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:2px; width:100%;"></div>
+        </div>
+        <div class="dir-controls" id="anim-controls">
+            <button class="btn" onclick="changeDir(-1)">◀</button>
+            <div id="dir-label" style="font-size:0.75rem; color:var(--accent-cyan)">Down-Right</div>
+            <button class="btn" onclick="changeDir(1)">▶</button>
         </div>
     </div>
 </div>
@@ -259,56 +199,72 @@
     const ANIMS = ['Walk', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
     const DIRS = ['Down-Right', 'Right', 'Up-Right', 'Up', 'Up-Left', 'Left', 'Down-Left', 'Down'];
     
-    let mons = JSON.parse(localStorage.getItem('island_mons_v2') || '[]');
+    let mons = JSON.parse(localStorage.getItem('island_mons_v3') || '[]');
     let currentMonId = null;
     let activeTab = 'Portrait';
     let currentDir = 0;
-    let animFrame = 0;
-    let lastTick = 0;
-    let biomeFilter = [];
     let gridAnims = [];
 
     const canvas = document.getElementById('sprite-canvas');
     const ctx = canvas.getContext('2d');
-    let detailAnimReq = null;
+    let detailLoop = null;
 
     function init() {
         renderBiomeFilters();
         renderGrid();
         setupUploadZones();
-        renderBiomeSelectors();
         renderTabs();
-        requestAnimationFrame(runGlobalAnims);
+        requestAnimationFrame(runGlobalLoop);
     }
 
-    // --- GRID VIEW ---
+    // --- XML PARSER (PMD Specific) ---
+    function getAnimData(xmlString, animName) {
+        if (!xmlString) return null;
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlString, "text/xml");
+        const anims = Array.from(xml.getElementsByTagName('Anim'));
+        
+        let target = anims.find(a => a.querySelector('Name').textContent === animName);
+        if (!target) return null;
+
+        // Handle CopyOf
+        const copyOf = target.querySelector('CopyOf');
+        if (copyOf) {
+            target = anims.find(a => a.querySelector('Name').textContent === copyOf.textContent);
+        }
+
+        return {
+            fw: parseInt(target.querySelector('FrameWidth').textContent),
+            fh: parseInt(target.querySelector('FrameHeight').textContent),
+            durs: Array.from(target.getElementsByTagName('Duration')).map(d => parseInt(d.textContent))
+        };
+    }
+
+    // --- REGISTRY GRID ---
     function renderGrid() {
         const grid = document.getElementById('mon-grid');
         const search = document.getElementById('search').value.toLowerCase();
-        grid.innerHTML = '';
-        gridAnims = [];
+        grid.innerHTML = ''; gridAnims = [];
 
-        const filtered = mons.filter(m => {
+        mons.filter(m => {
             const matchS = m.name.toLowerCase().includes(search);
             const matchB = biomeFilter.length === 0 || biomeFilter.every(b => m.biomes.includes(b));
             return matchS && matchB;
-        });
-
-        filtered.forEach(mon => {
+        }).forEach(mon => {
             const card = document.createElement('div');
             card.className = 'mon-card';
             card.onclick = () => openDetail(mon.id);
-            const complete = checkCompletion(mon);
+            const complete = mon.name && mon.assets.Portrait && mon.assets['Walk-Anim'] && mon.xmlData;
 
             card.innerHTML = `
                 <span class="status-light ${complete ? 'complete' : ''}"></span>
-                <img src="${mon.assets.Portrait || ''}" style="object-fit:none; object-position:0 0; width:40px; height:40px; border:1px solid #333">
-                <div class="name">${mon.name || 'UNNAMED'}</div>
+                <img src="${mon.assets.Portrait || ''}" style="width:40px; height:40px; object-fit:none; border:1px solid #333;">
+                <div class="name">${mon.name || 'NEW_MON'}</div>
                 <div class="card-previews">
-                    ${['Walk','Idle','Attack'].map(type => `
-                        <div class="mini-prev-box">
-                            <canvas id="prev-${type}-${mon.id}" class="mini-preview"></canvas>
-                            <div class="prev-label">${type[0]}</div>
+                    ${['Walk','Idle','Attack'].map(t => `
+                        <div style="text-align:center">
+                            <canvas id="prev-${t}-${mon.id}" class="mini-preview"></canvas>
+                            <div class="prev-label">${t[0]}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -325,49 +281,34 @@
         });
     }
 
-    function runGlobalAnims(now) {
+    function runGlobalLoop(now) {
         gridAnims.forEach(a => {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(a.mon.xmlData, "text/xml");
-            const node = Array.from(xml.getElementsByTagName('Animation')).find(n => n.getElementsByTagName('Name')[0].textContent === a.type);
-            if (!node) return;
-            const fw = parseInt(node.getElementsByTagName('FrameWidth')[0].textContent);
-            const fh = parseInt(node.getElementsByTagName('FrameHeight')[0].textContent);
-            const durs = Array.from(node.getElementsByTagName('Duration')).map(d => parseInt(d.textContent));
-            
-            if (now - a.last >= (durs[a.frame] || 4) * 16) {
-                a.frame = (a.frame + 1) % durs.length;
-                a.last = now;
+            const data = getAnimData(a.mon.xmlData, a.type);
+            if (!data) return;
+            if (now - a.last >= data.durs[a.frame] * 16) {
+                a.frame = (a.frame + 1) % data.durs.length; a.last = now;
             }
-
-            const c = a.canvas; 
-            c.width = 40; c.height = 40;
+            const c = a.canvas; c.width = 44; c.height = 44;
             const cx = c.getContext('2d');
-            cx.imageSmoothingEnabled = false;
-            cx.clearRect(0,0,40,40);
-            cx.drawImage(a.img, a.frame * fw, 0, fw, fh, 0, 0, 40, 40);
+            cx.imageSmoothingEnabled = false; cx.clearRect(0,0,44,44);
+            // Draw row 0 (Down-Right)
+            cx.drawImage(a.img, a.frame * data.fw, 0, data.fw, data.fh, 0, 0, 44, 44);
         });
-        requestAnimationFrame(runGlobalAnims);
+        requestAnimationFrame(runGlobalLoop);
     }
 
     // --- DETAIL VIEW ---
     function openDetail(id) {
-        currentMonId = id;
-        const mon = mons.find(m => m.id === id);
+        currentMonId = id; const mon = mons.find(m => m.id === id);
         document.getElementById('grid-view').classList.add('hidden');
         document.getElementById('detail-view').style.display = 'block';
         document.getElementById('edit-name').value = mon.name;
-        setBehavior(mon.behavior);
-        renderBiomeSelectors();
-        renderMoves();
-        updateUploadCheckmarks();
-        setPreviewTab('Portrait');
-        window.scrollTo(0,0);
+        setBehavior(mon.behavior); renderBiomeSelectors(); renderMoves();
+        updateUploadCheckmarks(); setPreviewTab('Portrait'); window.scrollTo(0,0);
     }
 
     function showGrid() {
-        currentMonId = null;
-        cancelAnimationFrame(detailAnimReq);
+        cancelAnimationFrame(detailLoop);
         document.getElementById('detail-view').style.display = 'none';
         document.getElementById('grid-view').classList.remove('hidden');
         renderGrid();
@@ -376,7 +317,6 @@
     function setPreviewTab(tab) {
         activeTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.name === tab));
-        const cv = document.getElementById('canvas-container');
         const pv = document.getElementById('portrait-view');
         const ac = document.getElementById('anim-controls');
 
@@ -391,99 +331,43 @@
 
     function startDetailAnim() {
         const mon = mons.find(m => m.id === currentMonId);
-        cancelAnimationFrame(detailAnimReq);
-        const key = activeTab + '-Anim';
-        if (!mon.assets[key] || !mon.xmlData) { ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+        cancelAnimationFrame(detailLoop);
+        const data = getAnimData(mon.xmlData, activeTab);
+        if (!data || !mon.assets[activeTab + '-Anim']) return;
 
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(mon.xmlData, "text/xml");
-        const node = Array.from(xml.getElementsByTagName('Animation')).find(n => n.getElementsByTagName('Name')[0].textContent === activeTab);
-        if (!node) return;
-
-        const fw = parseInt(node.getElementsByTagName('FrameWidth')[0].textContent);
-        const fh = parseInt(node.getElementsByTagName('FrameHeight')[0].textContent);
-        const durs = Array.from(node.getElementsByTagName('Duration')).map(d => parseInt(d.textContent));
-
-        const img = new Image(); img.src = mon.assets[key];
+        const img = new Image(); img.src = mon.assets[activeTab + '-Anim'];
         img.onload = () => {
-            canvas.width = fw * 3; canvas.height = fh * 3;
-            animFrame = 0; lastTick = performance.now();
+            canvas.width = data.fw * 3; canvas.height = data.fh * 3;
+            let frame = 0; let last = performance.now();
             function loop(now) {
-                if (now - lastTick >= (durs[animFrame] || 4) * 16) { animFrame = (animFrame + 1) % durs.length; lastTick = now; }
-                ctx.imageSmoothingEnabled = false;
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                ctx.drawImage(img, animFrame * fw, currentDir * fh, fw, fh, 0, 0, canvas.width, canvas.height);
-                detailAnimReq = requestAnimationFrame(loop);
+                if (now - last >= data.durs[frame] * 16) { frame = (frame + 1) % data.durs.length; last = now; }
+                ctx.imageSmoothingEnabled = false; ctx.clearRect(0,0,canvas.width,canvas.height);
+                ctx.drawImage(img, frame * data.fw, currentDir * data.fh, data.fw, data.fh, 0, 0, canvas.width, canvas.height);
+                detailLoop = requestAnimationFrame(loop);
             }
-            detailAnimReq = requestAnimationFrame(loop);
+            detailLoop = requestAnimationFrame(loop);
         };
     }
 
     function renderPortrait() {
         const mon = mons.find(m => m.id === currentMonId);
-        const view = document.getElementById('portrait-view');
-        view.innerHTML = '';
+        const view = document.getElementById('portrait-view'); view.innerHTML = '';
         if (!mon.assets.Portrait) return;
         for (let i = 0; i < 16; i++) {
             const f = document.createElement('div');
-            f.className = 'portrait-frame';
-            f.style.backgroundImage = `url(${mon.assets.Portrait})`;
-            f.style.backgroundPosition = `-${(i % 4) * 100}% -${Math.floor(i / 4) * 100}%`;
-            view.appendChild(f);
+            f.style.aspectRatio = '1/1'; f.style.background = `url(${mon.assets.Portrait})`;
+            f.style.backgroundSize = '400% 400%'; f.style.imageRendering = 'pixelated';
+            f.style.backgroundPosition = `${(i % 4) * 33.3}% ${Math.floor(i / 4) * 33.3}%`;
+            f.style.border = '1px solid #222'; view.appendChild(f);
         }
     }
 
-    // --- DATA HELPERS ---
-    function checkCompletion(m) {
-        return m.name && m.biomes.length > 0 && m.assets.Portrait && m.assets['Walk-Anim'] && m.xmlData;
-    }
-
-    function addNewMon() {
-        const id = Date.now().toString();
-        mons.push({ id, name: 'NEW_MON', behavior: 'Docile', biomes: [], moves: ['Tackle'], notes: '', assets: {}, xmlData: null });
-        save(); openDetail(id);
-    }
-
-    function updateCurrentMon(k, v) { const idx = mons.findIndex(m => m.id === currentMonId); mons[idx][k] = v; save(); }
-    function save() { localStorage.setItem('island_mons_v2', JSON.stringify(mons)); }
-
-    function setBehavior(v) {
-        updateCurrentMon('behavior', v);
-        document.querySelectorAll('.behavior-btn').forEach(b => b.classList.toggle('active', b.dataset.val === v));
-    }
-
-    function renderBiomeSelectors() {
-        const mon = mons.find(m => m.id === currentMonId);
-        document.getElementById('biome-select').innerHTML = BIOMES.map(b => `
-            <div class="filter-chip ${mon?.biomes.includes(b) ? 'active' : ''}" onclick="toggleBiome('${b}')">${b}</div>
-        `).join('');
-    }
-
-    function toggleBiome(b) {
-        const mon = mons.find(m => m.id === currentMonId);
-        mon.biomes = mon.biomes.includes(b) ? mon.biomes.filter(x => x !== b) : [...mon.biomes, b];
-        save(); renderBiomeSelectors();
-    }
-
-    function renderMoves() {
-        const mon = mons.find(m => m.id === currentMonId);
-        document.getElementById('moves-list').innerHTML = mon.moves.map((m, i) => `
-            <div class="move-row">
-                <input type="text" value="${m}" onchange="updateMove(${i}, this.value)">
-                <button class="btn" onclick="removeMove(${i})" style="color:var(--accent-red)">X</button>
-            </div>
-        `).join('');
-    }
-
-    function addMove() { const m = mons.find(x => x.id === currentMonId); m.moves.push(''); save(); renderMoves(); }
-    function updateMove(i, v) { const m = mons.find(x => x.id === currentMonId); m.moves[i] = v; save(); }
-    function removeMove(i) { const m = mons.find(x => x.id === currentMonId); m.moves.splice(i, 1); save(); renderMoves(); }
-
+    // --- LOGIC HELPERS ---
     function setupUploadZones() {
         const zones = ['Portrait', ...ANIMS.map(a => a + '-Anim'), 'AnimData.xml'];
         document.getElementById('upload-zones').innerHTML = zones.map(z => `
             <div class="upload-zone" id="z-${z}" onclick="triggerUpload('${z}')">
-                <span>${z.split('-')[0]}</span><span class="chk"></span>
+                <span>${z.replace('-Anim','')}</span><span class="chk"></span>
             </div>
         `).join('');
     }
@@ -499,7 +383,7 @@
                 else mon.assets[z] = ev.target.result;
                 save(); updateUploadCheckmarks(); setPreviewTab(activeTab);
             };
-            if (z === 'AnimData.xml') r.readAsText(file); else r.readAsDataURL(file);
+            z === 'AnimData.xml' ? r.readAsText(file) : r.readAsDataURL(file);
         };
         input.click();
     }
@@ -509,10 +393,21 @@
         document.querySelectorAll('.upload-zone').forEach(z => {
             const key = z.id.replace('z-', '');
             const has = key === 'AnimData.xml' ? !!mon.xmlData : !!mon.assets[key];
-            z.classList.toggle('loaded', has);
-            z.querySelector('.chk').innerText = has ? '✓' : '';
+            z.classList.toggle('loaded', has); z.querySelector('.chk').innerText = has ? '✓' : '';
         });
     }
+
+    function addNewMon() {
+        const id = Date.now().toString();
+        mons.push({ id, name: 'NEW_MON', behavior: 'Docile', biomes: [], moves: ['Tackle'], notes: '', assets: {}, xmlData: null });
+        save(); openDetail(id);
+    }
+
+    function save() { localStorage.setItem('island_mons_v3', JSON.stringify(mons)); }
+    function updateCurrentMon(k, v) { const idx = mons.findIndex(m => m.id === currentMonId); mons[idx][k] = v; save(); }
+    function setBehavior(v) { updateCurrentMon('behavior', v); document.querySelectorAll('.behavior-btn').forEach(b => b.classList.toggle('active', b.dataset.val === v)); }
+    function changeDir(d) { currentDir = (currentDir + d + 8) % 8; document.getElementById('dir-label').innerText = DIRS[currentDir]; }
+    function deleteCurrentMon() { if(confirm('DELETE?')) { mons = mons.filter(m => m.id !== currentMonId); save(); showGrid(); } }
 
     function renderTabs() {
         document.getElementById('preview-tabs').innerHTML = ['Portrait', ...ANIMS].map(t => `
@@ -520,27 +415,43 @@
         `).join('');
     }
 
-    function changeDir(d) { currentDir = (currentDir + d + 8) % 8; document.getElementById('dir-label').innerText = DIRS[currentDir]; }
-
     function renderBiomeFilters() {
-        document.getElementById('biome-filters').innerHTML = BIOMES.map(b => `
-            <div class="filter-chip" onclick="toggleFilter(this, '${b}')">${b}</div>
+        document.getElementById('biome-filters').innerHTML = BIOMES.map(b => `<div class="filter-chip" onclick="toggleFilter(this, '${b}')">${b}</div>`).join('');
+    }
+
+    let biomeFilter = [];
+    function toggleFilter(el, b) {
+        el.classList.toggle('active'); biomeFilter = biomeFilter.includes(b) ? biomeFilter.filter(x => x !== b) : [...biomeFilter, b]; renderGrid();
+    }
+
+    function renderBiomeSelectors() {
+        const mon = mons.find(m => m.id === currentMonId);
+        document.getElementById('biome-select').innerHTML = BIOMES.map(b => `
+            <div class="filter-chip ${mon?.biomes.includes(b) ? 'active' : ''}" onclick="toggleBiome('${b}')">${b}</div>
+        `).join('');
+    }
+    
+    function toggleBiome(b) {
+        const mon = mons.find(m => m.id === currentMonId);
+        mon.biomes = mon.biomes.includes(b) ? mon.biomes.filter(x => x !== b) : [...mon.biomes, b];
+        save(); renderBiomeSelectors();
+    }
+
+    function renderMoves() {
+        const mon = mons.find(m => m.id === currentMonId);
+        document.getElementById('moves-list').innerHTML = mon.moves.map((m, i) => `
+            <div class="move-row"><input type="text" value="${m}" onchange="updateMove(${i}, this.value)"><button class="btn" onclick="removeMove(${i})" style="color:var(--accent-red)">X</button></div>
         `).join('');
     }
 
-    function toggleFilter(el, b) {
-        el.classList.toggle('active');
-        biomeFilter = biomeFilter.includes(b) ? biomeFilter.filter(x => x !== b) : [...biomeFilter, b];
-        renderGrid();
-    }
-
-    function deleteCurrentMon() { if(confirm('ERASE_ENTRY?')) { mons = mons.filter(m => m.id !== currentMonId); save(); showGrid(); } }
+    function addMove() { const m = mons.find(x => x.id === currentMonId); m.moves.push(''); save(); renderMoves(); }
+    function updateMove(i, v) { const m = mons.find(x => x.id === currentMonId); m.moves[i] = v; save(); }
+    function removeMove(i) { const m = mons.find(x => x.id === currentMonId); m.moves.splice(i, 1); save(); renderMoves(); }
 
     function exportData() {
-        const clean = mons.map(({assets, xmlData, ...rest}) => ({...rest, assets: Object.keys(assets)}));
+        const clean = mons.map(({assets, xmlData, ...rest}) => ({...rest, hasAssets: Object.keys(assets)}));
         const blob = new Blob([JSON.stringify(clean, null, 2)], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'island_mons.json'; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mons.json'; a.click();
     }
 
     init();
