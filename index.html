@@ -10,29 +10,31 @@
 <body>
 
 <div id="gameContainer">
+
 <canvas id="gameCanvas" width="320" height="320"></canvas>
 
-<div id="dialogueBox">Press A B X or Y</div>
+<div id="dialogueBox">Press A B X Y Start or Select</div>
 
 <div id="controls">
 
-<div class="dpad">
-<button id="up">▲</button>
-<div>
-<button id="left">◀</button>
-<button id="down">▼</button>
-<button id="right">▶</button>
-</div>
+<div id="joystickBase">
+<div id="joystickStick"></div>
 </div>
 
 <div class="buttons">
-<button id="btnA">A</button>
-<button id="btnB">B</button>
-<button id="btnX">X</button>
+
 <button id="btnY">Y</button>
+<button id="btnX">X</button>
+<button id="btnB">B</button>
+<button id="btnA">A</button>
+
+<button id="btnSelect" class="wide">SELECT</button>
+<button id="btnStart" class="wide">START</button>
+
 </div>
 
 </div>
+
 </div>
 
 <script src="game.js"></script>
