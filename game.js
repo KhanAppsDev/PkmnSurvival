@@ -6,20 +6,36 @@ const dialogue = document.getElementById("dialogueBox")
 let player = {
 x:150,
 y:150,
-speed:3
+speed:2,
+dir:0,
+frame:0
 }
 
-const keys = {}
+const spriteSheet = new Image()
+spriteSheet.src = "https://www.spriters-resource.com/media/assets/8/8324.png"
 
-const sprite = new Image()
-sprite.src = "sprites/player.png"
+const FRAME_SIZE = 32
+
+const frames = {
+down:[0,1,2],
+left:[3,4,5],
+right:[6,7,8],
+up:[9,10,11]
+}
+
+let direction="down"
 
 function update(){
 
-if(keys["ArrowUp"]) player.y -= player.speed
-if(keys["ArrowDown"]) player.y += player.speed
-if(keys["ArrowLeft"]) player.x -= player.speed
-if(keys["ArrowRight"]) player.x += player.speed
+if(moveX !== 0 || moveY !== 0){
+
+player.x += moveX * player.speed
+player.y += moveY * player.speed
+
+player.frame += 0.2
+if(player.frame >= 3) player.frame = 0
+
+}
 
 }
 
@@ -27,7 +43,19 @@ function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height)
 
-ctx.drawImage(sprite,player.x,player.y,32,32)
+let frameIndex = Math.floor(player.frame)
+let spriteIndex = frames[direction][frameIndex]
+
+let sx = spriteIndex * FRAME_SIZE
+let sy = 0
+
+ctx.drawImage(
+spriteSheet,
+sx, sy,
+FRAME_SIZE, FRAME_SIZE,
+player.x, player.y,
+FRAME_SIZE, FRAME_SIZE
+)
 
 }
 
@@ -39,31 +67,64 @@ requestAnimationFrame(gameLoop)
 
 }
 
-document.addEventListener("keydown",e=>{
-
-keys[e.key] = true
-
-if(e.key==="a") dialogue.innerText="Line from A button"
-if(e.key==="b") dialogue.innerText="Line from B button"
-if(e.key==="x") dialogue.innerText="Line from X button"
-if(e.key==="y") dialogue.innerText="Line from Y button"
-
-})
-
-document.addEventListener("keyup",e=>{
-keys[e.key] = false
-})
-
-document.getElementById("btnA").onclick=()=>dialogue.innerText="Line from A button"
-document.getElementById("btnB").onclick=()=>dialogue.innerText="Line from B button"
-document.getElementById("btnX").onclick=()=>dialogue.innerText="Line from X button"
-document.getElementById("btnY").onclick=()=>dialogue.innerText="Line from Y button"
-
-document.getElementById("up").onclick=()=>player.y-=10
-document.getElementById("down").onclick=()=>player.y+=10
-document.getElementById("left").onclick=()=>player.x-=10
-document.getElementById("right").onclick=()=>player.x+=10
-
-sprite.onload=()=>{
+spriteSheet.onload = () => {
 gameLoop()
 }
+
+let moveX = 0
+let moveY = 0
+
+const base = document.getElementById("joystickBase")
+const stick = document.getElementById("joystickStick")
+
+let dragging=false
+
+base.addEventListener("pointerdown",()=>{
+dragging=true
+})
+
+document.addEventListener("pointerup",()=>{
+dragging=false
+stick.style.left="35px"
+stick.style.top="35px"
+moveX=0
+moveY=0
+})
+
+document.addEventListener("pointermove",(e)=>{
+
+if(!dragging) return
+
+const rect = base.getBoundingClientRect()
+
+let x = e.clientX - rect.left - 60
+let y = e.clientY - rect.top - 60
+
+let dist = Math.sqrt(x*x+y*y)
+let max = 40
+
+if(dist>max){
+x = x/dist*max
+y = y/dist*max
+}
+
+stick.style.left = (x+35)+"px"
+stick.style.top = (y+35)+"px"
+
+moveX = x/max
+moveY = y/max
+
+if(Math.abs(moveX) > Math.abs(moveY)){
+direction = moveX > 0 ? "right" : "left"
+}else{
+direction = moveY > 0 ? "down" : "up"
+}
+
+})
+
+document.getElementById("btnA").onclick=()=>dialogue.innerText="A pressed"
+document.getElementById("btnB").onclick=()=>dialogue.innerText="B pressed"
+document.getElementById("btnX").onclick=()=>dialogue.innerText="X pressed"
+document.getElementById("btnY").onclick=()=>dialogue.innerText="Y pressed"
+document.getElementById("btnStart").onclick=()=>dialogue.innerText="Start pressed"
+document.getElementById("btnSelect").onclick=()=>dialogue.innerText="Select pressed"
