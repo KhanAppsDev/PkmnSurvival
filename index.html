@@ -50,6 +50,8 @@
         .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
         .portrait-slot { aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
         .portrait-slot img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+        .portrait-slot canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+        @keyframes slideshow { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         
         .upload-zone { background: #000; border: 1px dashed var(--border); padding: 10px; font-size: 0.65rem; margin-bottom: 5px; cursor: pointer; display: flex; justify-content: space-between; }
         .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
@@ -360,37 +362,140 @@
     }
 
     // PORTRAIT MANAGEMENT
+   // PORTRAIT MANAGEMENT
     function renderPortraitManager() {
         const mon = mons.find(m => m.id === currentMonId);
         const container = document.getElementById('portrait-manager');
         container.innerHTML = '';
-
-        for (let i = 0; i < 5; i++) {
+        
+        // Get non-null portraits for slideshow
+        const validPortraits = mon.portraits.filter(p => p !== null);
+        
+        if (validPortraits.length > 0) {
+            // Create animated slideshow slot
             const slot = document.createElement('div');
-            slot.className = `portrait-slot ${mon.portraits[i] ? 'active' : ''}`;
+            slot.className = 'portrait-slot active';
             slot.onclick = () => {
-                window.currentTargetSlot = i;
+                window.currentTargetSlot = 0;
                 document.getElementById('portrait-input').click();
             };
             
-            slot.innerHTML = mon.portraits[i] 
-                ? `<img src="${mon.portraits[i]}">` 
-                : `<span style="color:#333; font-size:1.2rem;">+</span>`;
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
             
+            let currentFrame = 0;
+            const images = validPortraits.map(url => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.src = url;
+                return img;
+            });
+            
+            function animateSlideshow() {
+                if (images[currentFrame] && images[currentFrame].complete) {
+                    ctx.clearRect(0, 0, 64, 64);
+                    ctx.drawImage(images[currentFrame], 0, 0, 64, 64);
+                }
+                currentFrame = (currentFrame + 1) % images.length;
+            }
+            
+            setInterval(animateSlideshow, 500); // 500ms per frame
+            slot.appendChild(canvas);
+            container.appendChild(slot);
+            
+        } else {
+            // Empty slot with + button
+            const slot = document.createElement('div');
+            slot.className = 'portrait-slot';
+            slot.onclick = () => {
+                window.currentTargetSlot = 0;
+                document.getElementById('portrait-input').click();
+            };
+            slot.innerHTML = `<span style="color:#333; font-size:1.2rem;">+</span>`;
             container.appendChild(slot);
         }
     }
 
-    document.getElementById('portrait-input').onchange = async (e) => {
+document.getElementById('portrait-input').onchange = async (e) => {
         if (!e.target.files[0]) return;
-        const url = await uploadToImgBB(e.target.files[0]);
-        if (url) {
-            const mon = mons.find(m => m.id === currentMonId);
-            mon.portraits[window.currentTargetSlot] = url;
+        
+        const file = e.target.files[0];
+        const mon = mons.find(m => m.id === currentMonId);
+        
+        // Parse spritesheet into individual frames
+        const frames = await parseSpritesheetToFrames(file);
+        
+        if (frames.length > 0) {
+            // Upload all non-blank frames to ImgBB
+            const uploadPromises = frames.map(blob => uploadToImgBB(blob));
+            const urls = await Promise.all(uploadPromises);
+            
+            // Store URLs in portraits array
+            urls.forEach((url, i) => {
+                if (i < 5 && url) mon.portraits[i] = url;
+            });
+            
             save();
             renderPortraitManager();
         }
     };
+    
+    // Parse spritesheet into frames, skip blank tiles
+    async function parseSpritesheetToFrames(file) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Detect grid size (assume square tiles)
+                const tileSize = Math.min(img.width, img.height);
+                const cols = Math.floor(img.width / tileSize);
+                const rows = Math.floor(img.height / tileSize);
+                
+                canvas.width = tileSize;
+                canvas.height = tileSize;
+                
+                const frames = [];
+                
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        ctx.clearRect(0, 0, tileSize, tileSize);
+                        ctx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize, 0, 0, tileSize, tileSize);
+                        
+                        // Check if tile is blank (all transparent or black)
+                        if (!isTileBlank(ctx, tileSize)) {
+                            canvas.toBlob(blob => frames.push(blob), 'image/png');
+                        }
+                    }
+                }
+                
+                // Wait a bit for all blobs to be created
+                setTimeout(() => resolve(frames), 100);
+            };
+            img.src = URL.createObjectURL(file);
+        });
+    }
+    
+    function isTileBlank(ctx, size) {
+        const imgData = ctx.getImageData(0, 0, size, size);
+        const pixels = imgData.data;
+        let hasContent = false;
+        
+        for (let i = 0; i < pixels.length; i += 4) {
+            const a = pixels[i + 3]; // Alpha
+            const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
+            
+            // If pixel is not transparent and not pure black
+            if (a > 10 && (r > 5 || g > 5 || b > 5)) {
+                hasContent = true;
+                break;
+            }
+        }
+        return !hasContent;
+    }
 
     // SPRITE & XML MANAGEMENT
     function setupUploadZones() {
