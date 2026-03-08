@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v8</title>
+    <title>Island Mon Registry v7</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #070708;
-            --surface: rgba(20, 20, 23, 0.6);
+            --bg: #0a0a0b;
+            --surface: #141417;
             --accent-cyan: #00f2ff;
             --accent-green: #39ff14;
+            --accent-amber: #ffb100;
+            --accent-red: #ff3e3e;
             --text: #e0e0e0;
-            --border: rgba(42, 42, 46, 0.3);
+            --border: #2a2a2e;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -22,90 +24,109 @@
             color: var(--text);
             font-family: 'Share Tech Mono', monospace;
             margin: 0; padding: 0; width: 100vw; overflow-x: hidden;
-            background-image: radial-gradient(circle at 50% 50%, #1a1a1c 0%, #070708 100%);
+        }
+
+        body::before {
+            content: " "; display: block; position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 9999; background-size: 100% 3px, 2px 100%; pointer-events: none;
         }
 
         header {
-            padding: 10px 15px; border-bottom: 1px solid var(--border);
-            background: rgba(10, 10, 11, 0.8); backdrop-filter: blur(5px);
-            position: sticky; top: 0; z-index: 100;
+            padding: 10px 15px; border-bottom: 1px solid var(--accent-cyan);
+            background: var(--surface); position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
         }
 
         .btn {
             background: transparent; border: 1px solid var(--accent-cyan);
-            color: var(--accent-cyan); padding: 4px 10px; cursor: pointer;
-            font-family: inherit; font-size: 0.7rem; text-transform: uppercase;
+            color: var(--accent-cyan); padding: 6px 12px; cursor: pointer;
+            font-family: inherit; font-size: 0.75rem; text-transform: uppercase;
         }
 
         #grid-view { padding: 15px; }
+        .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-bar {
-            background: transparent; border: none; border-bottom: 1px solid var(--border);
-            color: var(--accent-green); padding: 12px; width: 100%; font-family: inherit; font-size: 1rem;
-            margin-bottom: 20px; outline: none;
+            background: #000; border: 1px solid var(--border); color: var(--accent-green);
+            padding: 12px; width: 100%; font-family: inherit; font-size: 1rem;
         }
+        .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+        .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 12px; }
 
-        .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-
-        /* Minimalist Card Design */
         .mon-card {
-            background: transparent; border: 1px solid transparent;
-            padding: 10px; transition: all 0.3s ease; position: relative;
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 12px; position: relative; display: flex; flex-direction: column; align-items: center;
         }
-        .mon-card:hover { border-color: var(--border); background: var(--surface); }
+        .mon-card .name { font-size: 0.95rem; color: var(--accent-cyan); margin: 6px 0; text-transform: uppercase; }
         
-        .card-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 8px; }
-        .portrait-main { width: 40px; height: 40px; image-rendering: pixelated; object-fit: none; margin-bottom: 5px; }
-        .mon-name { font-size: 0.8rem; color: var(--accent-cyan); letter-spacing: 1px; }
-
-        .preview-strip {
-            display: flex; justify-content: space-around; align-items: flex-end;
-            margin-top: 10px; min-height: 40px;
+        .card-previews {
+            display: flex; gap: 4px; margin-top: 10px; padding-top: 10px;
+            border-top: 1px solid var(--border); width: 100%; justify-content: center;
         }
-        .mini-preview-container { text-align: center; }
-        .mini-preview { image-rendering: pixelated; background: transparent; display: block; margin: 0 auto; }
-        .mini-label { font-size: 0.45rem; color: #555; margin-top: 2px; text-transform: uppercase; }
-
-        .config-btn {
-            position: absolute; top: 5px; right: 5px; font-size: 0.8rem;
-            cursor: pointer; opacity: 0.3; color: var(--text);
+        .mini-preview { 
+            width: 46px; height: 46px; background: #000; image-rendering: pixelated; 
+            border: 1px solid #222; display: block;
         }
-        .mon-card:hover .config-btn { opacity: 1; }
+        .prev-label { font-size: 0.5rem; color: #666; text-align: center; margin-top: 2px; }
 
-        /* Detail View Styles */
-        #detail-view { display: none; padding: 15px; max-width: 600px; margin: 0 auto; }
-        .editor-section { margin-bottom: 25px; }
-        h3 { font-size: 0.7rem; color: var(--accent-cyan); text-transform: uppercase; margin-bottom: 10px; opacity: 0.8; }
-
-        .portrait-manager { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
-        .portrait-slot {
-            width: 50px; height: 50px; border: 1px dashed var(--border);
-            display: flex; align-items: center; justify-content: center; position: relative;
-            flex-shrink: 0; cursor: pointer;
+        #detail-view { display: none; padding: 15px; padding-bottom: 50px; }
+        .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
+        h3 { margin: 0 0 12px 0; font-size: 0.8rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
+        
+        .field-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.65rem; color: #888; margin-bottom: 4px; text-transform: uppercase; }
+        input[type="text"] {
+            width: 100%; background: #000; border: 1px solid var(--border); color: #fff; 
+            padding: 10px; font-family: inherit; font-size: 0.9rem;
         }
+
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .upload-zone {
+            background: #000; border: 1px dashed var(--border); padding: 8px; font-size: 0.6rem;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
+
+        .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
+        .portrait-slot { 
+            aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.5rem; color: #555; cursor: pointer; position: relative;
+            overflow: hidden;
+        }
+        .portrait-slot.active { border-color: var(--accent-green); color: var(--accent-green); }
         .portrait-slot img { width: 100%; height: 100%; object-fit: none; image-rendering: pixelated; }
-        .slot-num { position: absolute; top: -5px; left: -5px; font-size: 0.5rem; background: var(--bg); padding: 2px; }
+        .slot-label { position: absolute; bottom: 2px; width: 100%; text-align: center; background: rgba(0,0,0,0.7); pointer-events: none; }
 
+        .tabs { display: flex; overflow-x: auto; gap: 6px; margin-bottom: 12px; padding-bottom: 4px; }
+        .tab { padding: 8px 14px; background: #000; border: 1px solid var(--border); font-size: 0.7rem; white-space: nowrap; }
+        .tab.active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        
         #canvas-container {
-            width: 100%; aspect-ratio: 1/1; background: rgba(0,0,0,0.2);
-            display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);
+            background: #000; border: 1px solid var(--border); display: flex; 
+            justify-content: center; align-items: center; width: 100%; 
+            aspect-ratio: 1/1; position: relative; overflow: hidden;
         }
         canvas { image-rendering: pixelated; }
 
-        .hidden { display: none !important; }
+        .filter-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.7rem; white-space: nowrap;}
+        .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.2); color: var(--accent-cyan); }
 
-        /* Custom Selector Overlay */
-        #selector-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000;
-            display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+        .batch-btn {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: rgba(0, 242, 255, 0.1); border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan); font-family: inherit; font-weight: bold;
         }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-size: 0.7rem; opacity: 0.6;">RSTRY_CORE_V8</div>
-    <div style="display: flex; gap: 8px;">
+    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V7</div>
+    <div style="display: flex; gap: 6px;">
         <button class="btn" onclick="document.getElementById('import-input').click()">Load</button>
         <button class="btn" onclick="exportData()">Exp</button>
         <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add</button>
@@ -115,70 +136,117 @@
 <input type="file" id="import-input" class="hidden" accept=".json" onchange="importData(this.files[0])">
 
 <div id="grid-view">
-    <input type="text" id="search" class="search-bar" placeholder="SEARCH ENTITIES..." oninput="renderGrid()">
+    <div class="controls">
+        <input type="text" id="search" class="search-bar" placeholder="SEARCH_DATABASE..." oninput="renderGrid()">
+        <div id="habitat-filters" class="filter-row"></div>
+    </div>
     <div class="mon-grid" id="mon-grid"></div>
 </div>
 
 <div id="detail-view">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-        <button class="btn" onclick="showGrid()">&lt; EXIT</button>
-        <button class="btn" onclick="deleteCurrentMon()" style="border-color: #ff3e3e; color: #ff3e3e;">PURGE</button>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <button class="btn" onclick="showGrid()">&lt; BACK</button>
+        <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">WIPE</button>
     </div>
 
-    <div class="editor-section">
-        <h3>Identity</h3>
-        <input type="text" id="edit-name" class="search-bar" style="font-size: 1.2rem; margin-bottom: 10px;" onchange="updateCurrentMon('name', this.value)">
-    </div>
+    <button class="batch-btn" onclick="document.getElementById('batch-input').click()">BATCH UPLOAD (SPRITES + XML)</button>
+    <input type="file" id="batch-input" class="hidden" multiple onchange="handleBatchUpload(this.files)">
 
     <div class="editor-section">
-        <h3>Portraits (1-5)</h3>
+        <h3>ENTITY_DATA</h3>
+        <div class="field-group">
+            <label>IDENTIFIER</label>
+            <input type="text" id="edit-name" onchange="updateCurrentMon('name', this.value)">
+        </div>
+        <div class="field-group">
+            <label>PRIMARY_HABITAT</label>
+            <div id="habitat-select" class="filter-row"></div>
+        </div>
+
+        <h3>PORTRAIT_RECORDS (1-5)</h3>
         <div class="portrait-manager" id="portrait-manager"></div>
         <input type="file" id="portrait-input" class="hidden" accept=".png">
+        
+        <h3 style="margin-top:15px">SPRITE_DATA</h3>
+        <div class="upload-grid" id="upload-zones"></div>
+        <input type="file" id="single-file-input" class="hidden">
     </div>
 
     <div class="editor-section">
-        <h3>Visualizer</h3>
+        <h3>VISUALIZER</h3>
+        <div class="tabs" id="preview-tabs"></div>
         <div id="canvas-container">
             <canvas id="sprite-canvas"></canvas>
+            <div id="portrait-view" class="hidden" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:2px; width:100%;"></div>
         </div>
-        <div style="display:flex; justify-content: space-between; margin-top:10px;">
+        <div id="anim-controls" style="display:flex; justify-content: space-between; margin-top:10px; align-items: center;">
             <button class="btn" onclick="changeDir(-1)">◀</button>
-            <div id="active-anim-name" style="font-size:0.7rem; color:var(--accent-cyan)">Idle</div>
+            <div id="dir-label" style="font-size:0.7rem; color:var(--accent-cyan)">Down-Right</div>
             <button class="btn" onclick="changeDir(1)">▶</button>
         </div>
-        <div id="anim-tabs" style="display:flex; overflow-x:auto; gap:5px; margin-top:10px; padding-bottom:5px;"></div>
     </div>
-</div>
-
-<div id="selector-overlay">
-    <h3 id="selector-title">Select Previews</h3>
-    <div id="anim-selector-list" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; width:100%; max-width:400px; margin-bottom:20px;"></div>
-    <button class="btn" onclick="closeSelector()">Close</button>
 </div>
 
 <script>
-    const ANIMS = ['Walk', 'Hop', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike', 'Withdraw', 'Eat', 'Faint'];
-    const DIRS = ['DR', 'R', 'UR', 'U', 'UL', 'L', 'DL', 'D'];
+    const HABITATS = ['Forest', 'Canopy', 'Cave', 'River', 'Mountain', 'Desert'];
+    const ANIMS = ['Walk', 'Hop', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
+    const DIRS = ['Down-Right', 'Right', 'Up-Right', 'Up', 'Up-Left', 'Left', 'Down-Left', 'Down'];
     
-    let mons = JSON.parse(localStorage.getItem('island_mons_v8') || '[]');
+    let mons = JSON.parse(localStorage.getItem('island_mons_v6') || '[]');
     let currentMonId = null;
+    let activeTab = 'Portrait';
     let currentDir = 0;
+    let currentTargetSlot = 0;
+    
+    let globalDirRow = 0;
     let globalPortraitIdx = 0;
     let gridAnims = [];
-    let lastRotation = Date.now();
-    let lastPortraitShift = Date.now();
+    let lastRotation = 0;
+    let lastPortraitShift = 0;
+    let activeHabitatFilter = null;
 
     const canvas = document.getElementById('sprite-canvas');
     const ctx = canvas.getContext('2d');
     let detailLoop = null;
-    let activeDetailAnim = 'Idle';
 
     function init() {
+        renderHabitatFilters();
         renderGrid();
-        requestAnimationFrame(globalLoop);
+        setupUploadZones();
+        renderTabs();
+        requestAnimationFrame(runGlobalLoop);
     }
 
-    // --- Core Logic ---
+    // --- IMPORT / EXPORT ---
+    function exportData() {
+        const blob = new Blob([JSON.stringify(mons, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Registry_Backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    }
+
+    function importData(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (Array.isArray(data)) {
+                    mons = data;
+                    save();
+                    location.reload(); // Refresh to ensure all states reset
+                } else {
+                    alert("INVALID_FORMAT: Data must be a Registry Array.");
+                }
+            } catch (err) {
+                alert("PARSE_ERROR: File is corrupted or not a valid JSON.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- DATA PARSING ---
     function getAnimData(xmlString, animName) {
         if (!xmlString) return null;
         const parser = new DOMParser();
@@ -186,212 +254,303 @@
         const anims = Array.from(xml.getElementsByTagName('Anim'));
         let target = anims.find(a => a.querySelector('Name').textContent === animName);
         if (!target) return null;
-        if (target.querySelector('CopyOf')) return getAnimData(xmlString, target.querySelector('CopyOf').textContent);
+        const copyOf = target.querySelector('CopyOf');
+        if (copyOf) target = anims.find(a => a.querySelector('Name').textContent === copyOf.textContent);
+        if (!target) return null;
 
-        const fw = parseInt(target.querySelector('FrameWidth').textContent);
-        const fh = parseInt(target.querySelector('FrameHeight').textContent);
-        
         return {
-            fw, fh,
+            fw: parseInt(target.querySelector('FrameWidth').textContent),
+            fh: parseInt(target.querySelector('FrameHeight').textContent),
             durs: Array.from(target.getElementsByTagName('Duration')).map(d => parseInt(d.textContent))
         };
     }
 
-    function isDirectional(mon, animName, data) {
-        if (!mon.assets[animName + '-Anim'] || !data) return false;
-        // Logic: If the total image height equals the height of one frame, it's non-directional
-        const img = new Image(); img.src = mon.assets[animName + '-Anim'];
-        return img.height > data.fh;
+    // --- PORTRAIT LOGIC ---
+    function renderPortraitManager() {
+        const mon = mons.find(m => m.id === currentMonId);
+        const container = document.getElementById('portrait-manager');
+        container.innerHTML = '';
+        
+        for (let i = 0; i < 5; i++) {
+            const slot = document.createElement('div');
+            const imgData = mon.portraits[i];
+            slot.className = `portrait-slot ${imgData ? 'active' : ''}`;
+            slot.onclick = () => triggerSlotUpload(i);
+            
+            if (imgData) {
+                slot.innerHTML = `<img src="${imgData}"><div class="slot-label">${i+1}/5</div>`;
+            } else {
+                slot.innerHTML = `<span>+</span><div class="slot-label">${i+1}/5</div>`;
+            }
+            container.appendChild(slot);
+        }
     }
 
-    // --- Grid Rendering ---
+    function triggerSlotUpload(index) {
+        currentTargetSlot = index;
+        document.getElementById('portrait-input').click();
+    }
+
+    document.getElementById('portrait-input').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const mon = mons.find(m => m.id === currentMonId);
+            mon.portraits[currentTargetSlot] = ev.target.result;
+            save();
+            renderPortraitManager();
+            renderGrid();
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // --- BATCH UPLOAD ---
+    async function handleBatchUpload(files) {
+        const mon = mons.find(m => m.id === currentMonId);
+        if (!mon) return;
+
+        for (let file of files) {
+            const name = file.name.toLowerCase();
+            const reader = new FileReader();
+
+            if (name.endsWith('.xml')) {
+                mon.xmlData = await file.text();
+            } else if (name.endsWith('.png')) {
+                const dataUrl = await new Promise(res => {
+                    reader.onload = e => res(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+
+                if (name.includes('portrait')) {
+                    let emptyIdx = mon.portraits.findIndex(p => !p);
+                    if (emptyIdx === -1 && mon.portraits.length < 5) mon.portraits.push(dataUrl);
+                    else if (emptyIdx !== -1) mon.portraits[emptyIdx] = dataUrl;
+                } else {
+                    const matchedAnim = ANIMS.find(a => name.includes(a.toLowerCase()));
+                    if (matchedAnim) mon.assets[matchedAnim + '-Anim'] = dataUrl;
+                }
+            }
+        }
+        save();
+        updateUploadCheckmarks();
+        renderPortraitManager();
+        renderGrid();
+        setPreviewTab(activeTab);
+    }
+
+    // --- REGISTRY GRID ---
     function renderGrid() {
         const grid = document.getElementById('mon-grid');
-        grid.innerHTML = ''; gridAnims = [];
         const search = document.getElementById('search').value.toLowerCase();
+        grid.innerHTML = ''; gridAnims = [];
 
-        mons.filter(m => m.name.toLowerCase().includes(search)).forEach(mon => {
+        mons.filter(m => {
+            const matchS = m.name.toLowerCase().includes(search);
+            const matchH = !activeHabitatFilter || m.habitat === activeHabitatFilter;
+            return matchS && matchH;
+        }).forEach(mon => {
             const card = document.createElement('div');
             card.className = 'mon-card';
+            card.onclick = () => openDetail(mon.id);
             
-            const portraits = mon.portraits.filter(p => !!p);
-            const pSrc = portraits.length > 0 ? portraits[globalPortraitIdx % portraits.length] : '';
-            const previews = mon.previewAnims || ['Walk', 'Idle', 'Attack'];
+            const validPortraits = mon.portraits.filter(p => !!p);
+            const currentPortrait = (validPortraits.length > 0) 
+                ? validPortraits[globalPortraitIdx % validPortraits.length] 
+                : '';
 
             card.innerHTML = `
-                <div class="config-btn" onclick="openSelector(event, '${mon.id}')">⚙</div>
-                <div class="card-header" onclick="openDetail('${mon.id}')">
-                    <img src="${pSrc}" class="portrait-main">
-                    <div class="mon-name">${mon.name}</div>
-                </div>
-                <div class="preview-strip">
-                    ${previews.map(p => `
-                        <div class="mini-preview-container">
-                            <canvas id="p-${mon.id}-${p}" class="mini-preview"></canvas>
-                            <div class="mini-label">${p}</div>
+                <img src="${currentPortrait}" style="width:48px; height:48px; object-fit:none; border:1px solid #333; image-rendering: pixelated; background:#000;">
+                <div class="name">${mon.name || 'UNKNOWN'}</div>
+                <div class="card-previews">
+                    ${['Walk','Hop','Attack'].map(t => `
+                        <div style="text-align:center">
+                            <canvas id="prev-${t}-${mon.id}" class="mini-preview"></canvas>
+                            <div class="prev-label">${t}</div>
                         </div>
                     `).join('')}
                 </div>
             `;
             grid.appendChild(card);
 
-            previews.forEach(p => {
-                if (mon.assets[p + '-Anim'] && mon.xmlData) {
-                    const img = new Image(); img.src = mon.assets[p + '-Anim'];
-                    gridAnims.push({ canvasId: `p-${mon.id}-${p}`, mon, anim: p, img, frame: 0, last: 0 });
+            ['Walk','Hop','Attack'].forEach(type => {
+                const key = type + '-Anim';
+                if (mon.assets[key] && mon.xmlData) {
+                    const img = new Image(); img.src = mon.assets[key];
+                    gridAnims.push({ canvas: document.getElementById(`prev-${type}-${mon.id}`), mon, type, img, frame: 0, last: 0 });
                 }
             });
         });
     }
 
-    function globalLoop() {
-        const now = Date.now();
-        if (now - lastRotation > 2000) { currentDir = (currentDir + 1) % 8; lastRotation = now; }
-        if (now - lastPortraitShift > 3000) { globalPortraitIdx++; lastPortraitShift = now; renderGrid(); }
+    function runGlobalLoop(now) {
+        if (now - lastRotation > 1500) { globalDirRow = (globalDirRow + 1) % 8; lastRotation = now; }
+        if (now - lastPortraitShift > 2000) { 
+            globalPortraitIdx++; 
+            lastPortraitShift = now;
+            renderGrid(); 
+        }
 
         gridAnims.forEach(a => {
-            const data = getAnimData(a.mon.xmlData, a.anim);
-            const canv = document.getElementById(a.canvasId);
-            if (!data || !canv) return;
-
-            if (now - a.last >= data.durs[a.frame] * 16.6) {
+            const data = getAnimData(a.mon.xmlData, a.type);
+            if (!data) return;
+            if (now - a.last >= data.durs[a.frame] * 16) {
                 a.frame = (a.frame + 1) % data.durs.length; a.last = now;
             }
+            const c = a.canvas; c.width = 46; c.height = 46;
+            const cx = c.getContext('2d');
+            cx.imageSmoothingEnabled = false; cx.clearRect(0,0,46,46);
 
-            canv.width = data.fw; canv.height = data.fh;
-            const ctxm = canv.getContext('2d');
-            ctxm.imageSmoothingEnabled = false;
-            ctxm.clearRect(0,0,data.fw, data.fh);
+            const scale = Math.min(c.width / data.fw, c.height / data.fh);
+            const dw = data.fw * scale; const dh = data.fh * scale;
+            const ox = (c.width - dw) / 2; const oy = (c.height - dh) / 2;
 
-            // Row selection logic: check if the sheet supports directions
-            const row = (a.img.height > data.fh) ? currentDir : 0;
-            ctxm.drawImage(a.img, a.frame * data.fw, row * data.fh, data.fw, data.fh, 0, 0, data.fw, data.fh);
+            cx.drawImage(a.img, a.frame * data.fw, globalDirRow * data.fh, data.fw, data.fh, ox, oy, dw, dh);
         });
-        requestAnimationFrame(globalLoop);
+        requestAnimationFrame(runGlobalLoop);
     }
 
-    // --- Config Selector ---
-    function openSelector(e, id) {
-        e.stopPropagation();
-        currentMonId = id;
-        const mon = mons.find(m => m.id === id);
-        const overlay = document.getElementById('selector-overlay');
-        const list = document.getElementById('anim-selector-list');
-        overlay.style.display = 'flex';
-        list.innerHTML = '';
-
-        ANIMS.forEach(a => {
-            const btn = document.createElement('div');
-            btn.className = `btn ${mon.previewAnims?.includes(a) ? 'active' : ''}`;
-            btn.style.textAlign = 'center';
-            btn.innerText = a;
-            btn.onclick = () => togglePreviewAnim(a);
-            list.appendChild(btn);
-        });
-    }
-
-    function togglePreviewAnim(anim) {
-        const mon = mons.find(m => m.id === currentMonId);
-        if (!mon.previewAnims) mon.previewAnims = ['Walk', 'Idle', 'Attack'];
-        
-        if (mon.previewAnims.includes(anim)) {
-            mon.previewAnims = mon.previewAnims.filter(a => a !== anim);
-        } else if (mon.previewAnims.length < 3) {
-            mon.previewAnims.push(anim);
-        }
-        save();
-        openSelector({stopPropagation:()=>{}}, currentMonId);
-    }
-
-    function closeSelector() {
-        document.getElementById('selector-overlay').style.display = 'none';
-        renderGrid();
-    }
-
-    // --- Detail View ---
+    // --- NAVIGATION / UI ---
     function openDetail(id) {
-        currentMonId = id;
-        const mon = mons.find(m => m.id === id);
+        currentMonId = id; const mon = mons.find(m => m.id === id);
         document.getElementById('grid-view').classList.add('hidden');
         document.getElementById('detail-view').style.display = 'block';
         document.getElementById('edit-name').value = mon.name;
-        
+        renderHabitatSelectors();
         renderPortraitManager();
-        renderAnimTabs();
-        setDetailAnim('Idle');
+        updateUploadCheckmarks(); setPreviewTab('Portrait'); window.scrollTo(0,0);
     }
 
-    function renderAnimTabs() {
-        const mon = mons.find(m => m.id === currentMonId);
-        const container = document.getElementById('anim-tabs');
-        container.innerHTML = ANIMS.map(a => {
-            const has = !!mon.assets[a + '-Anim'];
-            return `<div class="btn" style="opacity:${has?1:0.3}" onclick="setDetailAnim('${a}')">${a}</div>`;
-        }).join('');
+    function showGrid() {
+        cancelAnimationFrame(detailLoop);
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('grid-view').classList.remove('hidden');
+        renderGrid();
     }
 
-    function setDetailAnim(anim) {
-        activeDetailAnim = anim;
-        document.getElementById('active-anim-name').innerText = anim;
+    function setPreviewTab(tab) {
+        activeTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.name === tab));
+        const pv = document.getElementById('portrait-view');
+        const ac = document.getElementById('anim-controls');
+
+        if (tab === 'Portrait') {
+            canvas.classList.add('hidden'); pv.classList.remove('hidden'); ac.classList.add('hidden');
+            renderPortraitGrid();
+        } else {
+            canvas.classList.remove('hidden'); pv.classList.add('hidden'); ac.classList.remove('hidden');
+            startDetailAnim();
+        }
+    }
+
+    function startDetailAnim() {
         const mon = mons.find(m => m.id === currentMonId);
         cancelAnimationFrame(detailLoop);
-
-        const data = getAnimData(mon.xmlData, anim);
-        if (!data || !mon.assets[anim + '-Anim']) {
+        const data = getAnimData(mon.xmlData, activeTab);
+        if (!data || !mon.assets[activeTab + '-Anim']) {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             return;
         }
 
-        const img = new Image(); img.src = mon.assets[anim + '-Anim'];
+        const img = new Image(); img.src = mon.assets[activeTab + '-Anim'];
         img.onload = () => {
-            canvas.width = data.fw * 2; canvas.height = data.fh * 2;
-            let f = 0; let last = 0;
+            canvas.width = 160; canvas.height = 160;
+            let frame = 0; let last = performance.now();
             function loop(now) {
-                if (now - last > data.durs[f] * 16.6) { f = (f+1)%data.durs.length; last = now; }
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                const row = (img.height > data.fh) ? currentDir : 0;
-                ctx.drawImage(img, f*data.fw, row*data.fh, data.fw, data.fh, 0, 0, data.fw*2, data.fh*2);
+                if (now - last >= data.durs[frame] * 16) { frame = (frame + 1) % data.durs.length; last = now; }
+                ctx.imageSmoothingEnabled = false; ctx.clearRect(0,0,160,160);
+                const scale = Math.min(160 / data.fw, 160 / data.fh);
+                const dw = data.fw * scale; const dh = data.fh * scale;
+                ctx.drawImage(img, frame * data.fw, currentDir * data.fh, data.fw, data.fh, (160-dw)/2, (160-dh)/2, dw, dh);
                 detailLoop = requestAnimationFrame(loop);
             }
             detailLoop = requestAnimationFrame(loop);
         };
     }
 
-    function renderPortraitManager() {
+    function renderPortraitGrid() {
         const mon = mons.find(m => m.id === currentMonId);
-        const container = document.getElementById('portrait-manager');
-        container.innerHTML = '';
-        for (let i = 0; i < 5; i++) {
-            const slot = document.createElement('div');
-            slot.className = 'portrait-slot';
-            slot.onclick = () => { currentTargetSlot = i; document.getElementById('portrait-input').click(); };
-            if (mon.portraits[i]) slot.innerHTML = `<img src="${mon.portraits[i]}">`;
-            slot.innerHTML += `<div class="slot-num">${i+1}</div>`;
-            container.appendChild(slot);
+        const view = document.getElementById('portrait-view'); view.innerHTML = '';
+        const pSource = mon.portraits.find(p => !!p);
+        if (!pSource) return;
+        for (let i = 0; i < 16; i++) {
+            const f = document.createElement('div');
+            f.style.aspectRatio = '1/1'; f.style.background = `url(${pSource})`;
+            f.style.backgroundSize = '400% 400%'; f.style.imageRendering = 'pixelated';
+            f.style.backgroundPosition = `${(i % 4) * 33.3}% ${Math.floor(i / 4) * 33.3}%`;
+            f.style.border = '1px solid #222'; view.appendChild(f);
         }
     }
 
-    // --- Data Utilities ---
-    function save() { localStorage.setItem('island_mons_v8', JSON.stringify(mons)); }
-    function showGrid() { 
-        document.getElementById('detail-view').style.display = 'none'; 
-        document.getElementById('grid-view').classList.remove('hidden'); 
-        renderGrid(); 
+    function setupUploadZones() {
+        const zones = [...ANIMS.map(a => a + '-Anim'), 'AnimData.xml'];
+        document.getElementById('upload-zones').innerHTML = zones.map(z => `
+            <div class="upload-zone" id="z-${z}" onclick="triggerSingleUpload('${z}')">
+                <span>${z.replace('-Anim','')}</span><span class="chk"></span>
+            </div>
+        `).join('');
     }
-    function updateCurrentMon(k, v) { const idx = mons.findIndex(m => m.id === currentMonId); mons[idx][k] = v; save(); }
+
+    function triggerSingleUpload(key) {
+        const input = document.getElementById('single-file-input');
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = (ev) => {
+                const mon = mons.find(m => m.id === currentMonId);
+                if (key === 'AnimData.xml') mon.xmlData = ev.target.result;
+                else mon.assets[key] = ev.target.result;
+                save(); updateUploadCheckmarks(); setPreviewTab(activeTab);
+            };
+            key === 'AnimData.xml' ? r.readAsText(file) : r.readAsDataURL(file);
+        };
+        input.click();
+    }
+
+    function updateUploadCheckmarks() {
+        const mon = mons.find(m => m.id === currentMonId);
+        if (!mon) return;
+        document.querySelectorAll('.upload-zone').forEach(z => {
+            const key = z.id.replace('z-', '');
+            const has = (key === 'AnimData.xml') ? !!mon.xmlData : !!mon.assets[key];
+            z.classList.toggle('loaded', has); z.querySelector('.chk').innerText = has ? '✓' : '';
+        });
+    }
+
     function addNewMon() {
         const id = Date.now().toString();
-        mons.push({ id, name: 'NEW_ENTITY', portraits: [null,null,null,null,null], assets: {}, xmlData: null, previewAnims: ['Walk','Idle','Attack'] });
+        mons.push({ id, name: 'NEW_ENTITY', habitat: null, portraits: [null, null, null, null, null], assets: {}, xmlData: null });
         save(); openDetail(id);
     }
-    function exportData() {
-        const blob = new Blob([JSON.stringify(mons)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mon_registry_v8.json'; a.click();
+
+    function save() { localStorage.setItem('island_mons_v6', JSON.stringify(mons)); }
+    function updateCurrentMon(k, v) { const idx = mons.findIndex(m => m.id === currentMonId); mons[idx][k] = v; save(); }
+    function changeDir(d) { currentDir = (currentDir + d + 8) % 8; document.getElementById('dir-label').innerText = DIRS[currentDir]; }
+    function deleteCurrentMon() { if(confirm('ERASE RECORD?')) { mons = mons.filter(m => m.id !== currentMonId); save(); showGrid(); } }
+
+    function renderHabitatFilters() {
+        document.getElementById('habitat-filters').innerHTML = HABITATS.map(h => `
+            <div class="filter-chip ${activeHabitatFilter === h ? 'active' : ''}" onclick="toggleHFilter('${h}')">${h}</div>
+        `).join('');
     }
-    function importData(file) {
-        const r = new FileReader();
-        r.onload = e => { mons = JSON.parse(e.target.result); save(); location.reload(); };
-        r.readAsText(file);
+    function toggleHFilter(h) {
+        activeHabitatFilter = (activeHabitatFilter === h) ? null : h;
+        renderHabitatFilters(); renderGrid();
+    }
+
+    function renderHabitatSelectors() {
+        const mon = mons.find(m => m.id === currentMonId);
+        document.getElementById('habitat-select').innerHTML = HABITATS.map(h => `
+            <div class="filter-chip ${mon.habitat === h ? 'active' : ''}" onclick="setHabitat('${h}')">${h}</div>
+        `).join('');
+    }
+    function setHabitat(h) { updateCurrentMon('habitat', h); renderHabitatSelectors(); }
+
+    function renderTabs() {
+        document.getElementById('preview-tabs').innerHTML = ['Portrait', ...ANIMS].map(t => `
+            <div class="tab" data-name="${t}" onclick="setPreviewTab('${t}')">${t}</div>
+        `).join('');
     }
 
     init();
