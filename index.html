@@ -13,67 +13,78 @@
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; margin: 0; padding: 0; width: 100vw; overflow-x: hidden; }
-        body::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03)); z-index: 9999; background-size: 100% 3px, 2px 100%; pointer-events: none; }
+        
+        /* CRT Overlay Effect */
+        body::before { 
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; 
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03)); 
+            z-index: 9999; background-size: 100% 3px, 2px 100%; pointer-events: none; 
+        }
+
         header { padding: 10px 15px; border-bottom: 1px solid var(--accent-cyan); background: var(--surface); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
         .btn { background: transparent; border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 0.75rem; text-transform: uppercase; }
-        #grid-view, #island-view, #cloud-view { padding: 15px; }
+        
+        #grid-view, #island-view, #cloud-view, #detail-view { padding: 15px; }
+        .hidden { display: none !important; }
+
+        /* Search & Filters */
         .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-bar { background: #000; border: 1px solid var(--border); color: var(--accent-green); padding: 12px; width: 100%; font-family: inherit; font-size: 1rem; }
-        .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
-        .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 12px; }
-        .mon-card { background: var(--surface); border: 1px solid var(--border); padding: 12px; position: relative; display: flex; flex-direction: column; align-items: center; }
-        .mon-card .name { font-size: 0.95rem; color: var(--accent-cyan); margin: 6px 0; text-transform: uppercase; }
-        .card-previews { display: flex; gap: 4px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); width: 100%; justify-content: center; }
-        .mini-preview { width: 46px; height: 46px; background: #000; image-rendering: pixelated; border: 1px solid #222; display: block; }
-        #detail-view { display: none; padding: 15px; padding-bottom: 50px; }
-        .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
-        h3 { margin: 0 0 12px 0; font-size: 0.8rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
-        input[type="text"], input[type="number"] { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; font-family: inherit; font-size: 0.9rem; }
-        .upload-zone { background: #000; border: 1px dashed var(--border); padding: 8px; font-size: 0.6rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
-        .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
-        .portrait-slot { aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.5rem; color: #555; cursor: pointer; position: relative; overflow: hidden; }
-        .portrait-slot.active { border-color: var(--accent-green); color: var(--accent-green); }
-        .portrait-slot img { width: 100%; height: 100%; object-fit: none; image-rendering: pixelated; }
-        .tabs { display: flex; overflow-x: auto; gap: 6px; margin-bottom: 12px; padding-bottom: 4px; }
-        .tab { padding: 8px 14px; background: #000; border: 1px solid var(--border); font-size: 0.7rem; white-space: nowrap; }
-        .tab.active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
-        #canvas-container { background: #000; border: 1px solid var(--border); display: flex; justify-content: center; align-items: center; width: 100%; aspect-ratio: 1/1; position: relative; overflow: hidden; }
-        canvas { image-rendering: pixelated; }
+        .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
         .filter-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.7rem; white-space: nowrap; cursor: pointer;}
         .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.2); color: var(--accent-cyan); }
-        .batch-btn { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0, 242, 255, 0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-family: inherit; font-weight: bold; }
-        .hidden { display: none !important; }
-        #island-view.active { display: flex; flex-direction: column; align-items: center; }
+
+        /* Grid Cards */
+        .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .mon-card { background: var(--surface); border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; }
+        .mon-card:hover { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+        .mon-card .name { font-size: 0.8rem; color: var(--accent-cyan); margin-top: 8px; text-align: center; }
+
+        /* Editor Sections */
+        .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
+        h3 { margin: 0 0 12px 0; font-size: 0.75rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; font-family: inherit; margin-bottom: 10px; }
+
+        /* Portraits & Sprites */
+        .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .portrait-slot { aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .portrait-slot img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+        
+        .upload-zone { background: #000; border: 1px dashed var(--border); padding: 10px; font-size: 0.65rem; margin-bottom: 5px; cursor: pointer; display: flex; justify-content: space-between; }
+        .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
+
+        /* Canvas Areas */
+        #canvas-container { background: #000; border: 1px solid var(--border); display: flex; justify-content: center; align-items: center; min-height: 200px; position: relative; }
+        canvas { image-rendering: pixelated; max-width: 100%; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V12_CLOUD</div>
-    <div style="display: flex; gap: 6px;">
-        <button class="btn" onclick="showView('cloud')" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">Cloud</button>
-        <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber); color: var(--accent-amber);">Island</button>
-        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add</button>
+    <div style="color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px;">REGISTRY_OS_V12</div>
+    <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="showView('cloud')" style="border-color: var(--accent-cyan);">Cloud</button>
+        <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber);">Island</button>
+        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green);">+ Add</button>
     </div>
 </header>
-
 <div id="cloud-view" class="hidden">
     <div class="editor-section">
-        <h3>CLOUD_SYNC</h3>
-        <p style="font-size: 0.7rem; color: #888;">Enter a code to load a world, or save your current one.</p>
-        <input type="text" id="cloud-code-input" placeholder="REGISTRY_CODE (e.g. ALPHA_1)">
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="btn" onclick="loadFromCloud()" style="flex:1">LOAD_CLOUD</button>
-            <button class="btn" onclick="saveToCloud()" style="flex:1; border-color: var(--accent-green); color: var(--accent-green);">SAVE_CLOUD</button>
+        <h3>CLOUD_SYNC_PROTOCOL</h3>
+        <p style="font-size: 0.7rem; color: #888; margin-bottom: 15px;">Input a Registry Code to sync with the Firebase global database.</p>
+        <input type="text" id="cloud-code-input" placeholder="ENTER_CODE (e.g. ALPHA_7)">
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+            <button class="btn" onclick="loadFromCloud()" style="flex:1">LOAD_DATA</button>
+            <button class="btn" onclick="saveToCloud()" style="flex:1; border-color: var(--accent-green); color: var(--accent-green);">PUBLISH_CODE</button>
         </div>
-        <div id="cloud-status" style="margin-top: 15px; font-size: 0.7rem; color: var(--accent-amber);">Ready.</div>
+        <div id="cloud-status" style="margin-top: 15px; font-size: 0.7rem; color: var(--accent-amber);">SYSTEM_READY</div>
     </div>
 </div>
 
 <div id="grid-view">
     <div class="controls">
-        <input type="text" id="search" class="search-bar" placeholder="SEARCH_DATABASE..." oninput="renderGrid()">
+        <input type="text" id="search" class="search-bar" placeholder="SEARCH_BY_NAME..." oninput="renderGrid()">
         <div id="habitat-filters" class="filter-row"></div>
     </div>
     <div class="mon-grid" id="mon-grid"></div>
@@ -83,41 +94,36 @@
     <div style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 15px;">
         <button class="btn" onclick="showView('grid')">&lt; REGISTRY</button>
         <div style="display: flex; gap: 5px;">
-            <input type="number" id="map-seed" value="12345" style="width: 80px;">
-            <button class="btn" onclick="initIslandGen()" style="border-color: var(--accent-green); color: var(--accent-green);">GENERATE</button>
+            <input type="number" id="map-seed" value="12345" style="width: 80px; margin:0;">
+            <button class="btn" onclick="initIslandGen()" style="border-color: var(--accent-green);">REGENERATE</button>
         </div>
     </div>
-    <div style="position: relative; border: 1px solid #fff; background: #000; width: 260px; height: 260px;">
-        <canvas id="island-canvas" width="260" height="260" style="cursor: crosshair;"></canvas>
+    <div style="position: relative; border: 2px solid var(--border); background: #000; width: 300px; height: 300px; margin: 0 auto;">
+        <canvas id="island-canvas" width="300" height="300" style="cursor: crosshair;"></canvas>
     </div>
-    <div id="tile-panel" class="editor-section hidden" style="width: 100%; margin-top: 20px; max-width: 400px;">
-        <h3 id="tile-terrain-label">TILE_INFO</h3>
-        <canvas id="tile-detail-canvas" width="200" height="200" style="background: #000; border: 1px solid var(--border); display: block; margin: 0 auto; image-rendering: pixelated;"></canvas>
-        <div id="tile-mon-list" style="margin-top: 10px; font-size: 0.7rem; color: var(--accent-cyan); text-align: center;"></div>
+    <div id="tile-panel" class="editor-section hidden" style="width: 100%; margin-top: 20px;">
+        <h3 id="tile-terrain-label">TERRAIN_ANALYSIS</h3>
+        <canvas id="tile-detail-canvas" width="200" height="200" style="background: #000; border: 1px solid var(--border); display: block; margin: 0 auto;"></canvas>
+        <div id="tile-mon-list" style="margin-top: 10px; font-size: 0.75rem; color: var(--accent-cyan); text-align: center;"></div>
     </div>
 </div>
 
-<div id="detail-view">
+<div id="detail-view" class="hidden">
     <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-        <button class="btn" onclick="showView('grid')">&lt; BACK</button>
-        <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">WIPE</button>
+        <button class="btn" onclick="showView('grid')">&lt; EXIT</button>
+        <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">DELETE_RECORD</button>
     </div>
     <div class="editor-section">
-        <h3>ENTITY_DATA</h3>
+        <h3>NAME_REGISTRY</h3>
         <input type="text" id="edit-name" onchange="updateCurrentMon('name', this.value)">
-        <div id="habitat-select" class="filter-row" style="margin-top:10px"></div>
-        <h3>PORTRAIT_RECORDS (Auto-Upload to ImgBB)</h3>
+        <h3>HABITAT_ASSIGNMENT</h3>
+        <div id="habitat-select" class="filter-row"></div>
+        
+        <h3>PORTRAIT_DATA (IMGBB_HOSTED)</h3>
         <div class="portrait-manager" id="portrait-manager"></div>
-        <h3 style="margin-top:15px">SPRITE_DATA</h3>
-        <div class="upload-grid" id="upload-zones"></div>
-    </div>
-    <div class="editor-section">
-        <h3>VISUALIZER</h3>
-        <div class="tabs" id="preview-tabs"></div>
-        <div id="canvas-container">
-            <canvas id="sprite-canvas"></canvas>
-            <div id="portrait-view" class="hidden" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:2px; width:100%;"></div>
-        </div>
+        
+        <h3 style="margin-top:15px">SPRITE_ASSETS</h3>
+        <div id="upload-zones"></div>
     </div>
 </div>
 
@@ -139,224 +145,434 @@
 
   const app = initializeApp(firebaseConfig);
   window.db = getFirestore(app);
+  // Helper aliases for the next scripts
   window.fbDoc = doc; window.fbGet = getDoc; window.fbSet = setDoc;
 </script>
-
 <script>
     const IMGBB_KEY = 'bd7416e31a82ad846b1e4d3cc30eded6';
     const HABITATS = ['Forest', 'Canopy', 'Cave', 'River', 'Beach'];
     const ANIMS = ['Walk', 'Hop', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
-    const TERRAIN = { OPEN_FOREST: { name: 'Open Forest', color: '#44a044', biome: 'Forest' }, DENSE_FOREST: { name: 'Dense Forest', color: '#1a5e1a', biome: 'Canopy' }, CAVE: { name: 'Cave System', color: '#555555', biome: 'Cave' }, RIVERBANK: { name: 'Riverbank', color: '#4488ff', biome: 'River' }, SHORE: { name: 'Shoreline', color: '#d2b48c', biome: 'Beach' }, OCEAN: { name: 'Ocean', color: '#00008b', biome: 'None' } };
+    const TERRAIN = { 
+        OPEN_FOREST: { name: 'Open Forest', color: '#44a044', biome: 'Forest' }, 
+        DENSE_FOREST: { name: 'Dense Forest', color: '#1a5e1a', biome: 'Canopy' }, 
+        CAVE: { name: 'Cave System', color: '#555555', biome: 'Cave' }, 
+        RIVERBANK: { name: 'Riverbank', color: '#4488ff', biome: 'River' }, 
+        SHORE: { name: 'Shoreline', color: '#d2b48c', biome: 'Beach' }, 
+        OCEAN: { name: 'Ocean', color: '#00008b', biome: 'None' } 
+    };
 
+    // State Management
     let mons = JSON.parse(localStorage.getItem('island_mons_v12') || '[]');
-    let currentMonId = null, activeTab = 'Portrait', globalPortraitIdx = 0, lastPortraitShift = 0, activeHabitatFilter = null;
-    let currentIsland = null, islandWalkers = [], detailWalkers = [], islandLoop = null, detailRequest = null;
+    let currentMonId = null;
+    let activeHabitatFilter = null;
+    let currentIsland = null;
+    let islandLoop = null;
+    let detailRequest = null;
 
-    const canvas = document.getElementById('sprite-canvas'), ctx = canvas.getContext('2d');
-
-    function init() { renderHabitatFilters(); renderGrid(); setupUploadZones(); renderTabs(); requestAnimationFrame(runGlobalLoop); }
-
+    // View Management
     function showView(viewId) {
-        document.getElementById('grid-view').classList.add('hidden');
-        document.getElementById('detail-view').style.display = 'none';
-        document.getElementById('island-view').classList.remove('active');
-        document.getElementById('cloud-view').classList.add('hidden');
-        cancelAnimationFrame(islandLoop); cancelAnimationFrame(detailRequest);
-        if (viewId === 'grid') document.getElementById('grid-view').classList.remove('hidden');
-        else if (viewId === 'island') { document.getElementById('island-view').classList.add('active'); initIslandGen(); }
-        else if (viewId === 'detail') document.getElementById('detail-view').style.display = 'block';
-        else if (viewId === 'cloud') document.getElementById('cloud-view').classList.remove('hidden');
+        // Hide all
+        ['grid-view', 'detail-view', 'island-view', 'cloud-view'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+        
+        // Handle specific displays
+        if (viewId === 'detail') {
+            document.getElementById('detail-view').classList.remove('hidden');
+        } else {
+            const target = document.getElementById(viewId + '-view');
+            if (target) target.classList.remove('hidden');
+        }
+
+        // Cleanup loops
+        if (islandLoop) cancelAnimationFrame(islandLoop);
+        if (detailRequest) cancelAnimationFrame(detailRequest);
+
+        if (viewId === 'island') initIslandGen();
+        if (viewId === 'grid') renderGrid();
     }
 
-    // CLOUD LOGIC
-    async function saveToCloud() {
-        const code = document.getElementById('cloud-code-input').value.toUpperCase();
-        if(!code) return alert("Enter a code name!");
+    // Cloud Logic: ImgBB Upload
+    async function uploadToImgBB(file) {
         const status = document.getElementById('cloud-status');
-        status.innerText = "UPLOADING WORLD...";
+        if(status) status.innerText = "UPLOADING ASSET TO IMGBB...";
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
         try {
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if(status) status.innerText = "UPLOAD COMPLETE.";
+            return data.data.url;
+        } catch (e) {
+            if(status) status.innerText = "IMG_UPLOAD_FAILED.";
+            console.error(e);
+            return null;
+        }
+    }
+
+    // Basic Local Storage Sync
+    function save() {
+        localStorage.setItem('island_mons_v12', JSON.stringify(mons));
+    }
+
+    function addNewMon() {
+        const id = "MON_" + Date.now();
+        const newMon = {
+            id,
+            name: 'NEW_ENTITY',
+            habitat: 'Forest',
+            portraits: [null, null, null, null, null],
+            assets: {},
+            xmlData: null
+        };
+        mons.push(newMon);
+        save();
+        openDetail(id);
+    }
+</script>
+// CLOUD SYNC: FIRESTORE LOGIC
+    async function saveToCloud() {
+        const code = document.getElementById('cloud-code-input').value.trim().toUpperCase();
+        if(!code) return alert("PLEASE ENTER A REGISTRY CODE NAME.");
+        
+        const status = document.getElementById('cloud-status');
+        status.innerText = "UPLOADING REGISTRY TO CLOUD...";
+        
+        try {
+            // Saving to the 'registries' collection in Firestore
             await window.fbSet(window.fbDoc(window.db, "registries", code), {
                 seed: document.getElementById('map-seed').value,
                 mons: mons,
-                updated: Date.now()
+                timestamp: Date.now(),
+                version: "12.0"
             });
-            status.innerText = `SAVED TO CLOUD: ${code}`;
-        } catch (e) { status.innerText = "UPLOAD FAILED."; }
+            status.innerText = `SUCCESS: REGISTRY [${code}] PUBLISHED.`;
+        } catch (e) {
+            console.error(e);
+            status.innerText = "CLOUD_ERROR: CHECK NETWORK OR PERMISSIONS.";
+        }
     }
 
     async function loadFromCloud() {
-        const code = document.getElementById('cloud-code-input').value.toUpperCase();
+        const code = document.getElementById('cloud-code-input').value.trim().toUpperCase();
+        if(!code) return alert("ENTER A CODE TO SEARCH.");
+        
         const status = document.getElementById('cloud-status');
-        status.innerText = "FETCHING DATA...";
-        const snap = await window.fbGet(window.fbDoc(window.db, "registries", code));
-        if(snap.exists()) {
-            const data = snap.data();
-            mons = data.mons;
-            document.getElementById('map-seed').value = data.seed;
+        status.innerText = "SEARCHING DATABASE...";
+        
+        try {
+            const snap = await window.fbGet(window.fbDoc(window.db, "registries", code));
+            if(snap.exists()) {
+                const data = snap.data();
+                // Overwrite local data with cloud data
+                mons = data.mons;
+                document.getElementById('map-seed').value = data.seed;
+                save(); // Sync to localStorage
+                status.innerText = `SYNCED: WORLD [${code}] LOADED.`;
+                setTimeout(() => showView('grid'), 1000);
+            } else {
+                status.innerText = "ERROR: CODE NOT FOUND IN REGISTRY.";
+            }
+        } catch (e) {
+            console.error(e);
+            status.innerText = "FETCH_FAILED: CONNECTION INTERRUPTED.";
+        }
+    }
+
+    // REGISTRY UI RENDERING
+    function renderGrid() {
+        const grid = document.getElementById('mon-grid');
+        const searchTerm = document.getElementById('search').value.toLowerCase();
+        grid.innerHTML = '';
+
+        const filtered = mons.filter(m => {
+            const matchesSearch = m.name.toLowerCase().includes(searchTerm);
+            const matchesHabitat = !activeHabitatFilter || m.habitat === activeHabitatFilter;
+            return matchesSearch && matchesHabitat;
+        });
+
+        filtered.forEach(mon => {
+            const card = document.createElement('div');
+            card.className = 'mon-card';
+            card.onclick = () => openDetail(mon.id);
+            
+            // Use the first portrait URL from ImgBB if it exists
+            const portraitUrl = mon.portraits.find(p => p !== null) || 'https://via.placeholder.com/64?text=?';
+            
+            card.innerHTML = `
+                <img src="${portraitUrl}" style="width:64px; height:64px; image-rendering: pixelated;">
+                <div class="name">${mon.name}</div>
+                <div style="font-size:0.6rem; color:#666;">${mon.habitat.toUpperCase()}</div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function renderHabitatFilters() {
+        const container = document.getElementById('habitat-filters');
+        container.innerHTML = HABITATS.map(h => `
+            <div class="filter-chip ${activeHabitatFilter === h ? 'active' : ''}" 
+                 onclick="toggleHabitatFilter('${h}')">${h}</div>
+        `).join('');
+    }
+
+    function toggleHabitatFilter(h) {
+        activeHabitatFilter = (activeHabitatFilter === h) ? null : h;
+        renderHabitatFilters();
+        renderGrid();
+    }
+    function openDetail(id) {
+        currentMonId = id;
+        const mon = mons.find(m => m.id === id);
+        showView('detail');
+        
+        document.getElementById('edit-name').value = mon.name;
+        renderHabitatSelectors();
+        renderPortraitManager();
+        setupUploadZones();
+        updateUploadCheckmarks();
+    }
+
+    function updateCurrentMon(field, value) {
+        const index = mons.findIndex(m => m.id === currentMonId);
+        if (index !== -1) {
+            mons[index][field] = value;
             save();
-            renderGrid();
-            status.innerText = "CLOUD SYNC COMPLETE.";
+        }
+    }
+
+    function renderHabitatSelectors() {
+        const mon = mons.find(m => m.id === currentMonId);
+        const container = document.getElementById('habitat-select');
+        container.innerHTML = HABITATS.map(h => `
+            <div class="filter-chip ${mon.habitat === h ? 'active' : ''}" 
+                 onclick="updateCurrentMon('habitat', '${h}'); renderHabitatSelectors();">${h}</div>
+        `).join('');
+    }
+
+    // PORTRAIT MANAGEMENT (IMGBB)
+    function renderPortraitManager() {
+        const mon = mons.find(m => m.id === currentMonId);
+        const container = document.getElementById('portrait-manager');
+        container.innerHTML = '';
+
+        for (let i = 0; i < 5; i++) {
+            const slot = document.createElement('div');
+            slot.className = `portrait-slot ${mon.portraits[i] ? 'active' : ''}`;
+            slot.onclick = () => {
+                window.currentTargetSlot = i;
+                document.getElementById('portrait-input').click();
+            };
+            
+            slot.innerHTML = mon.portraits[i] 
+                ? `<img src="${mon.portraits[i]}">` 
+                : `<span style="color:#333; font-size:1.2rem;">+</span>`;
+            
+            container.appendChild(slot);
+        }
+    }
+
+    document.getElementById('portrait-input').onchange = async (e) => {
+        if (!e.target.files[0]) return;
+        const url = await uploadToImgBB(e.target.files[0]);
+        if (url) {
+            const mon = mons.find(m => m.id === currentMonId);
+            mon.portraits[window.currentTargetSlot] = url;
+            save();
+            renderPortraitManager();
+        }
+    };
+
+    // SPRITE & XML MANAGEMENT
+    function setupUploadZones() {
+        const container = document.getElementById('upload-zones');
+        const keys = [...ANIMS.map(a => a + '-Anim'), 'AnimData.xml'];
+        
+        container.innerHTML = keys.map(key => `
+            <div class="upload-zone" id="z-${key}" onclick="triggerAssetUpload('${key}')">
+                <span>${key}</span>
+                <span class="chk"></span>
+            </div>
+        `).join('');
+    }
+
+    function triggerAssetUpload(key) {
+        const input = document.getElementById('single-file-input');
+        input.onchange = async (e) => {
+            if (!e.target.files[0]) return;
+            const mon = mons.find(m => m.id === currentMonId);
+
+            if (key === 'AnimData.xml') {
+                const text = await e.target.files[0].text();
+                mon.xmlData = text;
+            } else {
+                const url = await uploadToImgBB(e.target.files[0]);
+                if (url) mon.assets[key] = url;
+            }
+            save();
+            updateUploadCheckmarks();
+        };
+        input.click();
+    }
+
+    function updateUploadCheckmarks() {
+        const m = mons.find(mon => mon.id === currentMonId);
+        if (!m) return;
+        
+        document.querySelectorAll('.upload-zone').forEach(zone => {
+            const key = zone.id.replace('z-', '');
+            const hasFile = (key === 'AnimData.xml') ? !!m.xmlData : !!m.assets[key];
+            zone.classList.toggle('loaded', hasFile);
+            zone.querySelector('.chk').innerText = hasFile ? '✓' : '';
+        });
+    }
+
+    function deleteCurrentMon() {
+        if (confirm("ERASE THIS ENTITY FROM REGISTRY?")) {
+            mons = mons.filter(m => m.id !== currentMonId);
+            save();
             showView('grid');
-        } else { status.innerText = "CODE NOT FOUND."; }
+        }
+    }
+            // MATH: DETERMINISTIC SEED GENERATOR
+    function mulberry32(a) {
+        return function() {
+            var t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        }
     }
 
-    async function uploadToImgBB(blob) {
-        const formData = new FormData();
-        formData.append('image', blob);
-        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: formData });
-        const data = await res.json();
-        return data.data.url;
-    }
-
-    // Existing Map/Logic fixes from v11
-    function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
-
+    // ISLAND GENERATOR
     function initIslandGen() {
-        const seed = parseInt(document.getElementById('map-seed').value) || 12345;
+        const seedInput = document.getElementById('map-seed').value;
+        const seed = parseInt(seedInput) || 12345;
         const random = mulberry32(seed);
-        currentIsland = generateIslandData(random);
-        spawnMonsOnIsland(random); renderIslandMain();
+        
+        currentIsland = generateIslandLayout(random);
+        spawnPopulations(random);
+        renderIslandMain();
+        
         document.getElementById('tile-panel').classList.add('hidden');
     }
 
-    function generateIslandData(rng) {
+    function generateIslandLayout(rng) {
         const size = 10; let tiles = [];
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                let type = (x === 0 || x === 9 || y === 0 || y === 9) ? (rng() > 0.8 ? 'OCEAN' : 'SHORE') : (rng() > 0.85 ? 'CAVE' : (rng() > 0.65 ? 'DENSE_FOREST' : 'OPEN_FOREST'));
-                tiles.push({ x, y, type, mons: [] });
+                let type = 'OPEN_FOREST';
+                const edge = (x === 0 || x === 9 || y === 0 || y === 9);
+                if (edge) type = rng() > 0.7 ? 'OCEAN' : 'SHORE';
+                else if (rng() > 0.9) type = 'CAVE';
+                else if (rng() > 0.7) type = 'DENSE_FOREST';
+                
+                tiles.push({ x, y, type, inhabitants: [] });
             }
         }
-        let cX = Math.floor(rng() * 6) + 2, cY = 0;
-        while (cY < 10) { tiles[cY * 10 + cX].type = 'RIVERBANK'; cY++; if (rng() > 0.4 && cX > 1 && cX < 8) cX += (rng() > 0.5 ? 1 : -1); }
+        // Random River
+        let rx = Math.floor(rng() * 6) + 2;
+        for (let ry = 0; ry < 10; ry++) {
+            tiles[ry * 10 + rx].type = 'RIVERBANK';
+            if (rng() > 0.5 && rx > 1 && rx < 8) rx += (rng() > 0.5 ? 1 : -1);
+        }
         return tiles;
     }
 
-    function getDirRow(vx, vy) {
-        const angle = Math.atan2(vy, vx) * (180 / Math.PI);
-        const normalized = (angle + 360 + 22.5) % 360;
-        const directions = [1, 2, 3, 4, 5, 6, 7, 0]; 
-        return directions[Math.floor(normalized / 45)];
-    }
-
-    function spawnMonsOnIsland(rng) {
-        islandWalkers = [];
+    function spawnPopulations(rng) {
         currentIsland.forEach(tile => {
-            const species = mons.filter(m => m.habitat === TERRAIN[tile.type].biome);
-            if (species.length > 0) {
-                const count = Math.floor(rng() * 2) + 1;
+            const possible = mons.filter(m => m.habitat === TERRAIN[tile.type].biome);
+            if (possible.length > 0 && rng() > 0.5) {
+                const count = Math.floor(rng() * 3) + 1;
                 for (let i = 0; i < count; i++) {
-                    const s = species[Math.floor(rng() * species.length)];
-                    const isSleeping = rng() > 0.8;
-                    const mon = { id: s.id, name: s.name, color: stringToColor(s.name), isSleeping, tx: tile.x, ty: tile.y, lx: rng() * 15 + 5, ly: rng() * 15 + 5, vx: isSleeping ? 0 : (rng() - 0.5) * 0.2, vy: isSleeping ? 0 : (rng() - 0.5) * 0.2 };
-                    tile.mons.push(mon); islandWalkers.push(mon);
+                    const species = possible[Math.floor(rng() * possible.length)];
+                    tile.inhabitants.push({
+                        id: species.id,
+                        name: species.name,
+                        lx: rng() * 20 + 2, ly: rng() * 20 + 2, // Local tile pos
+                        vx: (rng() - 0.5) * 0.1, vy: (rng() - 0.5) * 0.1,
+                        isSleeping: rng() > 0.8
+                    });
                 }
             }
         });
     }
 
+    // MAIN OVERWORLD RENDER
     function renderIslandMain() {
-        const canv = document.getElementById('island-canvas'), ictx = canv.getContext('2d');
+        const canv = document.getElementById('island-canvas');
+        const ictx = canv.getContext('2d');
+        
         function loop() {
-            ictx.clearRect(0,0,260,260);
-            currentIsland.forEach(t => { ictx.fillStyle = TERRAIN[t.type].color; ictx.fillRect(t.x * 26, t.y * 26, 25, 25); });
-            islandWalkers.forEach(m => {
-                m.lx += m.vx; m.ly += m.vy;
-                if(m.lx < 2 || m.lx > 23) m.vx *= -1; if(m.ly < 2 || m.ly > 23) m.vy *= -1;
-                ictx.fillStyle = m.isSleeping ? "#fff" : m.color; ictx.fillRect(m.tx*26 + m.lx, m.ty*26 + m.ly, 2, 2);
+            ictx.clearRect(0, 0, 300, 300);
+            // Draw Tiles
+            currentIsland.forEach(t => {
+                ictx.fillStyle = TERRAIN[t.type].color;
+                ictx.fillRect(t.x * 30, t.y * 30, 29, 29);
+                
+                // Draw Inhabitants (as dots on map)
+                t.inhabitants.forEach(m => {
+                    if (!m.isSleeping) {
+                        m.lx += m.vx; m.ly += m.vy;
+                        if (m.lx < 2 || m.lx > 27) m.vx *= -1;
+                        if (m.ly < 2 || m.ly > 27) m.vy *= -1;
+                    }
+                    ictx.fillStyle = m.isSleeping ? '#fff' : '#000';
+                    ictx.fillRect(t.x * 30 + m.lx, t.y * 30 + m.ly, 3, 3);
+                });
             });
             islandLoop = requestAnimationFrame(loop);
         }
         loop();
     }
 
+    // TILE INTERACTION
     document.getElementById('island-canvas').onclick = function(e) {
         const rect = this.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / 26), y = Math.floor((e.clientY - rect.top) / 26);
+        const x = Math.floor((e.clientX - rect.left) / (rect.width / 10));
+        const y = Math.floor((e.clientY - rect.top) / (rect.height / 10));
         const tile = currentIsland.find(t => t.x === x && t.y === y);
-        if(tile) openTileDetail(tile);
+        if (tile) openTileDetail(tile);
     };
 
     function openTileDetail(tile) {
-        document.getElementById('tile-panel').classList.remove('hidden');
-        document.getElementById('tile-mon-list').innerText = `POPULATION: ` + (tile.mons.map(m=>m.name).join(", ") || "EMPTY");
+        const panel = document.getElementById('tile-panel');
+        panel.classList.remove('hidden');
+        document.getElementById('tile-terrain-label').innerText = `SECTOR_${tile.x}_${tile.y}: ${tile.type}`;
+        
         const dctx = document.getElementById('tile-detail-canvas').getContext('2d');
-        detailWalkers = []; cancelAnimationFrame(detailRequest);
-        tile.mons.forEach(m => {
-            const species = mons.find(s => s.id === m.id);
-            const animType = m.isSleeping ? 'Sleep' : 'Walk';
-            detailWalkers.push({ x: Math.random()*140+30, y: Math.random()*140+30, vx: m.vx * 4, vy: m.vy * 4, isSleeping: m.isSleeping, data: species, frame: 0, lastF: 0, animType, xml: getAnimData(species.xmlData, animType) });
-        });
-        function dLoop(t) {
-            dctx.fillStyle = TERRAIN[tile.type].color; dctx.fillRect(0,0,200,200);
-            detailWalkers.forEach(dw => {
-                dw.x += dw.vx; dw.y += dw.vy;
-                if(dw.x < 10 || dw.x > 160) dw.vx *= -1; if(dw.y < 10 || dw.y > 160) dw.vy *= -1;
-                const sheet = dw.data.assets[dw.animType + '-Anim'];
-                if(sheet) {
-                    const img = new Image(); img.crossOrigin = "anonymous"; img.src = sheet;
-                    const fw = dw.xml ? dw.xml.fw : 32, fh = dw.xml ? dw.xml.fh : 32;
-                    const row = dw.isSleeping ? 7 : getDirRow(dw.vx, dw.vy);
-                    dctx.drawImage(img, dw.frame * fw, row * fh, fw, fh, dw.x - fw/2, dw.y - fh/2, fw, fh);
-                    if(t - dw.lastF > 150) { dw.frame = (dw.frame+1) % (dw.xml ? dw.xml.durs.length : 4); dw.lastF = t; }
-                }
+        const population = tile.inhabitants.map(m => m.name).join(', ') || 'NO_SIGNALS';
+        document.getElementById('tile-mon-list').innerText = `DETECTED: ${population}`;
+
+        // Local animation for the zoomed-in view
+        function detailLoop(time) {
+            dctx.fillStyle = TERRAIN[tile.type].color;
+            dctx.fillRect(0,0,200,200);
+            
+            tile.inhabitants.forEach((m, i) => {
+                const monData = mons.find(s => s.id === m.id);
+                // Simple color representation for now - can be expanded to full sprites
+                dctx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
+                dctx.beginPath();
+                dctx.arc(m.lx * 6, m.ly * 6, 8, 0, Math.PI * 2);
+                dctx.fill();
             });
-            detailRequest = requestAnimationFrame(dLoop);
+            detailRequest = requestAnimationFrame(detailLoop);
         }
-        dLoop(0);
+        detailLoop(0);
     }
 
-    function renderGrid() {
-        const grid = document.getElementById('mon-grid');
-        grid.innerHTML = '';
-        mons.forEach(mon => {
-            const card = document.createElement('div'); card.className = 'mon-card'; card.onclick = () => openDetail(mon.id);
-            const p = mon.portraits.find(x => !!x) || '';
-            card.innerHTML = `<img src="${p}" style="width:48px; height:48px; image-rendering: pixelated; background:#000;"><div class="name">${mon.name}</div>`;
-            grid.appendChild(card);
-        });
-    }
-
-    function runGlobalLoop(now) {
-        if (now - lastPortraitShift > 3000) { globalPortraitIdx++; lastPortraitShift = now; renderGrid(); }
-        requestAnimationFrame(runGlobalLoop);
-    }
-
-    function openDetail(id) { currentMonId = id; const mon = mons.find(m => m.id === id); showView('detail'); document.getElementById('edit-name').value = mon.name; renderHabitatSelectors(); renderPortraitManager(); updateUploadCheckmarks(); setPreviewTab('Portrait'); }
-    function getAnimData(xml, name) {
-        if (!xml) return null; const parser = new DOMParser(), doc = parser.parseFromString(xml, "text/xml"), anims = Array.from(doc.getElementsByTagName('Anim'));
-        let t = anims.find(a => a.querySelector('Name').textContent === name);
-        if (!t) return null; const copy = t.querySelector('CopyOf'); if (copy) return getAnimData(xml, copy.textContent);
-        return { fw: parseInt(t.querySelector('FrameWidth').textContent), fh: parseInt(t.querySelector('FrameHeight').textContent), durs: Array.from(t.getElementsByTagName('Duration')).map(d => parseInt(d.textContent)) };
-    }
-    function save() { localStorage.setItem('island_mons_v12', JSON.stringify(mons)); }
-    function stringToColor(s) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return `hsl(${Math.abs(h % 360)}, 70%, 60%)`; }
-    function addNewMon() { const id = Date.now().toString(); mons.push({ id, name: 'NEW_ENTITY', habitat: 'Forest', portraits: [null,null,null,null,null], assets: {}, xmlData: null }); save(); openDetail(id); }
-    function updateCurrentMon(k, v) { const i = mons.findIndex(m => m.id === currentMonId); mons[i][k] = v; save(); }
-    function deleteCurrentMon() { if(confirm('WIPE?')) { mons = mons.filter(m => m.id !== currentMonId); save(); showView('grid'); } }
-    function renderHabitatFilters() { document.getElementById('habitat-filters').innerHTML = HABITATS.map(h => `<div class="filter-chip ${activeHabitatFilter === h ? 'active' : ''}" onclick="activeHabitatFilter=(activeHabitatFilter==='${h}'?null:'${h}');renderHabitatFilters();renderGrid();">${h}</div>`).join(''); }
-    function renderHabitatSelectors() { const mon = mons.find(m => m.id === currentMonId); document.getElementById('habitat-select').innerHTML = HABITATS.map(h => `<div class="filter-chip ${mon.habitat === h ? 'active' : ''}" onclick="updateCurrentMon('habitat','${h}');renderHabitatSelectors();">${h}</div>`).join(''); }
-    function renderPortraitManager() {
-        const mon = mons.find(m => m.id === currentMonId), cont = document.getElementById('portrait-manager'); cont.innerHTML = '';
-        for (let i = 0; i < 5; i++) { const s = document.createElement('div'); s.className = `portrait-slot ${mon.portraits[i]?'active':''}`; s.onclick = () => { window.currentTargetSlot=i; document.getElementById('portrait-input').click(); }; s.innerHTML = (mon.portraits[i] ? `<img src="${mon.portraits[i]}">` : `<span>+</span>`) + `<div class="slot-label">${i+1}/5</div>`; cont.appendChild(s); }
-    }
-    document.getElementById('portrait-input').onchange = async (e) => {
-        const url = await uploadToImgBB(e.target.files[0]);
-        mons.find(m=>m.id===currentMonId).portraits[window.currentTargetSlot]=url; save(); renderPortraitManager();
+    // INITIALIZE APP
+    window.onload = () => {
+        renderHabitatFilters();
+        renderGrid();
     };
-    function setupUploadZones() { document.getElementById('upload-zones').innerHTML = [...ANIMS.map(a=>a+'-Anim'), 'AnimData.xml'].map(z => `<div class="upload-zone" id="z-${z}" onclick="triggerSingleUpload('${z}')"><span>${z}</span><span class="chk"></span></div>`).join(''); }
-    function triggerSingleUpload(k) { const inp = document.getElementById('single-file-input'); inp.onchange = async (e) => {
-        const mon = mons.find(m=>m.id===currentMonId);
-        if(k==='AnimData.xml') { const text = await e.target.files[0].text(); mon.xmlData = text; }
-        else { const url = await uploadToImgBB(e.target.files[0]); mon.assets[k] = url; }
-        save(); updateUploadCheckmarks();
-    }; inp.click(); }
-    function updateUploadCheckmarks() { const m = mons.find(mon => mon.id === currentMonId); if(!m) return; document.querySelectorAll('.upload-zone').forEach(z => { const k = z.id.replace('z-',''); const has = k==='AnimData.xml'?!!m.xmlData:!!m.assets[k]; z.classList.toggle('loaded', has); z.querySelector('.chk').innerText = has ? '✓' : ''; }); }
-    function setPreviewTab(t) { activeTab = t; document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.name === t)); const pv = document.getElementById('portrait-view'); if (t === 'Portrait') { canvas.classList.add('hidden'); pv.classList.remove('hidden'); renderPortraitGrid(); } else { canvas.classList.remove('hidden'); pv.classList.add('hidden'); } }
-    function renderPortraitGrid() { const m = mons.find(mon => mon.id === currentMonId), v = document.getElementById('portrait-view'); v.innerHTML = ''; const s = m.portraits.find(p => !!p); if(!s) return; for (let i=0; i<16; i++) { const f = document.createElement('div'); f.style.aspectRatio = '1/1'; f.style.background = `url(${s})`; f.style.backgroundSize = '400% 400%'; f.style.imageRendering = 'pixelated'; f.style.backgroundPosition = `${(i%4)*33.3}% ${Math.floor(i/4)*33.3}%`; f.style.border = '1px solid #222'; v.appendChild(f); } }
-    function renderTabs() { document.getElementById('preview-tabs').innerHTML = ['Portrait', ...ANIMS].map(t => `<div class="tab" data-name="${t}" onclick="setPreviewTab('${t}')">${t}</div>`).join(''); }
-
-    init();
 </script>
 </body>
 </html>
