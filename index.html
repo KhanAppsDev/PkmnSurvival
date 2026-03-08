@@ -1,129 +1,680 @@
-Here’s a complete single-file HTML solution that meets your specifications for the Island Mon Registry. It uses vanilla JS, a dark terminal aesthetic with cyan/green accents, monospace fonts, scanline overlay, responsive grid and detail views, file uploads stored in localStorage, animated sprite previews, search/filtering, and JSON export. All data persists locally.
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Island Mon Registry</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-html, body { margin:0; padding:0; background:#0a0a0a; color:#0ff; font-family:'Share Tech Mono', monospace; height:100%; }
-body { display:flex; flex-direction:column; }
-header { display:flex; justify-content:space-between; align-items:center; padding:10px; background:#050505; border-bottom:1px solid #00ffcc; }
-button { font-family:'Share Tech Mono', monospace; background:#000; color:#0ff; border:1px solid #0ff; padding:4px 8px; cursor:pointer; }
-button:hover { background:#001; }
-#main { flex:1; display:flex; flex-direction:column; overflow:auto; position:relative; }
-.scanlines { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0.1) 1px); z-index:10; }
-.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; padding:10px; }
-.card { background:#111; border:1px solid #0ff; padding:10px; cursor:pointer; display:flex; flex-direction:column; }
-.card img { width:100%; image-rendering:pixelated; }
-.badge { display:flex; align-items:center; margin:4px 0; }
-.badge-dot { width:10px; height:10px; border-radius:50%; margin-right:6px; }
-.tags { display:flex; flex-wrap:wrap; gap:4px; font-size:12px; }
-.tag { border:1px solid #0ff; padding:2px 4px; border-radius:2px; }
-.detail { display:none; flex-direction:column; padding:10px; overflow:auto; height:100%; }
-input[type=text], select, textarea { width:100%; margin:4px 0 8px 0; background:#111; border:1px solid #0ff; color:#0ff; padding:2px 4px; font-family:'Share Tech Mono', monospace; }
-textarea { resize:vertical; height:60px; }
-.upload-zone { border:1px dashed #0ff; padding:4px; margin:4px 0; text-align:center; position:relative; cursor:pointer; }
-.upload-zone.loaded::after { content:'✓'; position:absolute; top:2px; right:4px; color:#0f0; }
-.tab-buttons { display:flex; gap:4px; margin:4px 0; }
-.tab-buttons button.active { background:#0ff; color:#000; }
-canvas { background:repeating-conic-gradient(#111 0% 25%, transparent 0% 50%) 50%/20px 20px; image-rendering:pixelated; }
-.direction-controls { display:flex; justify-content:center; gap:8px; margin:4px 0; }
-.filter-bar { display:flex; flex-wrap:wrap; gap:4px; padding:4px; background:#050505; }
-.filter-chip { border:1px solid #0ff; padding:2px 6px; cursor:pointer; border-radius:2px; }
-.filter-chip.active { background:#0ff; color:#000; }
-.search-input { flex:1; background:#111; border:1px solid #0ff; color:#0ff; padding:2px 4px; font-family:'Share Tech Mono', monospace; }
-.completion { width:10px; height:10px; border-radius:50%; margin-left:auto; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Mon Registry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0b;
+            --surface: #141417;
+            --accent-cyan: #00f2ff;
+            --accent-green: #39ff14;
+            --accent-amber: #ffb100;
+            --accent-red: #ff3e3e;
+            --text: #e0e0e0;
+            --border: #2a2a2e;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            overflow-x: hidden;
+            line-height: 1.4;
+        }
+
+        /* Scanline Overlay */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 1000;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--accent-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: var(--accent-cyan);
+            color: var(--bg);
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .search-bar {
+            background: #000;
+            border: 1px solid var(--border);
+            color: var(--accent-green);
+            padding: 0.5rem;
+            width: 300px;
+            font-family: inherit;
+        }
+
+        /* Grid View */
+        #grid-view { padding: 2rem; }
+        .controls { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap; }
+        
+        .mon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .mon-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            cursor: pointer;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .mon-card:hover { border-color: var(--accent-cyan); }
+        .mon-card img { width: 80px; height: 80px; image-rendering: pixelated; display: block; margin: 0 auto 1rem; }
+        .mon-card .name { text-align: center; font-size: 1.2rem; color: var(--accent-cyan); margin-bottom: 0.5rem; }
+        
+        .status-light {
+            width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px;
+            background: #444;
+        }
+        .status-light.complete { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+
+        .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; background: #000; border: 1px solid #444; margin-right: 4px; }
+
+        /* Detail View */
+        #detail-view { display: none; padding: 2rem; min-height: 100vh; }
+        .detail-header { display: flex; gap: 2rem; margin-bottom: 2rem; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+
+        .editor-section { background: var(--surface); padding: 1.5rem; border: 1px solid var(--border); }
+        h3 { margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; color: var(--accent-cyan); }
+
+        .field-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.25rem; }
+        input[type="text"], textarea, select {
+            width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 0.5rem; font-family: inherit;
+        }
+
+        /* Behavior Selector */
+        .behavior-selector { display: flex; gap: 0.5rem; }
+        .behavior-btn {
+            flex: 1; padding: 0.5rem; border: 1px solid var(--border); text-align: center; cursor: pointer; opacity: 0.5;
+        }
+        .behavior-btn.active { opacity: 1; border-color: currentColor; }
+        .behavior-btn[data-val="Docile"] { color: var(--accent-green); }
+        .behavior-btn[data-val="Curious"] { color: var(--accent-amber); }
+        .behavior-btn[data-val="Aggressive"] { color: var(--accent-red); }
+
+        /* Sprite Upload Zones */
+        .upload-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+        .upload-zone {
+            background: #000; border: 1px dashed var(--border); padding: 0.5rem; font-size: 0.7rem;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
+
+        /* Canvas Area */
+        .preview-panel { display: flex; flex-direction: column; align-items: center; }
+        .tabs { display: flex; gap: 2px; width: 100%; overflow-x: auto; margin-bottom: 1rem; }
+        .tab { 
+            padding: 0.5rem 1rem; background: #000; border: 1px solid var(--border); cursor: pointer; font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .tab.active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        
+        #canvas-container {
+            background-image: linear-gradient(45deg, #1a1a1a 25%, transparent 25%), 
+                              linear-gradient(-45deg, #1a1a1a 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #1a1a1a 75%), 
+                              linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+            background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border: 2px solid var(--border); display: flex; justify-content: center; align-items: center;
+            width: 100%; height: 300px; overflow: hidden; position: relative;
+        }
+        canvas { image-rendering: pixelated; }
+
+        .dir-controls { margin-top: 1rem; display: flex; align-items: center; gap: 1rem; }
+        
+        .hidden { display: none !important; }
+        
+        .moves-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .move-row { display: flex; gap: 0.5rem; }
+
+        .portrait-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, 80px); gap: 5px;
+        }
+        .portrait-frame {
+            width: 80px; height: 80px; background: #000; border: 1px solid #333; image-rendering: pixelated;
+        }
+
+        .filter-chip {
+            padding: 2px 10px; border: 1px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 0.8rem;
+        }
+        .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.1); }
+    </style>
 </head>
 <body>
+
 <header>
-  <div>
-    <input type="text" id="search" class="search-input" placeholder="Search by name">
-  </div>
-  <div>
-    <button id="addMon">Add Mon</button>
-    <button id="exportJSON">Export JSON</button>
-  </div>
+    <div style="font-size: 1.5rem; color: var(--accent-cyan); font-weight: bold;">ISLAND_MON_REGISTRY_V1.0</div>
+    <div style="display: flex; gap: 1rem;">
+        <button class="btn" onclick="exportData()">Export JSON</button>
+        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add Mon</button>
+    </div>
 </header>
-<div id="main">
-  <div class="scanlines"></div>
-  <div id="gridView" class="grid"></div>
-  <div id="detailView" class="detail">
-    <button id="backToGrid">◀ Back</button>
-    <div>
-      <label>Name: <input type="text" id="monName"></label>
+
+<div id="grid-view">
+    <div class="controls">
+        <input type="text" id="search" class="search-bar" placeholder="SEARCH REGISTRY..." oninput="renderGrid()">
+        <div id="biome-filters" style="display: flex; gap: 0.5rem;">
+            </div>
     </div>
-    <div>
-      Behavior:
-      <label><input type="radio" name="behavior" value="Docile"> Docile</label>
-      <label><input type="radio" name="behavior" value="Curious"> Curious</label>
-      <label><input type="radio" name="behavior" value="Aggressive"> Aggressive</label>
-    </div>
-    <div>
-      Biomes:
-      <label><input type="checkbox" value="Forest Floor" class="biome"> Forest Floor</label>
-      <label><input type="checkbox" value="Canopy" class="biome"> Canopy</label>
-      <label><input type="checkbox" value="Cave" class="biome"> Cave</label>
-      <label><input type="checkbox" value="Riverbank" class="biome"> Riverbank</label>
-      <label><input type="checkbox" value="Mountain" class="biome"> Mountain</label>
-    </div>
-    <div>
-      Moves:
-      <div id="movesList"></div>
-      <button id="addMove">Add Move</button>
-    </div>
-    <div>
-      Notes:<br>
-      <textarea id="monNotes"></textarea>
-    </div>
-    <div>
-      <h3>Sprite Uploads</h3>
-      <div id="spriteUploads"></div>
-    </div>
-    <div>
-      <h3>Sprite Preview</h3>
-      <div class="tab-buttons" id="previewTabs"></div>
-      <canvas id="spriteCanvas" width="128" height="128"></canvas>
-      <div class="direction-controls">
-        <button id="prevDir">◀</button>
-        <span id="dirLabel">Down-Right</span>
-        <button id="nextDir">▶</button>
-      </div>
-    </div>
-  </div>
+    <div class="mon-grid" id="mon-grid"></div>
 </div>
+
+<div id="detail-view">
+    <div class="detail-header">
+        <button class="btn" onclick="showGrid()">&lt; Back to Registry</button>
+        <h2 id="detail-title" style="margin: 0; color: var(--accent-cyan);">EDIT_ENTRY</h2>
+        <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red); margin-left: auto;">Delete</button>
+    </div>
+
+    <div class="detail-grid">
+        <div class="editor-section">
+            <h3>CORE_DATA</h3>
+            <div class="field-group">
+                <label>MONSTER NAME</label>
+                <input type="text" id="edit-name" onchange="updateCurrentMon('name', this.value)">
+            </div>
+            
+            <div class="field-group">
+                <label>BEHAVIOR_PROTOCOL</label>
+                <div class="behavior-selector">
+                    <div class="behavior-btn" data-val="Docile" onclick="setBehavior('Docile')">DOCILE</div>
+                    <div class="behavior-btn" data-val="Curious" onclick="setBehavior('Curious')">CURIOUS</div>
+                    <div class="behavior-btn" data-val="Aggressive" onclick="setBehavior('Aggressive')">AGGRESSIVE</div>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label>BIOME_HABITATS</label>
+                <div id="biome-select" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
+            </div>
+
+            <div class="field-group">
+                <label>MOVESET</label>
+                <div class="moves-list" id="moves-list"></div>
+                <button class="btn" onclick="addMove()" style="margin-top: 0.5rem; font-size: 0.7rem;">+ Add Move</button>
+            </div>
+
+            <div class="field-group">
+                <label>FIELD_NOTES</label>
+                <textarea id="edit-notes" rows="4" onchange="updateCurrentMon('notes', this.value)"></textarea>
+            </div>
+
+            <h3>ASSET_UPLOADS</h3>
+            <div class="upload-grid" id="upload-zones">
+                </div>
+            <input type="file" id="file-input" class="hidden" accept=".png,.xml">
+        </div>
+
+        <div class="editor-section">
+            <h3>VISUAL_OUTPUT</h3>
+            <div class="preview-panel">
+                <div class="tabs" id="preview-tabs">
+                    <div class="tab active" onclick="setPreviewTab('Portrait')">Portrait</div>
+                    <div class="tab" onclick="setPreviewTab('Walk')">Walk</div>
+                    <div class="tab" onclick="setPreviewTab('Idle')">Idle</div>
+                    <div class="tab" onclick="setPreviewTab('Sleep')">Sleep</div>
+                    <div class="tab" onclick="setPreviewTab('Hurt')">Hurt</div>
+                    <div class="tab" onclick="setPreviewTab('Attack')">Attack</div>
+                    <div class="tab" onclick="setPreviewTab('Charge')">Charge</div>
+                    <div class="tab" onclick="setPreviewTab('Shoot')">Shoot</div>
+                    <div class="tab" onclick="setPreviewTab('Strike')">Strike</div>
+                </div>
+
+                <div id="canvas-container">
+                    <canvas id="sprite-canvas"></canvas>
+                    <div id="portrait-view" class="portrait-grid hidden"></div>
+                </div>
+
+                <div class="dir-controls" id="anim-controls">
+                    <button class="btn" onclick="changeDir(-1)">◀</button>
+                    <div id="dir-label" style="min-width: 100px; text-align: center; color: var(--accent-cyan);">Down-Right</div>
+                    <button class="btn" onclick="changeDir(1)">▶</button>
+                    <span id="frame-counter" style="color: #666; font-size: 0.8rem;">Frame: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-const monsKey='islandMons'; let mons=JSON.parse(localStorage.getItem(monsKey)||'[]'); let currentMon=null; const behaviors={Docile:'#0f0',Curious:'#ff0',Aggressive:'#f00'}; const directions=['Down-Right','Right','Up-Right','Up','Up-Left','Left','Down-Left','Down']; let currentDir=0; let currentFrame=0; let animData={}, animFrameDurations=[], animFrameCount=0; let animCanvas=document.getElementById('spriteCanvas'); let ctx=animCanvas.getContext('2d'); const gridView=document.getElementById('gridView'), detailView=document.getElementById('detailView'); const searchInput=document.getElementById('search'); const addMonBtn=document.getElementById('addMon'); const exportBtn=document.getElementById('exportJSON'); const backBtn=document.getElementById('backToGrid'); const monNameInput=document.getElementById('monName'); const behaviorInputs=document.querySelectorAll('input[name="behavior"]'); const biomeInputs=document.querySelectorAll('.biome'); const movesList=document.getElementById('movesList'); const addMoveBtn=document.getElementById('addMove'); const spriteUploadsDiv=document.getElementById('spriteUploads'); const previewTabsDiv=document.getElementById('previewTabs');
+    // --- Constants & Config ---
+    const BIOMES = ['Forest Floor', 'Canopy', 'Cave', 'Riverbank', 'Mountain'];
+    const ANIM_NAMES = ['Walk', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
+    const DIRECTIONS = ['Down-Right', 'Right', 'Up-Right', 'Up', 'Up-Left', 'Left', 'Down-Left', 'Down'];
+    
+    // --- State ---
+    let mons = JSON.parse(localStorage.getItem('island_mons') || '[]');
+    let currentMonId = null;
+    let activeTab = 'Portrait';
+    let currentDir = 0;
+    let animFrame = 0;
+    let lastTick = 0;
+    let biomeFilter = [];
+    
+    const canvas = document.getElementById('sprite-canvas');
+    const ctx = canvas.getContext('2d');
+    let animationRequest = null;
 
-function saveMons(){localStorage.setItem(monsKey,JSON.stringify(mons)); renderGrid();}
+    // --- Initialization ---
+    function init() {
+        renderBiomeFilters();
+        renderGrid();
+        setupUploadZones();
+        renderBiomeSelectors();
+    }
 
-function createMoveInput(value=''){let div=document.createElement('div'); let input=document.createElement('input'); input.type='text'; input.value=value; input.addEventListener('input',updateCurrentMon); let rmBtn=document.createElement('button'); rmBtn.textContent='x'; rmBtn.addEventListener('click',()=>{div.remove();updateCurrentMon();}); div.appendChild(input); div.appendChild(rmBtn); movesList.appendChild(div);}
+    // --- Grid Logic ---
+    function renderGrid() {
+        const grid = document.getElementById('mon-grid');
+        const search = document.getElementById('search').value.toLowerCase();
+        grid.innerHTML = '';
 
-function updateCurrentMon(){if(!currentMon) return; currentMon.name=monNameInput.value; currentMon.behavior=[...behaviorInputs].find(b=>b.checked)?.value||''; currentMon.biomes=[...biomeInputs].filter(b=>b.checked).map(b=>b.value); currentMon.moves=[...movesList.querySelectorAll('input')].map(i=>i.value).filter(v=>v); currentMon.notes=document.getElementById('monNotes').value; saveMons(); renderGrid(); renderDetail();}
+        const filtered = mons.filter(m => {
+            const matchesSearch = m.name.toLowerCase().includes(search);
+            const matchesBiomes = biomeFilter.length === 0 || biomeFilter.every(b => m.biomes.includes(b));
+            return matchesSearch && matchesBiomes;
+        });
 
-function renderMoves(){movesList.innerHTML=''; if(!currentMon.moves) currentMon.moves=[]; currentMon.moves.forEach(m=>createMoveInput(m));}
+        filtered.forEach(mon => {
+            const card = document.createElement('div');
+            card.className = 'mon-card';
+            card.onclick = () => openDetail(mon.id);
+            
+            const isComplete = checkCompletion(mon);
+            
+            // Extract first portrait frame for preview
+            let imgSrc = '';
+            if (mon.assets.Portrait) {
+                // In a real app, we'd crop the base64, but for simplicity:
+                imgSrc = mon.assets.Portrait; 
+            }
 
-function addMon(){let mon={id:Date.now(),name:'',behavior:'',biomes:[],moves:[],notes:'',sprites:{}}; mons.push(mon); currentMon=mon; renderDetailView();}
+            card.innerHTML = `
+                <div style="position: absolute; top: 10px; right: 10px;">
+                    <span class="status-light ${isComplete ? 'complete' : ''}"></span>
+                </div>
+                <img src="${imgSrc || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='}" 
+                     style="width:40px; height:40px; margin: 0 auto; object-fit: cover; object-position: 0 0;">
+                <div class="name">${mon.name || 'UNKNOWN'}</div>
+                <div style="text-align:center">
+                    <span class="badge" style="border-color:${getBehaviorColor(mon.behavior)}">${mon.behavior}</span>
+                    ${mon.biomes.map(b => `<span class="badge">${b}</span>`).join('')}
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
 
-function renderGrid(){gridView.innerHTML='';let filter=searchInput.value.toLowerCase(); mons.forEach(mon=>{if(filter&&!mon.name.toLowerCase().includes(filter)) return; let card=document.createElement('div'); card.className='card'; card.addEventListener('click',()=>{currentMon=mon; renderDetailView();}); let portrait=document.createElement('img'); portrait.src=mon.sprites.Portrait||''; card.appendChild(portrait); let nameDiv=document.createElement('div'); nameDiv.textContent=mon.name||'Unnamed'; card.appendChild(nameDiv); let badgeDiv=document.createElement('div'); badgeDiv.className='badge'; let dot=document.createElement('span'); dot.className='badge-dot'; dot.style.background=behaviors[mon.behavior]||'#555'; badgeDiv.appendChild(dot); badgeDiv.appendChild(document.createTextNode(mon.behavior||'None')); card.appendChild(badgeDiv); let tagsDiv=document.createElement('div'); tagsDiv.className='tags'; mon.biomes.forEach(b=>{let t=document.createElement('span'); t.className='tag'; t.textContent=b; tagsDiv.appendChild(t);}); card.appendChild(tagsDiv); let completion=document.createElement('div'); completion.className='completion'; if(mon.name&&mon.behavior&&mon.biomes.length>0&&mon.moves.length>0&&mon.sprites.Portrait&&mon.sprites['Walk-Anim']&&mon.sprites['Idle-Anim']){completion.style.background='#0f0';}else{completion.style.background='#555';} card.appendChild(completion); gridView.appendChild(card);});}
+    function checkCompletion(mon) {
+        return mon.name && mon.behavior && mon.biomes.length > 0 && 
+               mon.moves.length > 0 && mon.assets.Portrait && 
+               mon.assets['Walk-Anim'] && mon.assets['Idle-Anim'];
+    }
 
-function renderDetailView(){gridView.style.display='none';detailView.style.display='flex';monNameInput.value=currentMon.name; behaviorInputs.forEach(b=>b.checked=b.value===currentMon.behavior); biomeInputs.forEach(b=>b.checked=currentMon.biomes.includes(b.value)); renderMoves(); document.getElementById('monNotes').value=currentMon.notes||''; renderSpriteUploads(); renderPreviewTabs();}
+    function getBehaviorColor(b) {
+        if (b === 'Docile') return 'var(--accent-green)';
+        if (b === 'Curious') return 'var(--accent-amber)';
+        return 'var(--accent-red)';
+    }
 
-function renderSpriteUploads(){spriteUploadsDiv.innerHTML='';['Portrait','Walk-Anim','Idle-Anim','Sleep-Anim','Hurt-Anim','Attack-Anim','Charge-Anim','Shoot-Anim','Strike-Anim','AnimData'].forEach(name=>{let div=document.createElement('div'); div.className='upload-zone'; div.textContent=name+'.png'; if(currentMon.sprites[name]) div.classList.add('loaded'); let inp=document.createElement('input'); inp.type='file'; inp.style.display='none'; inp.accept=name==='AnimData'?'.xml':'image/png'; inp.addEventListener('change',e=>{let file=e.target.files[0];if(!file)return;let reader=new FileReader();reader.onload=function(ev){currentMon.sprites[name]=ev.target.result; updateCurrentMon(); div.classList.add('loaded'); renderPreviewTabs();};reader.readAsDataURL(file);}); div.addEventListener('click',()=>inp.click()); div.appendChild(inp); spriteUploadsDiv.appendChild(div);});}
+    // --- Detail View Logic ---
+    function openDetail(id) {
+        currentMonId = id;
+        const mon = mons.find(m => m.id === id);
+        
+        document.getElementById('grid-view').classList.add('hidden');
+        document.getElementById('detail-view').style.display = 'block';
+        
+        // Populate Fields
+        document.getElementById('edit-name').value = mon.name;
+        document.getElementById('edit-notes').value = mon.notes;
+        setBehavior(mon.behavior);
+        renderBiomeSelectors();
+        renderMoves();
+        updateUploadCheckmarks();
+        setPreviewTab('Portrait');
+    }
 
-function renderPreviewTabs(){previewTabsDiv.innerHTML='';let tabs=Object.keys(currentMon.sprites); tabs.forEach(tab=>{let btn=document.createElement('button'); btn.textContent=tab; btn.className='tab-btn'; btn.addEventListener('click',()=>{document.querySelectorAll('#previewTabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); drawAnimation(tab);}); previewTabsDiv.appendChild(btn);}); if(tabs[0]) previewTabsDiv.querySelector('button').click();}
+    function showGrid() {
+        currentMonId = null;
+        cancelAnimationFrame(animationRequest);
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('grid-view').classList.remove('hidden');
+        renderGrid();
+    }
 
-function drawAnimation(tab){let data=currentMon.sprites[tab]; if(!data) {ctx.clearRect(0,0,animCanvas.width,animCanvas.height); return;} if(tab==='AnimData'){parseAnimData(data); return;}if(tab==='Portrait'){let img=new Image(); img.onload=function(){ctx.clearRect(0,0,animCanvas.width,animCanvas.height); let frameSize=40; let cols=img.width/frameSize; let rows=img.height/frameSize; for(let y=0;y<rows;y++){for(let x=0;x<cols;x++){ctx.drawImage(img,x*frameSize,y*frameSize,frameSize,frameSize,x*80,y*80,frameSize*2,frameSize*2);}}}; img.src=data; return;}let img=new Image(); img.onload=function(){let frameWidth=animData.FrameWidth||32; let frameHeight=animData.FrameHeight||32; let frames=animFrameCount||1; ctx.clearRect(0,0,animCanvas.width,animCanvas.height); ctx.drawImage(img,currentFrame*frameWidth,currentDir*frameHeight,frameWidth,frameHeight,0,0,frameWidth*3,frameHeight*3);}; img.src=data;}
+    function addNewMon() {
+        const newId = Date.now().toString();
+        const newMon = {
+            id: newId,
+            name: 'NEW_MON',
+            behavior: 'Docile',
+            biomes: [],
+            moves: ['Tackle'],
+            notes: '',
+            assets: {},
+            xmlData: null
+        };
+        mons.push(newMon);
+        save();
+        openDetail(newId);
+    }
 
-function parseAnimData(xmlStr){let parser=new DOMParser(); let xml=parser.parseFromString(xmlStr,'application/xml'); let anim=xml.querySelector('Animation'); if(anim){animData.FrameWidth=parseInt(anim.querySelector('FrameWidth').textContent); animData.FrameHeight=parseInt(anim.querySelector('FrameHeight').textContent); animFrameDurations=[...anim.querySelectorAll('Durations duration')].map(d=>parseInt(d.textContent)*16); animFrameCount=animFrameDurations.length; drawAnimation('Walk-Anim');}}
+    function deleteCurrentMon() {
+        if (confirm('Erase this entry from registry?')) {
+            mons = mons.filter(m => m.id !== currentMonId);
+            save();
+            showGrid();
+        }
+    }
 
-function cycleDir(offset){currentDir=(currentDir+offset+8)%8; document.getElementById('dirLabel').textContent=directions[currentDir]; drawAnimation(previewTabsDiv.querySelector('button.active')?.textContent);}
+    function updateCurrentMon(key, val) {
+        const idx = mons.findIndex(m => m.id === currentMonId);
+        mons[idx][key] = val;
+        save();
+    }
 
-addMonBtn.addEventListener('click',addMon); backBtn.addEventListener('click',()=>{detailView.style.display='none'; gridView.style.display='grid';}); searchInput.addEventListener('input',renderGrid); addMoveBtn.addEventListener('click',()=>{createMoveInput(); updateCurrentMon();}); behaviorInputs.forEach(b=>b.addEventListener('change',updateCurrentMon)); biomeInputs.forEach(b=>b.addEventListener('change',updateCurrentMon)); monNameInput.addEventListener('input',updateCurrentMon); document.getElementById('monNotes').addEventListener('input',updateCurrentMon); document.getElementById('prevDir').addEventListener('click',()=>cycleDir(-1)); document.getElementById('nextDir').addEventListener('click',()=>cycleDir(1)); exportBtn.addEventListener('click',()=>{let data=mons.map(m=>{let {id,sprites,...rest}=m; return rest;}); let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); let url=URL.createObjectURL(blob); let a=document.createElement('a'); a.href=url; a.download='mons.json'; a.click(); URL.revokeObjectURL(url);});
+    function save() {
+        localStorage.setItem('island_mons', JSON.stringify(mons));
+    }
 
-renderGrid();
+    // --- Form Controls ---
+    function setBehavior(val) {
+        updateCurrentMon('behavior', val);
+        document.querySelectorAll('.behavior-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.val === val);
+        });
+    }
+
+    function toggleBiome(b) {
+        const mon = mons.find(m => m.id === currentMonId);
+        if (mon.biomes.includes(b)) {
+            mon.biomes = mon.biomes.filter(x => x !== b);
+        } else {
+            mon.biomes.push(b);
+        }
+        save();
+        renderBiomeSelectors();
+    }
+
+    function renderBiomeSelectors() {
+        const mon = mons.find(m => m.id === currentMonId);
+        const container = document.getElementById('biome-select');
+        if (!container) return;
+        container.innerHTML = BIOMES.map(b => `
+            <div class="filter-chip ${mon?.biomes.includes(b) ? 'active' : ''}" onclick="toggleBiome('${b}')">${b}</div>
+        `).join('');
+    }
+
+    function renderMoves() {
+        const mon = mons.find(m => m.id === currentMonId);
+        const container = document.getElementById('moves-list');
+        container.innerHTML = mon.moves.map((move, i) => `
+            <div class="move-row">
+                <input type="text" value="${move}" onchange="updateMove(${i}, this.value)">
+                <button class="btn" onclick="removeMove(${i})" style="border-color:var(--accent-red); color:var(--accent-red)">X</button>
+            </div>
+        `).join('');
+    }
+
+    function addMove() {
+        const mon = mons.find(m => m.id === currentMonId);
+        mon.moves.push('');
+        save();
+        renderMoves();
+    }
+
+    function updateMove(i, val) {
+        const mon = mons.find(m => m.id === currentMonId);
+        mon.moves[i] = val;
+        save();
+    }
+
+    function removeMove(i) {
+        const mon = mons.find(m => m.id === currentMonId);
+        mon.moves.splice(i, 1);
+        save();
+        renderMoves();
+    }
+
+    // --- File Handling ---
+    function setupUploadZones() {
+        const container = document.getElementById('upload-zones');
+        const assets = ['Portrait', 'Walk-Anim', 'Idle-Anim', 'Sleep-Anim', 'Hurt-Anim', 'Attack-Anim', 'Charge-Anim', 'Shoot-Anim', 'Strike-Anim', 'AnimData.xml'];
+        
+        container.innerHTML = assets.map(asset => `
+            <div class="upload-zone" id="zone-${asset}" onclick="triggerUpload('${asset}')">
+                <span>${asset.replace('-Anim', '')}</span>
+                <span class="check"></span>
+            </div>
+        `).join('');
+    }
+
+    function triggerUpload(asset) {
+        const input = document.getElementById('file-input');
+        input.onchange = (e) => handleFile(e, asset);
+        input.click();
+    }
+
+    function handleFile(e, asset) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const mon = mons.find(m => m.id === currentMonId);
+            if (asset === 'AnimData.xml') {
+                mon.xmlData = event.target.result;
+            } else {
+                mon.assets[asset] = event.target.result;
+            }
+            save();
+            updateUploadCheckmarks();
+            setPreviewTab(activeTab); // Refresh view
+        };
+
+        if (asset === 'AnimData.xml') reader.readAsText(file);
+        else reader.readAsDataURL(file);
+    }
+
+    function updateUploadCheckmarks() {
+        const mon = mons.find(m => m.id === currentMonId);
+        if (!mon) return;
+        
+        const assets = ['Portrait', 'Walk-Anim', 'Idle-Anim', 'Sleep-Anim', 'Hurt-Anim', 'Attack-Anim', 'Charge-Anim', 'Shoot-Anim', 'Strike-Anim', 'AnimData.xml'];
+        assets.forEach(asset => {
+            const zone = document.getElementById(`zone-${asset}`);
+            const isLoaded = asset === 'AnimData.xml' ? !!mon.xmlData : !!mon.assets[asset];
+            zone.classList.toggle('loaded', isLoaded);
+            zone.querySelector('.check').innerText = isLoaded ? '✓' : '';
+        });
+    }
+
+    // --- Sprite Preview & Animation ---
+    function setPreviewTab(tab) {
+        activeTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tab));
+        
+        const canvasContainer = document.getElementById('canvas-container');
+        const portraitView = document.getElementById('portrait-view');
+        const animControls = document.getElementById('anim-controls');
+
+        if (tab === 'Portrait') {
+            canvas.classList.add('hidden');
+            portraitView.classList.remove('hidden');
+            animControls.classList.add('hidden');
+            renderPortrait();
+        } else {
+            canvas.classList.remove('hidden');
+            portraitView.classList.add('hidden');
+            animControls.classList.remove('hidden');
+            startAnimation();
+        }
+    }
+
+    function renderPortrait() {
+        const mon = mons.find(m => m.id === currentMonId);
+        const view = document.getElementById('portrait-view');
+        view.innerHTML = '';
+        if (!mon.assets.Portrait) return;
+
+        const img = new Image();
+        img.src = mon.assets.Portrait;
+        img.onload = () => {
+            // Assume 40x40 grid
+            const cols = img.width / 40;
+            const rows = img.height / 40;
+            for (let i = 0; i < cols * rows; i++) {
+                const frame = document.createElement('div');
+                frame.className = 'portrait-frame';
+                frame.style.backgroundImage = `url(${mon.assets.Portrait})`;
+                frame.style.backgroundPosition = `-${(i % cols) * 40}px -${Math.floor(i / cols) * 40}px`;
+                frame.style.backgroundSize = `${img.width * 2}px ${img.height * 2}px`;
+                view.appendChild(frame);
+            }
+        };
+    }
+
+    function startAnimation() {
+        const mon = mons.find(m => m.id === currentMonId);
+        cancelAnimationFrame(animationRequest);
+        
+        const assetKey = activeTab + '-Anim';
+        if (!mon.assets[assetKey] || !mon.xmlData) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
+
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(mon.xmlData, "text/xml");
+        const animNode = Array.from(xmlDoc.getElementsByTagName('Animation')).find(a => a.getElementsByTagName('Name')[0].textContent === activeTab);
+        
+        if (!animNode) return;
+
+        const fw = parseInt(animNode.getElementsByTagName('FrameWidth')[0].textContent);
+        const fh = parseInt(animNode.getElementsByTagName('FrameHeight')[0].textContent);
+        const durations = Array.from(animNode.getElementsByTagName('Duration')).map(d => parseInt(d.textContent));
+
+        const img = new Image();
+        img.src = mon.assets[assetKey];
+        img.onload = () => {
+            canvas.width = fw * 3;
+            canvas.height = fh * 3;
+            animFrame = 0;
+            lastTick = performance.now();
+            
+            function animate(now) {
+                const duration = durations[animFrame] * 16; // PMD tick is approx 16ms
+                if (now - lastTick >= duration) {
+                    animFrame = (animFrame + 1) % durations.length;
+                    lastTick = now;
+                    document.getElementById('frame-counter').innerText = `Frame: ${animFrame}`;
+                }
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Row based on direction (PMD order)
+                // Col based on frame
+                ctx.drawImage(
+                    img, 
+                    animFrame * fw, currentDir * fh, fw, fh,
+                    0, 0, canvas.width, canvas.height
+                );
+                animationRequest = requestAnimationFrame(animate);
+            }
+            animationRequest = requestAnimationFrame(animate);
+        };
+    }
+
+    function changeDir(delta) {
+        currentDir = (currentDir + delta + 8) % 8;
+        document.getElementById('dir-label').innerText = DIRECTIONS[currentDir];
+    }
+
+    // --- Filtering ---
+    function renderBiomeFilters() {
+        const container = document.getElementById('biome-filters');
+        container.innerHTML = BIOMES.map(b => `
+            <div class="filter-chip" onclick="toggleBiomeFilter(this, '${b}')">${b}</div>
+        `).join('');
+    }
+
+    function toggleBiomeFilter(el, biome) {
+        el.classList.toggle('active');
+        if (biomeFilter.includes(biome)) {
+            biomeFilter = biomeFilter.filter(x => x !== biome);
+        } else {
+            biomeFilter.push(biome);
+        }
+        renderGrid();
+    }
+
+    // --- Export ---
+    function exportData() {
+        const exportObj = mons.map(m => ({
+            id: m.id,
+            name: m.name,
+            behavior: m.behavior,
+            biomes: m.biomes,
+            moves: m.moves,
+            notes: m.notes,
+            hasAssets: {
+                portrait: !!m.assets.Portrait,
+                walk: !!m.assets['Walk-Anim'],
+                idle: !!m.assets['Idle-Anim'],
+                xml: !!m.xmlData
+            }
+        }));
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "mons.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    // Run
+    init();
+
 </script>
 </body>
 </html>
