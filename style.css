@@ -1,0 +1,44 @@
+body{
+background:#111;
+color:white;
+font-family:sans-serif;
+text-align:center;
+margin:0;
+}
+
+#gameContainer{
+width:360px;
+margin:auto;
+}
+
+canvas{
+border:2px solid white;
+image-rendering:pixelated;
+}
+
+#dialogueBox{
+height:60px;
+padding:10px;
+background:#222;
+margin-top:5px;
+}
+
+#controls{
+display:flex;
+justify-content:space-between;
+margin-top:10px;
+}
+
+.dpad button,
+.buttons button{
+width:50px;
+height:50px;
+margin:3px;
+font-size:18px;
+}
+
+.buttons{
+display:grid;
+grid-template-columns:repeat(2,60px);
+grid-gap:5px;
+}
