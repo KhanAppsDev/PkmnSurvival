@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v12.1</title>
+    <title>Island Mon Registry v12.2</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -21,6 +21,8 @@
         .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 12px; }
         .mon-card { background: var(--surface); border: 1px solid var(--border); padding: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
         .mon-card .name { font-size: 0.9rem; color: var(--accent-cyan); margin: 5px 0; text-transform: uppercase; }
+        .card-previews { display: flex; gap: 4px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); width: 100%; justify-content: center; }
+        .mini-preview { width: 40px; height: 40px; background: #000; image-rendering: pixelated; border: 1px solid #222; }
         #detail-view { display: none; padding: 15px; padding-bottom: 60px;}
         .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
         canvas { image-rendering: pixelated; }
@@ -36,31 +38,32 @@
         .upload-zone { background: #000; border: 1px dashed var(--border); padding: 8px; font-size: 0.6rem; cursor: pointer; display:flex; justify-content: space-between; align-items: center; }
         .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
         .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 10px 0; }
-        .portrait-slot { aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; position: relative; overflow: hidden; }
-        .portrait-slot img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+        .portrait-slot { aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.5rem; cursor: pointer; position: relative; overflow: hidden; }
+        .portrait-slot img { width: 100%; height: 100%; object-fit: none; image-rendering: pixelated; }
         .portrait-slot.active { border-color: var(--accent-green); }
+        #portrait-view { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; width: 100%; }
         .batch-btn { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-family: inherit; font-size: 0.8rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V12.1</div>
+    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V12.2</div>
     <div style="display: flex; gap: 6px;">
-        <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber); color: var(--accent-amber);">Explore Map</button>
-        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add Mon</button>
+        <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber); color: var(--accent-amber);">Island Map</button>
+        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add</button>
     </div>
 </header>
 
 <div id="grid-view">
     <input type="text" id="search" class="search-bar" placeholder="SEARCH_DATABASE..." oninput="renderGrid()">
-    <div id="habitat-filters" style="margin-bottom:15px;"></div>
+    <div id="habitat-filters" style="margin-bottom:15px; overflow-x:auto; white-space:nowrap;"></div>
     <div class="mon-grid" id="mon-grid"></div>
 </div>
 
 <div id="island-view">
     <div style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 15px;">
-        <button class="btn" onclick="showView('grid')">&lt; EXIT</button>
+        <button class="btn" onclick="showView('grid')">&lt; REGISTRY</button>
         <div style="display: flex; gap: 5px;">
             <input type="number" id="map-seed" value="777" style="width: 60px; background: #000; border: 1px solid var(--border); color: var(--accent-cyan); font-family: inherit;">
             <button class="btn" onclick="initIslandGen()" style="border-color: var(--accent-green);">GENERATE</button>
@@ -91,25 +94,22 @@
         <label style="font-size:0.6rem; color:#888;">CORE HABITAT</label>
         <div id="habitat-select" style="margin-top:5px;"></div>
 
-        <label style="font-size:0.6rem; color:#888; display:block; margin-top:15px;">PORTRAIT SLOTS</label>
+        <label style="font-size:0.6rem; color:#888; display:block; margin-top:15px;">PORTRAIT SLOTS (1-5)</label>
         <div class="portrait-manager" id="portrait-manager"></div>
     </div>
 
     <div class="editor-section">
-        <label style="font-size:0.6rem; color:#888; display:block; margin-bottom:10px;">ANIMATION ASSETS</label>
-        <div class="upload-grid" id="upload-zones"></div>
-    </div>
-
-    <div class="editor-section">
         <div class="tabs" id="preview-tabs"></div>
-        <div style="background:#000; border:1px solid var(--border); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:200px; position:relative;">
+        <div style="background:#000; border:1px solid var(--border); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:200px;">
             <canvas id="sprite-canvas" width="160" height="160"></canvas>
-            <div id="dir-label" style="font-size:0.6rem; color:var(--accent-cyan); margin-top:5px;">DIRECTION: DOWN</div>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button class="btn" onclick="changeDir(-1)">LEFT</button>
-                <button class="btn" onclick="changeDir(1)">RIGHT</button>
+            <div id="portrait-view" class="hidden"></div>
+            <div id="anim-controls" style="width:100%; display:flex; justify-content: space-between; padding:10px; align-items:center;">
+                <button class="btn" onclick="changeDir(-1)">◀</button>
+                <div id="dir-label" style="font-size:0.6rem; color:var(--accent-cyan)">DIRECTION: DOWN</div>
+                <button class="btn" onclick="changeDir(1)">▶</button>
             </div>
         </div>
+        <div id="upload-zones" class="upload-grid" style="margin-top:10px;"></div>
     </div>
 </div>
 
@@ -119,6 +119,7 @@
 <script>
     const HABITATS = ['Forest Floor', 'Canopy', 'Cave', 'Riverbank', 'Mountain'];
     const ANIMS = ['Walk', 'Sleep', 'Idle', 'Attack', 'Hurt', 'Strike', 'Shoot'];
+    const DIRS = ['Down-Right', 'Right', 'Up-Right', 'Up', 'Up-Left', 'Left', 'Down-Left', 'Down'];
     const TERRAIN = {
         OCEAN: { color: '#002b55', biome: 'None' },
         SHORE: { color: '#e3c6a0', biome: 'Riverbank' },
@@ -130,19 +131,42 @@
         RIVER: { color: '#33ccff', biome: 'Riverbank' }
     };
 
-    let mons = JSON.parse(localStorage.getItem('island_mons_v12_1') || '[]');
-    let currentMonId = null, activeTab = 'Walk', activeHabitatFilter = null, currentDir = 0, currentSlot = 0;
-    let currentIsland = [], islandWalkers = [], detailWalkers = [];
-    let islandLoop, detailLoop;
+    let mons = JSON.parse(localStorage.getItem('island_mons_v12_2') || '[]');
+    let currentMonId = null, activeTab = 'Walk', activeHabitatFilter = null, currentDir = 7, currentSlot = 0;
+    let currentIsland = [], islandWalkers = [], detailWalkers = [], gridAnims = [];
+    let islandLoop, detailLoop, globalLoop;
 
     function init() {
         renderHabitatFilters();
         renderGrid();
         setupUploadZones();
         renderTabs();
+        requestAnimationFrame(runGlobalLoop);
     }
 
-    // --- RNG & GEN ---
+    // --- XML PARSER (RECURSIVE) ---
+    function getAnimData(xmlStr, animName) {
+        if (!xmlStr) return null;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xmlStr, "text/xml");
+        const anims = Array.from(doc.getElementsByTagName('Anim'));
+        const findAnim = (name) => {
+            let a = anims.find(node => node.querySelector('Name').textContent === name);
+            if (!a) return null;
+            let copy = a.querySelector('CopyOf');
+            if (copy) return findAnim(copy.textContent);
+            return a;
+        };
+        const target = findAnim(animName);
+        if (!target) return null;
+        return {
+            fw: parseInt(target.querySelector('FrameWidth').textContent),
+            fh: parseInt(target.querySelector('FrameHeight').textContent),
+            durs: Array.from(target.getElementsByTagName('Duration')).map(d => parseInt(d.textContent))
+        };
+    }
+
+    // --- ISLAND GENERATION ---
     function mulberry32(a) {
         return function() {
             var t = a += 0x6D2B79F5;
@@ -157,7 +181,6 @@
         const rng = mulberry32(seed);
         const size = 12;
         currentIsland = [];
-
         for(let y=0; y<size; y++) {
             for(let x=0; x<size; x++) {
                 let dist = Math.min(x, size-1-x, y, size-1-y);
@@ -174,20 +197,17 @@
                 currentIsland.push({ x, y, type, elev, mons: [] });
             }
         }
-
-        // River Pathing
         let rx = Math.floor(rng() * 4) + 4;
         for(let ry=2; ry<size-1; ry++) {
             let idx = ry * size + rx;
             currentIsland[idx].type = 'RIVER';
-            if(ry === size-2) { // Delta
+            if(ry === size-2) { 
                 if(currentIsland[idx+1]) currentIsland[idx+1].type = 'RIVER';
                 if(currentIsland[idx-1]) currentIsland[idx-1].type = 'RIVER';
             }
             if(rng() > 0.4) rx += (rng() > 0.5 ? 1 : -1);
             rx = Math.max(1, Math.min(size-2, rx));
         }
-
         spawnMons(rng);
         renderIslandCanvas();
     }
@@ -218,7 +238,9 @@
             currentIsland.forEach(t => {
                 ctx.fillStyle = TERRAIN[t.type].color;
                 ctx.fillRect(t.x * 25, t.y * 25, 25, 25);
-                if(t.type === 'MOUNTAIN') { ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fillRect(t.x*25+5, t.y*25+5, 15, 15); }
+                if(t.type === 'MOUNTAIN' || t.type === 'PEAK') {
+                    ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.strokeRect(t.x*25+4, t.y*25+4, 17, 17);
+                }
             });
             islandWalkers.forEach(m => {
                 if(!m.isSleep) { m.lx += m.vx; m.ly += m.vy; }
@@ -232,170 +254,177 @@
         loop();
     }
 
-    // --- MON DATA ---
-    function getAnimData(xmlStr, animName) {
-        if (!xmlStr) return null;
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(xmlStr, "text/xml");
-        const anims = Array.from(doc.getElementsByTagName('Anim'));
-        
-        const findAnim = (name) => {
-            let a = anims.find(node => node.querySelector('Name').textContent === name);
-            if (!a) return null;
-            let copy = a.querySelector('CopyOf');
-            if (copy) return findAnim(copy.textContent);
-            return a;
-        };
+    document.getElementById('island-canvas').onclick = (e) => {
+        const r = e.target.getBoundingClientRect();
+        const tx = Math.floor((e.clientX - r.left) / (r.width / 12));
+        const ty = Math.floor((e.clientY - r.top) / (r.height / 12));
+        const tile = currentIsland.find(t => t.x === tx && t.y === ty);
+        if(tile) openTileDetail(tile);
+    };
 
-        const target = findAnim(animName);
-        if (!target) return null;
-
-        return {
-            fw: parseInt(target.querySelector('FrameWidth').textContent),
-            fh: parseInt(target.querySelector('FrameHeight').textContent),
-            durs: Array.from(target.getElementsByTagName('Duration')).map(d => parseInt(d.textContent))
-        };
-    }
-
-    async function handleBatchUpload(files) {
-        const mon = mons.find(m => m.id === currentMonId);
-        for (let f of files) {
-            const name = f.name.toLowerCase();
-            if (name.endsWith('.xml')) mon.xmlData = await f.text();
-            else if (name.endsWith('.png') || name.endsWith('.jpg')) {
-                const data = await new Promise(res => {
-                    const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(f);
-                });
-                if (name.includes('port')) {
-                    let idx = mon.portraits.findIndex(p => !p);
-                    if (idx !== -1) mon.portraits[idx] = data;
-                } else {
-                    const match = ANIMS.find(a => name.includes(a.toLowerCase()));
-                    if (match) mon.assets[match + '-Anim'] = data;
-                }
-            }
+    function openTileDetail(tile) {
+        document.getElementById('tile-panel').classList.remove('hidden');
+        document.getElementById('tile-terrain-label').innerText = `${tile.type} | EL: ${Math.floor(tile.elev)}`;
+        document.getElementById('tile-mon-list').innerText = (tile.mons.length) ? tile.mons.map(m => m.name).join(', ') : 'NO MONS DETECTED';
+        const dctx = document.getElementById('tile-detail-canvas').getContext('2d');
+        detailWalkers = []; cancelAnimationFrame(detailLoop);
+        tile.mons.forEach(m => {
+            const species = mons.find(x => x.id === m.id);
+            detailWalkers.push({ x: Math.random()*140+30, y: Math.random()*140+30, vx: m.vx*5, vy: m.vy*5, s: species, frame: 0, last: 0, anim: m.isSleep ? 'Sleep' : 'Walk' });
+        });
+        function loop(t) {
+            dctx.fillStyle = TERRAIN[tile.type].color; dctx.fillRect(0,0,200,200);
+            detailWalkers.forEach(dw => {
+                dw.x += dw.vx; dw.y += dw.vy;
+                if(dw.x < 10 || dw.x > 180) dw.vx *= -1; if(dw.y < 10 || dw.y > 180) dw.vy *= -1;
+                const ad = getAnimData(dw.s.xmlData, dw.anim);
+                const asset = dw.s.assets[dw.anim+'-Anim'];
+                if(ad && asset) {
+                    const img = new Image(); img.src = asset;
+                    dctx.drawImage(img, dw.frame*ad.fw, (dw.vx>0?1:5)*ad.fh, ad.fw, ad.fh, dw.x-16, dw.y-16, ad.fw, ad.fh);
+                    if(t - dw.last > 100) { dw.frame = (dw.frame+1)%ad.durs.length; dw.last = t; }
+                } else { dctx.fillStyle = dw.anim === 'Sleep' ? '#fff' : 'cyan'; dctx.fillRect(dw.x, dw.y, 8, 8); }
+            });
+            detailLoop = requestAnimationFrame(loop);
         }
-        save(); openMon(currentMonId);
+        loop(0);
     }
 
+    // --- REGISTRY & GLOBAL LOOP ---
     function renderGrid() {
         const container = document.getElementById('mon-grid');
         const query = document.getElementById('search').value.toLowerCase();
-        container.innerHTML = '';
+        container.innerHTML = ''; gridAnims = [];
         mons.filter(m => m.name.toLowerCase().includes(query) && (!activeHabitatFilter || m.habitat === activeHabitatFilter))
         .forEach(m => {
-            const div = document.createElement('div'); div.className = 'mon-card';
-            div.onclick = () => openMon(m.id);
+            const card = document.createElement('div'); card.className = 'mon-card';
+            card.onclick = () => openMon(m.id);
             const p = m.portraits.find(x => !!x) || '';
-            div.innerHTML = `<img src="${p}" style="width:48px; height:48px; background:#000; border:1px solid #333; image-rendering:pixelated;"><div class="name">${m.name}</div>`;
-            container.appendChild(div);
+            card.innerHTML = `<img src="${p}" style="width:48px; height:48px; border:1px solid #333; image-rendering:pixelated; background:#000;">
+            <div class="name">${m.name}</div>
+            <div class="card-previews">
+                ${['Walk','Attack'].map(t => `<canvas id="prev-${t}-${m.id}" class="mini-preview"></canvas>`).join('')}
+            </div>`;
+            container.appendChild(card);
+            ['Walk','Attack'].forEach(type => {
+                if(m.assets[type+'-Anim'] && m.xmlData) {
+                    const img = new Image(); img.src = m.assets[type+'-Anim'];
+                    gridAnims.push({ canvas: document.getElementById(`prev-${type}-${m.id}`), mon: m, type, img, frame: 0, last: 0 });
+                }
+            });
         });
     }
 
+    function runGlobalLoop(now) {
+        gridAnims.forEach(a => {
+            const ad = getAnimData(a.mon.xmlData, a.type);
+            if (!ad) return;
+            if (now - a.last >= 120) { a.frame = (a.frame + 1) % ad.durs.length; a.last = now; }
+            const ctx = a.canvas.getContext('2d'); ctx.clearRect(0,0,40,40);
+            ctx.drawImage(a.img, a.frame*ad.fw, 7*ad.fh, ad.fw, ad.fh, 0, 0, 40, 40);
+        });
+        requestAnimationFrame(runGlobalLoop);
+    }
+
+    // --- DETAIL VIEW LOGIC ---
     function openMon(id) {
         currentMonId = id; const m = mons.find(x => x.id === id);
         showView('detail');
         document.getElementById('edit-name').value = m.name;
-        renderHabitatSelect();
-        renderPortraitManager();
-        updateUploadCheckmarks();
+        renderHabitatSelect(); renderPortraitManager(); updateUploadCheckmarks();
         setPreviewTab(activeTab);
     }
 
-    function renderPortraitManager() {
-        const m = mons.find(x => x.id === currentMonId);
-        const container = document.getElementById('portrait-manager');
-        container.innerHTML = '';
-        for(let i=0; i<5; i++) {
-            const slot = document.createElement('div');
-            slot.className = `portrait-slot ${m.portraits[i] ? 'active' : ''}`;
-            slot.innerHTML = m.portraits[i] ? `<img src="${m.portraits[i]}">` : '+';
-            slot.onclick = () => { currentSlot = i; document.getElementById('portrait-input').click(); };
-            container.appendChild(slot);
-        }
-    }
-
-    document.getElementById('portrait-input').onchange = (e) => {
-        const r = new FileReader();
-        r.onload = (ev) => {
-            mons.find(m => m.id === currentMonId).portraits[currentSlot] = ev.target.result;
-            save(); renderPortraitManager(); renderGrid();
-        };
-        r.readAsDataURL(e.target.files[0]);
-    };
-
     function setPreviewTab(t) {
-        activeTab = t;
-        renderTabs();
+        activeTab = t; renderTabs();
         const m = mons.find(x => x.id === currentMonId);
         const ctx = document.getElementById('sprite-canvas').getContext('2d');
+        const pv = document.getElementById('portrait-view'), ac = document.getElementById('anim-controls'), sc = document.getElementById('sprite-canvas');
         cancelAnimationFrame(detailLoop);
         
-        const data = getAnimData(m.xmlData, t);
-        const asset = m.assets[t + '-Anim'];
-        if(!data || !asset) { ctx.clearRect(0,0,160,160); return; }
+        if(t === 'Portrait') {
+            sc.classList.add('hidden'); pv.classList.remove('hidden'); ac.classList.add('hidden');
+            renderPortraitGrid(); return;
+        }
+        sc.classList.remove('hidden'); pv.classList.add('hidden'); ac.classList.remove('hidden');
 
+        const ad = getAnimData(m.xmlData, t);
+        const asset = m.assets[t + '-Anim'];
+        if(!ad || !asset) { ctx.clearRect(0,0,160,160); return; }
         const img = new Image(); img.src = asset;
         img.onload = () => {
-            let frame = 0, lastTime = 0;
+            let frame = 0, last = 0;
             function loop(now) {
-                if (now - lastTime > data.durs[frame] * 16.6) {
-                    frame = (frame + 1) % data.durs.length;
-                    lastTime = now;
-                }
+                if (now - last > ad.durs[frame] * 16.6) { frame = (frame + 1) % ad.durs.length; last = now; }
                 ctx.clearRect(0,0,160,160);
-                // currentDir * fh is the row in the sprite sheet
-                ctx.drawImage(img, frame * data.fw, currentDir * data.fh, data.fw, data.fh, (160-data.fw*2)/2, (160-data.fh*2)/2, data.fw*2, data.fh*2);
+                ctx.drawImage(img, frame*ad.fw, currentDir*ad.fh, ad.fw, ad.fh, (160-ad.fw*2)/2, (160-ad.fh*2)/2, ad.fw*2, ad.fh*2);
                 detailLoop = requestAnimationFrame(loop);
             }
             detailLoop = requestAnimationFrame(loop);
         };
     }
 
-    function changeDir(v) {
-        currentDir = (currentDir + v + 8) % 8;
-        const dirs = ['DR', 'R', 'UR', 'U', 'UL', 'L', 'DL', 'D'];
-        document.getElementById('dir-label').innerText = `DIRECTION: ${dirs[currentDir]}`;
-        setPreviewTab(activeTab);
+    function renderPortraitGrid() {
+        const mon = mons.find(m => m.id === currentMonId);
+        const v = document.getElementById('portrait-view'); v.innerHTML = '';
+        const src = mon.portraits.find(p => !!p); if(!src) return;
+        for (let i=0; i<16; i++) {
+            const f = document.createElement('div'); f.style.aspectRatio = '1/1'; f.style.background = `url(${src})`;
+            f.style.backgroundSize = '400% 400%'; f.style.imageRendering = 'pixelated';
+            f.style.backgroundPosition = `${(i%4)*33.3}% ${Math.floor(i/4)*33.3}%`; f.style.border = '1px solid #222'; v.appendChild(f);
+        }
     }
 
-    // --- UI HELPERS ---
-    function showView(v) {
-        document.getElementById('grid-view').classList.add('hidden');
-        document.getElementById('island-view').classList.remove('active');
-        document.getElementById('detail-view').style.display = 'none';
-        if(v === 'grid') { document.getElementById('grid-view').classList.remove('hidden'); renderGrid(); }
-        if(v === 'island') { document.getElementById('island-view').classList.add('active'); initIslandGen(); }
-        if(v === 'detail') document.getElementById('detail-view').style.display = 'block';
+    // --- UPLOAD & DATA ---
+    async function handleBatchUpload(files) {
+        const mon = mons.find(m => m.id === currentMonId);
+        for (let f of files) {
+            const name = f.name.toLowerCase();
+            if (name.endsWith('.xml')) mon.xmlData = await f.text();
+            else if (name.endsWith('.png') || name.endsWith('.jpg')) {
+                const data = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(f); });
+                if (name.includes('port')) { let idx = mon.portraits.findIndex(p => !p); if (idx !== -1) mon.portraits[idx] = data; }
+                else { const match = ANIMS.find(a => name.includes(a.toLowerCase())); if (match) mon.assets[match + '-Anim'] = data; }
+            }
+        }
+        save(); openMon(currentMonId);
     }
 
     function renderHabitatFilters() {
         document.getElementById('habitat-filters').innerHTML = HABITATS.map(h => `<div class="filter-chip ${activeHabitatFilter===h?'active':''}" onclick="activeHabitatFilter=(activeHabitatFilter==='${h}'?null:'${h}');renderHabitatFilters();renderGrid();">${h}</div>`).join('');
     }
-
     function renderHabitatSelect() {
         const m = mons.find(x => x.id === currentMonId);
         document.getElementById('habitat-select').innerHTML = HABITATS.map(h => `<div class="filter-chip ${m.habitat===h?'active':''}" onclick="updateMon('habitat','${h}');renderHabitatSelect();">${h}</div>`).join('');
     }
-
+    function renderPortraitManager() {
+        const m = mons.find(x => x.id === currentMonId);
+        const container = document.getElementById('portrait-manager'); container.innerHTML = '';
+        for(let i=0; i<5; i++) {
+            const slot = document.createElement('div'); slot.className = `portrait-slot ${m.portraits[i] ? 'active' : ''}`;
+            slot.innerHTML = m.portraits[i] ? `<img src="${m.portraits[i]}">` : '+';
+            slot.onclick = () => { currentSlot = i; document.getElementById('portrait-input').click(); };
+            container.appendChild(slot);
+        }
+    }
+    document.getElementById('portrait-input').onchange = (e) => {
+        const r = new FileReader(); r.onload = (ev) => { mons.find(m => m.id === currentMonId).portraits[currentSlot] = ev.target.result; save(); renderPortraitManager(); };
+        r.readAsDataURL(e.target.files[0]);
+    };
     function setupUploadZones() {
         document.getElementById('upload-zones').innerHTML = ['XML', ...ANIMS].map(a => `<div class="upload-zone" id="z-${a}" onclick="doUpload('${a}')"><span>${a}</span><span class="chk"></span></div>`).join('');
     }
-
     function doUpload(key) {
         const inp = document.getElementById('single-file-input');
         inp.onchange = (e) => {
             const r = new FileReader(); r.onload = (ev) => {
                 const m = mons.find(m=>m.id===currentMonId);
-                if(key === 'XML') m.xmlData = ev.target.result;
-                else m.assets[key+'-Anim'] = ev.target.result;
+                if(key === 'XML') m.xmlData = ev.target.result; else m.assets[key+'-Anim'] = ev.target.result;
                 save(); updateUploadCheckmarks(); setPreviewTab(activeTab);
             }; 
-            if(key === 'XML') r.readAsText(e.target.files[0]);
-            else r.readAsDataURL(e.target.files[0]);
+            key === 'XML' ? r.readAsText(e.target.files[0]) : r.readAsDataURL(e.target.files[0]);
         }; inp.click();
     }
-    
     function updateUploadCheckmarks() {
         const m = mons.find(x => x.id === currentMonId); if(!m) return;
         ['XML', ...ANIMS].forEach(a => {
@@ -404,19 +433,23 @@
             if(el) { el.classList.toggle('loaded', has); el.querySelector('.chk').innerText = has ? '✓' : ''; }
         });
     }
-
     function renderTabs() {
-        document.getElementById('preview-tabs').innerHTML = ANIMS.map(a => `<div class="tab ${activeTab===a?'active':''}" onclick="setPreviewTab('${a}')">${a}</div>`).join('');
+        document.getElementById('preview-tabs').innerHTML = ['Portrait', ...ANIMS].map(a => `<div class="tab ${activeTab===a?'active':''}" onclick="setPreviewTab('${a}')">${a}</div>`).join('');
     }
-
+    function changeDir(v) { currentDir = (currentDir + v + 8) % 8; document.getElementById('dir-label').innerText = `DIRECTION: ${DIRS[currentDir]}`; setPreviewTab(activeTab); }
+    function showView(v) {
+        document.getElementById('grid-view').classList.add('hidden'); document.getElementById('island-view').classList.remove('active'); document.getElementById('detail-view').style.display = 'none';
+        if(v === 'grid') { document.getElementById('grid-view').classList.remove('hidden'); renderGrid(); }
+        if(v === 'island') { document.getElementById('island-view').classList.add('active'); initIslandGen(); }
+        if(v === 'detail') document.getElementById('detail-view').style.display = 'block';
+    }
     function addNewMon() {
-        const id = Date.now();
-        mons.push({ id, name: 'NEW_RECORD', habitat: 'Forest Floor', assets: {}, portraits: [null,null,null,null,null], xmlData: null });
+        const id = Date.now(); mons.push({ id, name: 'NEW_RECORD', habitat: 'Forest Floor', assets: {}, portraits: [null,null,null,null,null], xmlData: null });
         save(); openMon(id);
     }
     function updateMon(k, v) { const i = mons.findIndex(m=>m.id===currentMonId); mons[i][k] = v; save(); }
     function deleteMon() { if(confirm('ERASE?')) { mons = mons.filter(m=>m.id!==currentMonId); save(); showView('grid'); } }
-    function save() { localStorage.setItem('island_mons_v12_1', JSON.stringify(mons)); }
+    function save() { localStorage.setItem('island_mons_v12_2', JSON.stringify(mons)); }
 
     init();
 </script>
