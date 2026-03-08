@@ -4,1058 +4,679 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Island Mon Registry v2.1.0</title>
+<title>Island Mon Registry</title>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  height: 100%;
-  background: #111;
-  color: #ddd;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  color-scheme: dark;
-  -webkit-text-size-adjust: 100%;
-}
-button, input, select, textarea {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-  -webkit-tap-highlight-color: rgba(0,200,150,0.2);
-  touch-action: manipulation;
-}
-button { cursor: pointer; }
-input, select, textarea {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  color: #ddd;
-  border-radius: 4px;
-  padding: 10px;
-  width: 100%;
-}
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: #0cb;
-}
-textarea { resize: vertical; min-height: 70px; }
-.view { display: none; }
-.view.active { display: block; }
-.topbar {
-  background: #181818;
-  border-bottom: 1px solid #333;
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.topbar h1 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #0cb;
-  white-space: nowrap;
-}
-.topbar-btns { display: flex; gap: 6px; }
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 10px 14px;
-  min-height: 44px;
-  min-width: 44px;
-  background: #222;
-  border: 1px solid #444;
-  color: #ccc;
-  border-radius: 6px;
-  font-size: 13px;
-  white-space: nowrap;
-}
-.btn:active { background: #333; }
-.btn-primary { background: #0a3; border-color: #0a3; color: #fff; }
-.btn-primary:active { background: #072; }
-.btn-danger { border-color: #c33; color: #f66; }
-.btn-danger:active { background: #311; }
-.btn-sm { padding: 6px 10px; min-height: 36px; font-size: 12px; }
-.btn-block { width: 100%; }
-.list-search {
-  padding: 10px 14px;
-  background: #181818;
-  border-bottom: 1px solid #282828;
-}
-.mon-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px;
-  border-bottom: 1px solid #222;
-  cursor: pointer;
-}
-.mon-item:active { background: #1a1a1a; }
-.mon-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: #444;
-}
-.mon-dot.complete { background: #0a3; }
-.mon-dot.partial { background: #da3; }
-.mon-item-name { flex: 1; font-size: 15px; }
-.mon-item-arrow { color: #555; font-size: 18px; }
-.editor-back {
-  padding: 10px 14px;
-  background: #181818;
-  border-bottom: 1px solid #333;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.editor-back-btn {
-  background: none;
-  border: none;
-  color: #0cb;
-  font-size: 15px;
-  padding: 10px 4px;
-  min-height: 44px;
-}
-.section {
-  padding: 14px;
-  border-bottom: 1px solid #222;
-}
-.section-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #888;
-  margin-bottom: 10px;
-}
-.field-label {
-  display: block;
-  font-size: 12px;
-  color: #888;
-  margin-bottom: 4px;
-  margin-top: 10px;
-}
-.field-label:first-child { margin-top: 0; }
-.beh-group { display: flex; gap: 6px; margin-top: 6px; }
-.beh-btn {
-  flex: 1;
-  padding: 10px 6px;
-  background: #1a1a1a;
-  border: 2px solid #333;
-  border-radius: 6px;
-  text-align: center;
-  font-size: 12px;
-  min-height: 44px;
-  color: #ccc;
-}
-.beh-btn.selected { border-color: #0cb; color: #0cb; }
-.beh-btn:active { background: #222; }
-.biome-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-.biome-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 4px;
-  min-height: 44px;
-  cursor: pointer;
-}
-.biome-row:active { background: #222; }
-.biome-row.checked { border-color: #0a3; }
-.biome-check-box {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #555;
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  color: transparent;
-  flex-shrink: 0;
-}
-.biome-row.checked .biome-check-box { border-color: #0a3; color: #0a3; }
-.move-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.move-row input { flex: 1; }
-.sprite-list { display: flex; flex-direction: column; gap: 6px; }
-.sprite-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 4px;
-  min-height: 48px;
-  cursor: pointer;
-}
-.sprite-row:active { background: #222; }
-.sprite-row.uploaded { border-color: #0a3; }
-.sprite-row.uploading { border-color: #da3; opacity: 0.7; }
-.sprite-row.error { border-color: #c33; }
-.sprite-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
-.sprite-name { flex: 1; font-size: 13px; }
-.sprite-row input[type="file"] { display: none; }
-.preview-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-.preview-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.preview-canvas {
-  image-rendering: pixelated;
-  border: 1px solid #333;
-  border-radius: 4px;
-}
-.dir-label {
-  min-width: 80px;
-  text-align: center;
-  font-size: 13px;
-  color: #aaa;
-}
-.preview-msg {
-  text-align: center;
-  color: #666;
-  padding: 20px;
-  font-size: 13px;
-}
-.portrait-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 10px;
-}
-.portrait-grid canvas {
-  image-rendering: pixelated;
-  border: 1px solid #333;
-  border-radius: 2px;
-}
-.modal-bg {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.8);
-  z-index: 100;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.modal-bg.open { display: flex; }
-.modal-box {
-  background: #1a1a1a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 420px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-.modal-head {
-  padding: 14px 16px;
-  border-bottom: 1px solid #333;
-  font-weight: 600;
-  color: #0cb;
-}
-.modal-body { padding: 16px; }
-.modal-foot {
-  padding: 12px 16px;
-  border-top: 1px solid #333;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-.toast-wrap {
-  position: fixed;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  pointer-events: none;
-}
-.toast {
-  padding: 10px 14px;
-  background: #222;
-  border: 1px solid #444;
-  border-radius: 6px;
-  font-size: 13px;
-  animation: fadeIn 0.2s;
-}
-.toast.success { border-color: #0a3; }
-.toast.error { border-color: #c33; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-.app-footer {
-  text-align: center;
-  padding: 8px;
-  font-size: 10px;
-  color: #555;
-}
-
-/* ── DEBUG PANEL ── */
-#debugPanel {
-background: #1a0a0a;
-border: 2px solid #f80;
-border-radius: 6px;
-margin: 10px;
-padding: 10px;
-font-size: 12px;
-font-family: monospace;
-max-height: 300px;
-overflow-y: auto;
-}
-#debugPanel h3 {
-color: #f80;
-font-size: 13px;
-margin-bottom: 8px;
-}
-.dbg-line {
-padding: 2px 0;
-border-bottom: 1px solid #2a1a1a;
-}
-.dbg-ok { color: #0a3; }
-.dbg-err { color: #f44; }
-.dbg-info { color: #aaa; }
-.dbg-warn { color: #da3; }
-#debugTapTest {
-display: inline-block;
-padding: 12px 20px;
-background: #333;
-border: 2px solid #f80;
-color: #f80;
-border-radius: 6px;
-margin-top: 8px;
-font-size: 14px;
-font-family: monospace;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#111;color:#ddd;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:14px;line-height:1.5;color-scheme:dark;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit;touch-action:manipulation;-webkit-appearance:none;appearance:none}
+button{cursor:pointer}
+input,select,textarea{background:#1a1a1a;border:1px solid #333;color:#ddd;border-radius:4px;padding:10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0cb}
+textarea{resize:vertical;min-height:70px}
+.hide{display:none}
+.topbar{background:#181818;border-bottom:1px solid #333;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;z-index:10}
+.topbar h1{font-size:15px;font-weight:600;color:#0cb;white-space:nowrap}
+.tbb{display:flex;gap:6px}
+.b{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:10px 14px;min-height:44px;min-width:44px;background:#222;border:1px solid #444;color:#ccc;border-radius:6px;font-size:13px;white-space:nowrap}
+.b:active{background:#333}
+.bp{background:#0a3;border-color:#0a3;color:#fff}
+.bp:active{background:#072}
+.bd{border-color:#c33;color:#f66}
+.bd:active{background:#311}
+.bs{padding:6px 10px;min-height:36px;font-size:12px}
+.bw{width:100%}
+.ls{padding:10px 14px;background:#181818;border-bottom:1px solid #282828}
+.mi{display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid #222;cursor:pointer}
+.mi:active{background:#1a1a1a}
+.md{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:#444}
+.md.c{background:#0a3}
+.md.p{background:#da3}
+.mn{flex:1;font-size:15px}
+.ma{color:#555;font-size:18px}
+.eb{padding:10px 14px;background:#181818;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.ebb{background:none;border:none;color:#0cb;font-size:15px;padding:10px 4px;min-height:44px}
+.sc{padding:14px;border-bottom:1px solid #222}
+.st{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:10px}
+.fl{display:block;font-size:12px;color:#888;margin-bottom:4px;margin-top:10px}
+.fl:first-child{margin-top:0}
+.bg{display:flex;gap:6px;margin-top:6px}
+.bb{flex:1;padding:10px 6px;background:#1a1a1a;border:2px solid #333;border-radius:6px;text-align:center;font-size:12px;min-height:44px;color:#ccc}
+.bb.sel{border-color:#0cb;color:#0cb}
+.bb:active{background:#222}
+.bl{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.br{display:flex;align-items:center;gap:10px;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:4px;min-height:44px;cursor:pointer}
+.br:active{background:#222}
+.br.ck{border-color:#0a3}
+.bc{width:20px;height:20px;border:2px solid #555;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;flex-shrink:0}
+.br.ck .bc{border-color:#0a3;color:#0a3}
+.mr{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.mr input{flex:1}
+.sl{display:flex;flex-direction:column;gap:6px}
+.sr{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#1a1a1a;border:1px solid #333;border-radius:4px;min-height:48px;cursor:pointer}
+.sr:active{background:#222}
+.sr.up{border-color:#0a3}
+.sr.ug{border-color:#da3;opacity:.7}
+.sr.er{border-color:#c33}
+.si{font-size:16px;width:24px;text-align:center;flex-shrink:0}
+.sn{flex:1;font-size:13px}
+.sr input[type="file"]{display:none}
+.pw{display:flex;flex-direction:column;align-items:center;gap:12px}
+.pc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+.pv{image-rendering:pixelated;border:1px solid #333;border-radius:4px}
+.dl{min-width:80px;text-align:center;font-size:13px;color:#aaa}
+.pm{text-align:center;color:#666;padding:20px;font-size:13px}
+.pg{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.pg canvas{image-rendering:pixelated;border:1px solid #333;border-radius:2px}
+.mo{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center;padding:20px}
+.mo.open{display:flex}
+.mx{background:#1a1a1a;border:1px solid #444;border-radius:8px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.mh{padding:14px 16px;border-bottom:1px solid #333;font-weight:600;color:#0cb}
+.mb{padding:16px}
+.mf{padding:12px 16px;border-top:1px solid #333;display:flex;gap:8px;justify-content:flex-end}
+.tw{position:fixed;bottom:16px;left:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.tt{padding:10px 14px;background:#222;border:1px solid #444;border-radius:6px;font-size:13px;pointer-events:auto}
+.tt.ok{border-color:#0a3}
+.tt.er{border-color:#c33}
+.ft{text-align:center;padding:8px;font-size:10px;color:#555}
+#dbg{background:#1a0a0a;border:2px solid #f80;margin:10px;padding:10px;font-size:11px;font-family:monospace;max-height:200px;overflow-y:auto;border-radius:6px}
+#dbg b{color:#f80}
+.dok{color:#0a3}
+.der{color:#f44}
+.din{color:#aaa}
 </style>
-
 </head>
 <body>
 
-<!-- ============ DEBUG PANEL — REMOVE AFTER DIAGNOSIS ============ -->
+<div id="dbg"><b>DIAG v3.0.0</b><br></div>
 
-<div id="debugPanel">
-  <h3>DIAGNOSTIC v2.1.0</h3>
-  <div id="debugLog"></div>
-  <div id="debugTapTest" onclick="dbgTap()">TAP THIS TO TEST CLICKS</div>
-</div>
-
-<!-- ============ LIST VIEW ============ -->
-
-<div class="view active" id="viewList">
+<div id="vList">
   <div class="topbar">
     <h1>Island Mon Registry</h1>
-    <div class="topbar-btns">
-      <button class="btn btn-sm" onclick="openSettings()">Settings</button>
-      <button class="btn btn-sm" onclick="exportJSON()">Export</button>
+    <div class="tbb">
+      <button class="b bs" id="btnSettings">Settings</button>
+      <button class="b bs" id="btnExport">Export</button>
     </div>
   </div>
-  <div class="list-search">
-    <input type="text" id="searchInput" placeholder="Search mons..." oninput="renderList()">
-  </div>
-  <div id="monListContainer"></div>
-  <div style="padding:14px;">
-    <button class="btn btn-primary btn-block" onclick="addMon()">+ Add Mon</button>
-    <div class="app-footer" id="monCount"></div>
+  <div class="ls"><input type="text" id="searchIn" placeholder="Search mons..."></div>
+  <div id="listC"></div>
+  <div style="padding:14px">
+    <button class="b bp bw" id="btnAdd">+ Add Mon</button>
+    <div class="ft" id="countLabel"></div>
   </div>
 </div>
 
-<!-- ============ EDITOR VIEW ============ -->
-
-<div class="view" id="viewEditor">
-  <div class="editor-back">
-    <button class="editor-back-btn" onclick="goBack()">&#8592; Back</button>
-    <button class="btn btn-sm btn-danger" onclick="deleteMon(selectedMonId)">Delete</button>
+<div id="vEdit" class="hide">
+  <div class="eb">
+    <button class="ebb" id="btnBack">&#8592; Back</button>
+    <button class="b bs bd" id="btnDel">Delete</button>
   </div>
-  <div id="editorBody"></div>
-  <div class="app-footer">v2.1.0</div>
+  <div id="editBody"></div>
+  <div class="ft">v3.0.0</div>
 </div>
 
-<!-- ============ SETTINGS MODAL ============ -->
-
-<div class="modal-bg" id="settingsModal">
-  <div class="modal-box">
-    <div class="modal-head">GitHub Settings</div>
-    <div class="modal-body">
-      <label class="field-label">Personal Access Token (repo scope)</label>
-      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
-      <div id="tokenPreview" style="font-size:11px;color:#666;margin-top:4px;"></div>
-      <label class="field-label">GitHub Username</label>
-      <input type="text" id="ghUser" placeholder="your-username">
-      <label class="field-label">Repository Name</label>
-      <input type="text" id="ghRepo" placeholder="island-mon-game">
-      <label class="field-label">Branch</label>
-      <input type="text" id="ghBranch" placeholder="main" value="main">
+<div class="mo" id="modal">
+  <div class="mx">
+    <div class="mh">GitHub Settings</div>
+    <div class="mb">
+      <label class="fl">Personal Access Token (repo scope)</label>
+      <input type="password" id="ghTok" placeholder="ghp_xxxxxxxxxxxx">
+      <div id="tokPrev" style="font-size:11px;color:#666;margin-top:4px"></div>
+      <label class="fl">GitHub Username</label>
+      <input type="text" id="ghUsr" placeholder="your-username">
+      <label class="fl">Repository Name</label>
+      <input type="text" id="ghRep" placeholder="island-mon-game">
+      <label class="fl">Branch</label>
+      <input type="text" id="ghBr" placeholder="main" value="main">
     </div>
-    <div class="modal-foot">
-      <button class="btn" onclick="closeSettings()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    <div class="mf">
+      <button class="b" id="btnCancel">Cancel</button>
+      <button class="b bp" id="btnSave">Save</button>
     </div>
   </div>
 </div>
 
-<!-- ============ TOASTS ============ -->
-
-<div class="toast-wrap" id="toastWrap"></div>
+<div class="tw" id="toasts"></div>
 
 <script>
-/* ══════════════════════════════════════════
-   DIAGNOSTIC LOGGING — runs first
-   ══════════════════════════════════════════ */
-var dbgTapCount = 0;
-function dbg(msg, type) {
-  var el = document.getElementById('debugLog');
-  if (!el) return;
-  var line = document.createElement('div');
-  line.className = 'dbg-line dbg-' + (type || 'info');
-  line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-  el.appendChild(line);
-  el.scrollTop = el.scrollHeight;
-}
-function dbgTap() {
-  dbgTapCount++;
-  dbg('TAP #' + dbgTapCount + ' registered OK', 'ok');
-  document.getElementById('debugTapTest').textContent = 'TAPS: ' + dbgTapCount + ' (working!)';
+// Diagnostic logger
+var D = document.getElementById('dbg');
+function dlog(m, t) {
+  if (!D) return;
+  var s = document.createElement('span');
+  s.className = t === 1 ? 'dok' : t === 2 ? 'der' : 'din';
+  s.textContent = m;
+  D.appendChild(s);
+  D.appendChild(document.createElement('br'));
+  D.scrollTop = D.scrollHeight;
 }
 
-// Catch ALL errors globally
-window.onerror = function(msg, src, line, col, err) {
-  dbg('ERROR: ' + msg + ' (line ' + line + ')', 'err');
-  return false;
-};
+// Global error trap
+window.onerror = function(m, s, l) { dlog('ERR: ' + m + ' L' + l, 2); return false; };
 window.addEventListener('unhandledrejection', function(e) {
-  dbg('PROMISE ERROR: ' + (e.reason ? e.reason.message || e.reason : 'unknown'), 'err');
+  dlog('PERR: ' + String(e.reason).substring(0, 100), 2);
 });
 
-dbg('Script tag started executing', 'ok');
-dbg('UA: ' + navigator.userAgent.substring(0, 80), 'info');
+dlog('JS executing...', 1);
+dlog('UA: ' + navigator.userAgent.substring(0, 60), 0);
 
-/* ══════════════════════════════════════════
-   Island Mon Registry v2.1.0
-   ══════════════════════════════════════════ */
+// ── Data ──
+var SPRITES = ['Walk-Anim.png','Idle-Anim.png','Sleep-Anim.png','Hurt-Anim.png','Attack-Anim.png','Charge-Anim.png','Shoot-Anim.png','Strike-Anim.png','AnimData.xml'];
+var BIOMES = [{id:'forest_floor',l:'Forest Floor'},{id:'canopy',l:'Canopy'},{id:'cave',l:'Cave'},{id:'riverbank',l:'Riverbank'},{id:'mountain',l:'Mountain'}];
+var BEHS = [{id:'docile',l:'Docile',d:'Walk up & pet'},{id:'curious',l:'Curious',d:'Needs food/item'},{id:'aggressive',l:'Aggressive',d:'Weaken first'}];
+var DIRS = ['South','SE','East','NE','North','NW','West','SW'];
+var ANIMS = ['Walk','Idle','Sleep','Hurt','Attack','Charge','Shoot','Strike'];
+var mons = [], selId = null, anim = null;
 
-var SPRITE_FILES = [
-  'Walk-Anim.png','Idle-Anim.png','Sleep-Anim.png','Hurt-Anim.png',
-  'Attack-Anim.png','Charge-Anim.png','Shoot-Anim.png','Strike-Anim.png',
-  'AnimData.xml'
-];
-var BIOMES = [
-  {id:'forest_floor',label:'Forest Floor'},
-  {id:'canopy',label:'Canopy'},
-  {id:'cave',label:'Cave'},
-  {id:'riverbank',label:'Riverbank'},
-  {id:'mountain',label:'Mountain'}
-];
-var BEHAVIORS = [
-  {id:'docile',label:'Docile',desc:'Walk up & pet'},
-  {id:'curious',label:'Curious',desc:'Needs food/item'},
-  {id:'aggressive',label:'Aggressive',desc:'Weaken in combat'}
-];
-var PMD_DIRS = ['South','SE','East','NE','North','NW','West','SW'];
-var ANIM_TYPES = ['Walk','Idle','Sleep','Hurt','Attack','Charge','Shoot','Strike'];
-
-var mons = [];
-var selectedMonId = null;
-var animState = null;
-
-dbg('Constants defined OK', 'ok');
-
-// ── Persistence ──
-function load() {
-  try { mons = JSON.parse(localStorage.getItem('imr_mons')) || []; } catch(e) { mons = []; }
-}
-function save() { localStorage.setItem('imr_mons', JSON.stringify(mons)); }
-function ghLoad() {
-  try { return JSON.parse(localStorage.getItem('imr_gh')) || {}; } catch(e) { return {}; }
-}
-function ghSave(s) { localStorage.setItem('imr_gh', JSON.stringify(s)); }
-
-// ── Helpers ──
+function ld() { try { mons = JSON.parse(localStorage.getItem('imr3')) || []; } catch(e) { mons = []; } }
+function sv() { localStorage.setItem('imr3', JSON.stringify(mons)); }
+function ghl() { try { return JSON.parse(localStorage.getItem('imr3g')) || {}; } catch(e) { return {}; } }
+function ghs(o) { localStorage.setItem('imr3g', JSON.stringify(o)); }
 function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function genId() { return 'mon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5); }
-function toFolder(name) { return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, ''); }
-function getMon(id) { return mons.find(function(m) { return m.id === id; }); }
-function isComplete(m) {
-  if (!m.name || !m.behavior || !m.biomes.length) return false;
-  var hasMoves = m.moves.filter(function(x) { return x.trim(); }).length > 0;
-  if (!hasMoves) return false;
-  return SPRITE_FILES.every(function(f) { return m.sprites && m.sprites[f]; });
-}
-function isPartial(m) {
-  if (!m.name) return false;
-  return m.behavior || m.biomes.length || SPRITE_FILES.some(function(f) { return m.sprites && m.sprites[f]; });
-}
-function dotClass(m) { return isComplete(m) ? 'complete' : isPartial(m) ? 'partial' : ''; }
+function gid() { return 'm' + Date.now() + Math.random().toString(36).substr(2, 4); }
+function fld(n) { return n.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, ''); }
+function gm(id) { for (var i = 0; i < mons.length; i++) { if (mons[i].id === id) return mons[i]; } return null; }
 
-dbg('Functions defined OK', 'ok');
+function isFull(m) {
+  if (!m.name || !m.behavior || !m.biomes.length) return false;
+  var hm = false;
+  for (var i = 0; i < m.moves.length; i++) { if (m.moves[i].trim()) { hm = true; break; } }
+  if (!hm) return false;
+  for (var j = 0; j < SPRITES.length; j++) { if (!m.sprites || !m.sprites[SPRITES[j]]) return false; }
+  return true;
+}
+function isPart(m) {
+  if (!m.name) return false;
+  if (m.behavior || m.biomes.length) return true;
+  for (var i = 0; i < SPRITES.length; i++) { if (m.sprites && m.sprites[SPRITES[i]]) return true; }
+  return false;
+}
+function dc(m) { return isFull(m) ? 'c' : isPart(m) ? 'p' : ''; }
+
+dlog('Helpers defined', 1);
 
 // ── Toast ──
-function toast(msg, type) {
-  var w = document.getElementById('toastWrap');
+function toast(msg, ok) {
+  var w = document.getElementById('toasts');
   var t = document.createElement('div');
-  t.className = 'toast ' + (type || '');
+  t.className = 'tt ' + (ok ? 'ok' : 'er');
   t.textContent = msg;
   w.appendChild(t);
-  setTimeout(function() { t.remove(); }, 3000);
+  setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 3000);
 }
 
 // ── Views ──
-function showView(id) {
-  dbg('showView(' + id + ')', 'info');
-  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
+function showList() {
+  document.getElementById('vList').className = '';
+  document.getElementById('vEdit').className = 'hide';
   window.scrollTo(0, 0);
 }
-function goBack() {
-  stopAnim();
-  selectedMonId = null;
-  showView('viewList');
-  renderList();
+function showEdit() {
+  document.getElementById('vList').className = 'hide';
+  document.getElementById('vEdit').className = '';
+  window.scrollTo(0, 0);
 }
 
-// ── List ──
+// ── Render list ──
 function renderList() {
-  dbg('renderList() called, mons: ' + mons.length, 'info');
-  var q = document.getElementById('searchInput').value.toLowerCase().trim();
-  var list = mons;
-  if (q) list = list.filter(function(m) { return m.name.toLowerCase().indexOf(q) >= 0; });
-
-  var c = document.getElementById('monListContainer');
-  if (!list.length) {
-    c.innerHTML = '<div style="padding:40px;text-align:center;color:#666;">No mons yet. Tap + Add Mon.</div>';
-  } else {
-    c.innerHTML = list.map(function(m) {
-      return '<div class="mon-item" onclick="selectMon(\'' + m.id + '\')">' +
-        '<span class="mon-dot ' + dotClass(m) + '"></span>' +
-        '<span class="mon-item-name">' + esc(m.name || 'Unnamed') + '</span>' +
-        '<span class="mon-item-arrow">&rsaquo;</span>' +
-      '</div>';
-    }).join('');
+  var q = document.getElementById('searchIn').value.toLowerCase().trim();
+  var ls = [];
+  for (var i = 0; i < mons.length; i++) {
+    if (!q || mons[i].name.toLowerCase().indexOf(q) >= 0) ls.push(mons[i]);
   }
-  var total = mons.length;
-  var comp = mons.filter(isComplete).length;
-  document.getElementById('monCount').textContent = total + ' mons | ' + comp + ' complete | v2.1.0';
+  var c = document.getElementById('listC');
+  if (!ls.length) {
+    c.innerHTML = '<div style="padding:40px;text-align:center;color:#666">No mons yet. Tap + Add Mon.</div>';
+  } else {
+    var h = '';
+    for (var j = 0; j < ls.length; j++) {
+      h += '<div class="mi" data-id="' + ls[j].id + '">';
+      h += '<span class="md ' + dc(ls[j]) + '"></span>';
+      h += '<span class="mn">' + esc(ls[j].name || 'Unnamed') + '</span>';
+      h += '<span class="ma">&rsaquo;</span></div>';
+    }
+    c.innerHTML = h;
+  }
+  // Attach click listeners to mon items
+  var items = c.querySelectorAll('.mi');
+  for (var k = 0; k < items.length; k++) {
+    (function(el) {
+      el.addEventListener('click', function() {
+        selId = el.getAttribute('data-id');
+        dlog('select: ' + selId, 0);
+        stopA();
+        showEdit();
+        renderEdit();
+      });
+    })(items[k]);
+  }
+  var tot = mons.length, comp = 0;
+  for (var n = 0; n < mons.length; n++) { if (isFull(mons[n])) comp++; }
+  document.getElementById('countLabel').textContent = tot + ' mons | ' + comp + ' complete | v3.0.0';
 }
 
-// ── Add / Select / Delete ──
-function addMon() {
-  dbg('addMon() called', 'ok');
-  var m = { id: genId(), name: '', behavior: '', biomes: [], moves: [''], notes: '', sprites: {} };
-  mons.push(m);
-  save();
-  selectMon(m.id);
-}
-function selectMon(id) {
-  dbg('selectMon(' + id + ')', 'info');
-  stopAnim();
-  selectedMonId = id;
-  showView('viewEditor');
-  renderEditor();
-}
-function deleteMon(id) {
-  if (!confirm('Delete this mon?')) return;
-  mons = mons.filter(function(m) { return m.id !== id; });
-  SPRITE_FILES.forEach(function(f) { try { localStorage.removeItem('asset_' + id + '_' + f); } catch(e) {} });
-  save();
-  goBack();
-  toast('Deleted', 'error');
-}
-
-// ── Editor ──
-function renderEditor() {
-  var m = getMon(selectedMonId);
-  if (!m) { dbg('renderEditor: mon not found!', 'err'); return; }
-  dbg('renderEditor for: ' + (m.name || 'unnamed'), 'info');
+// ── Render editor ──
+function renderEdit() {
+  var m = gm(selId);
+  if (!m) return;
   var h = '';
 
-  h += '<div class="section">';
-  h += '<div class="section-title">Identity</div>';
-  h += '<label class="field-label">Name</label>';
-  h += '<input type="text" id="ed_name" value="' + esc(m.name) + '" placeholder="e.g. Flamegecko" oninput="updField(\'name\',this.value)">';
+  h += '<div class="sc"><div class="st">Identity</div>';
+  h += '<label class="fl">Name</label>';
+  h += '<input type="text" id="eName" value="' + esc(m.name) + '" placeholder="e.g. Flamegecko">';
   h += '</div>';
 
-  h += '<div class="section">';
-  h += '<div class="section-title">Behavior</div>';
-  h += '<div class="beh-group">';
-  BEHAVIORS.forEach(function(b) {
-    var sel = m.behavior === b.id ? ' selected' : '';
-    h += '<button class="beh-btn' + sel + '" onclick="updField(\'behavior\',\'' + b.id + '\')">' + b.label + '<br><small style="color:#888">' + b.desc + '</small></button>';
-  });
+  h += '<div class="sc"><div class="st">Behavior</div><div class="bg">';
+  for (var i = 0; i < BEHS.length; i++) {
+    h += '<button class="bb' + (m.behavior === BEHS[i].id ? ' sel' : '') + '" data-beh="' + BEHS[i].id + '">' + BEHS[i].l + '<br><small style="color:#888">' + BEHS[i].d + '</small></button>';
+  }
   h += '</div></div>';
 
-  h += '<div class="section">';
-  h += '<div class="section-title">Biomes</div>';
-  h += '<div class="biome-list">';
-  BIOMES.forEach(function(b) {
-    var chk = m.biomes.indexOf(b.id) >= 0;
-    h += '<div class="biome-row' + (chk ? ' checked' : '') + '" onclick="toggleBiome(\'' + b.id + '\')">';
-    h += '<span class="biome-check-box">' + (chk ? '&#10003;' : '') + '</span>';
-    h += '<span>' + b.label + '</span>';
-    h += '</div>';
-  });
+  h += '<div class="sc"><div class="st">Biomes</div><div class="bl">';
+  for (var j = 0; j < BIOMES.length; j++) {
+    var ck = m.biomes.indexOf(BIOMES[j].id) >= 0;
+    h += '<div class="br' + (ck ? ' ck' : '') + '" data-bio="' + BIOMES[j].id + '">';
+    h += '<span class="bc">' + (ck ? '&#10003;' : '') + '</span>';
+    h += '<span>' + BIOMES[j].l + '</span></div>';
+  }
   h += '</div></div>';
 
-  h += '<div class="section">';
-  h += '<div class="section-title">Moves</div>';
-  m.moves.forEach(function(mv, i) {
-    h += '<div class="move-row">';
-    h += '<input type="text" value="' + esc(mv) + '" placeholder="Move ' + (i + 1) + '..." oninput="updMove(' + i + ',this.value)">';
-    h += '<button class="btn btn-sm btn-danger" onclick="rmMove(' + i + ')">X</button>';
-    h += '</div>';
-  });
-  h += '<button class="btn btn-sm" onclick="addMove()" style="margin-top:4px;">+ Add Move</button>';
-  h += '</div>';
+  h += '<div class="sc"><div class="st">Moves</div><div id="moveList">';
+  for (var k = 0; k < m.moves.length; k++) {
+    h += '<div class="mr"><input type="text" value="' + esc(m.moves[k]) + '" data-mi="' + k + '" placeholder="Move ' + (k + 1) + '...">';
+    h += '<button class="b bs bd" data-rmi="' + k + '">X</button></div>';
+  }
+  h += '</div><button class="b bs" id="btnAddMove" style="margin-top:4px">+ Add Move</button></div>';
 
-  h += '<div class="section">';
-  h += '<div class="section-title">Notes</div>';
-  h += '<textarea placeholder="Lore, spawn conditions..." oninput="updField(\'notes\',this.value)">' + esc(m.notes) + '</textarea>';
+  h += '<div class="sc"><div class="st">Notes</div>';
+  h += '<textarea id="eNotes" placeholder="Lore, spawn conditions...">' + esc(m.notes) + '</textarea></div>';
 
-h += ‘</div>’;
-
-h += ‘<div class="section">’;
-h += ‘<div class="section-title">Sprites (tap to upload)</div>’;
-h += ‘<div class="sprite-list">’;
-SPRITE_FILES.forEach(function(f) {
-var up = m.sprites && m.sprites[f];
-var cls = up ? ’ uploaded’ : ‘’;
-var sid = ‘sp_’ + f.replace(/./g, ‘_’);
-h += ‘<div class="sprite-row' + cls + '" id="' + sid + '" onclick="pickFile(\'' + esc(f) + '\')">’;
-h += ‘<span class="sprite-icon">’ + (up ? ‘✓’ : ‘↑’) + ‘</span>’;
-h += ‘<span class="sprite-name">’ + esc(f) + ‘</span>’;
-h += ‘<input type="file" accept="' + (f.endsWith('.xml') ? '.xml' : '.png') + '" onchange="uploadSprite(\'' + esc(f) + '\',this)">’;
-h += ‘</div>’;
-});
+h += ‘<div class="sc"><div class="st">Sprites (tap to upload)</div><div class="sl" id="spriteList">’;
+for (var s = 0; s < SPRITES.length; s++) {
+var up = m.sprites && m.sprites[SPRITES[s]];
+h += ‘<div class="sr' + (up ? ' up' : '') + '" data-sp="' + SPRITES[s] + '">’;
+h += ‘<span class="si">’ + (up ? ‘✓’ : ‘↑’) + ‘</span>’;
+h += ‘<span class="sn">’ + esc(SPRITES[s]) + ‘</span>’;
+h += ‘<input type="file" accept="' + (SPRITES[s].indexOf('.xml') >= 0 ? '.xml' : '.png') + '"></div>’;
+}
 h += ‘</div></div>’;
 
-h += ‘<div class="section">’;
-h += ‘<div class="section-title">Animation Preview</div>’;
-var hasWalk = getAsset(m.id, ‘Walk-Anim.png’);
-var hasXml = getAsset(m.id, ‘AnimData.xml’);
-if (hasWalk && hasXml) {
-h += ‘<div class="preview-wrap">’;
-h += ‘<div class="preview-controls">’;
-h += ‘<select id="animSel" onchange="restartAnim()" style="width:auto;padding:8px;">’;
-ANIM_TYPES.forEach(function(a) {
-h += ‘<option value="' + a + '">’ + a + ‘</option>’;
-});
+h += ‘<div class="sc"><div class="st">Animation Preview</div>’;
+var hw = getA(m.id, ‘Walk-Anim.png’);
+var hx = getA(m.id, ‘AnimData.xml’);
+if (hw && hx) {
+h += ‘<div class="pw"><div class="pc">’;
+h += ‘<select id="animSel" style="width:auto;padding:8px">’;
+for (var a = 0; a < ANIMS.length; a++) h += ‘<option value="' + ANIMS[a] + '">’ + ANIMS[a] + ‘</option>’;
 h += ‘</select>’;
-h += ‘<button class="btn btn-sm" onclick="chgDir(-1)"><</button>’;
-h += ‘<span class="dir-label" id="dirLabel">South</span>’;
-h += ‘<button class="btn btn-sm" onclick="chgDir(1)">></button>’;
-h += ‘</div>’;
-h += ‘<canvas id="prevCanvas" class="preview-canvas"></canvas>’;
-h += ‘</div>’;
+h += ‘<button class="b bs" id="btnDirL"><</button>’;
+h += ‘<span class="dl" id="dirLbl">South</span>’;
+h += ‘<button class="b bs" id="btnDirR">></button>’;
+h += ‘</div><canvas id="prevC" class="pv"></canvas></div>’;
 } else {
-h += ‘<div class="preview-msg">Upload Walk-Anim.png + AnimData.xml to preview</div>’;
+h += ‘<div class="pm">Upload Walk-Anim.png + AnimData.xml to preview</div>’;
 }
 h += ‘</div>’;
 
-h += ‘<div class="section">’;
-h += ‘<div class="section-title">Portrait Preview</div>’;
-h += ‘<div style="text-align:center;">’;
-h += ‘<button class="btn btn-sm" onclick="document.getElementById(\'portraitIn\').click()">Upload Portrait Sheet</button>’;
-h += ‘<input type="file" id="portraitIn" accept=".png" style="display:none" onchange="loadPortrait(this)">’;
-h += ‘<div class="portrait-grid" id="portraitGrid"></div>’;
+h += ‘<div class="sc"><div class="st">Portrait Preview</div><div style="text-align:center">’;
+h += ‘<button class="b bs" id="btnPort">Upload Portrait Sheet</button>’;
+h += ‘<input type="file" id="portIn" accept=".png" style="display:none">’;
+h += ‘<div class="pg" id="portGrid"></div>’;
 h += ‘</div></div>’;
 
-document.getElementById(‘editorBody’).innerHTML = h;
+document.getElementById(‘editBody’).innerHTML = h;
 
-if (hasWalk && hasXml) {
-setTimeout(function() { startAnim(m); }, 50);
+// ── Attach ALL event listeners via JS ──
+// Name
+document.getElementById(‘eName’).addEventListener(‘input’, function() {
+m.name = this.value; sv();
+});
+// Notes
+document.getElementById(‘eNotes’).addEventListener(‘input’, function() {
+m.notes = this.value; sv();
+});
+// Behaviors
+var behBtns = document.querySelectorAll(’[data-beh]’);
+for (var bi = 0; bi < behBtns.length; bi++) {
+(function(el) {
+el.addEventListener(‘click’, function() {
+m.behavior = el.getAttribute(‘data-beh’); sv(); renderEdit();
+});
+})(behBtns[bi]);
 }
+// Biomes
+var bioBtns = document.querySelectorAll(’[data-bio]’);
+for (var bj = 0; bj < bioBtns.length; bj++) {
+(function(el) {
+el.addEventListener(‘click’, function() {
+var bid = el.getAttribute(‘data-bio’);
+var idx = m.biomes.indexOf(bid);
+if (idx >= 0) m.biomes.splice(idx, 1); else m.biomes.push(bid);
+sv(); renderEdit();
+});
+})(bioBtns[bj]);
 }
-
-// ── Field updates ──
-function updField(f, v) {
-var m = getMon(selectedMonId);
-if (!m) return;
-m[f] = v;
-save();
-if (f === ‘behavior’) renderEditor();
+// Moves input
+var mvIns = document.querySelectorAll(’[data-mi]’);
+for (var mi = 0; mi < mvIns.length; mi++) {
+(function(el) {
+el.addEventListener(‘input’, function() {
+m.moves[parseInt(el.getAttribute(‘data-mi’))] = this.value; sv();
+});
+})(mvIns[mi]);
 }
-function toggleBiome(bid) {
-var m = getMon(selectedMonId);
-if (!m) return;
-var i = m.biomes.indexOf(bid);
-if (i >= 0) m.biomes.splice(i, 1); else m.biomes.push(bid);
-save();
-renderEditor();
-}
-function addMove() {
-var m = getMon(selectedMonId);
-if (!m) return;
-m.moves.push(’’);
-save();
-renderEditor();
-}
-function rmMove(i) {
-var m = getMon(selectedMonId);
-if (!m) return;
-m.moves.splice(i, 1);
+// Move remove
+var rmBtns = document.querySelectorAll(’[data-rmi]’);
+for (var ri = 0; ri < rmBtns.length; ri++) {
+(function(el) {
+el.addEventListener(‘click’, function() {
+m.moves.splice(parseInt(el.getAttribute(‘data-rmi’)), 1);
 if (!m.moves.length) m.moves.push(’’);
-save();
-renderEditor();
+sv(); renderEdit();
+});
+})(rmBtns[ri]);
 }
-function updMove(i, v) {
-var m = getMon(selectedMonId);
-if (!m) return;
-m.moves[i] = v;
-save();
+// Add move
+var amBtn = document.getElementById(‘btnAddMove’);
+if (amBtn) amBtn.addEventListener(‘click’, function() { m.moves.push(’’); sv(); renderEdit(); });
+
+// Sprites
+var spRows = document.querySelectorAll(’[data-sp]’);
+for (var si = 0; si < spRows.length; si++) {
+(function(el) {
+var fname = el.getAttribute(‘data-sp’);
+var finput = el.querySelector(‘input[type=“file”]’);
+el.addEventListener(‘click’, function(e) {
+if (e.target === finput) return; // don’t re-trigger
+dlog(’pick: ’ + fname, 0);
+finput.click();
+});
+finput.addEventListener(‘change’, function() {
+if (!this.files || !this.files[0]) return;
+doUpload(m, fname, this.files[0], el);
+});
+})(spRows[si]);
 }
 
-// ── Sprite upload ──
-function pickFile(filename) {
-dbg(’pickFile: ’ + filename, ‘info’);
-var sid = ‘sp_’ + filename.replace(/./g, ‘_’);
-var el = document.getElementById(sid);
-if (el) {
-var inp = el.querySelector(‘input[type=“file”]’);
-if (inp) { inp.click(); dbg(‘file input .click() fired’, ‘ok’); }
-else { dbg(‘file input NOT FOUND in row’, ‘err’); }
-} else {
-dbg(’sprite row element not found: ’ + sid, ‘err’);
-}
+// Direction buttons
+var dlBtn = document.getElementById(‘btnDirL’);
+var drBtn = document.getElementById(‘btnDirR’);
+if (dlBtn) dlBtn.addEventListener(‘click’, function() { chgD(-1); });
+if (drBtn) drBtn.addEventListener(‘click’, function() { chgD(1); });
+
+// Anim selector
+var aSel = document.getElementById(‘animSel’);
+if (aSel) aSel.addEventListener(‘change’, function() { stopA(); startA(m); });
+
+// Portrait
+var pBtn = document.getElementById(‘btnPort’);
+var pIn = document.getElementById(‘portIn’);
+if (pBtn && pIn) {
+pBtn.addEventListener(‘click’, function() { pIn.click(); });
+pIn.addEventListener(‘change’, function() { doPortrait(this); });
 }
 
-function uploadSprite(filename, input) {
-dbg(‘uploadSprite: ’ + filename, ‘info’);
-if (!input.files || !input.files[0]) { dbg(‘no file selected’, ‘warn’); return; }
-var file = input.files[0];
-dbg(‘file: ’ + file.name + ’ (’ + file.size + ’ bytes)’, ‘info’);
-var m = getMon(selectedMonId);
-if (!m || !m.name) { toast(‘Set a name first’, ‘error’); return; }
+// Start anim
+if (hw && hx) setTimeout(function() { startA(m); }, 50);
+}
 
-var sid = ‘sp_’ + filename.replace(/./g, ‘_’);
-var row = document.getElementById(sid);
-if (row) row.className = ‘sprite-row uploading’;
+// ── Upload sprite ──
+function doUpload(m, fname, file, row) {
+if (!m.name) { toast(‘Set a name first’, false); return; }
+row.className = ‘sr ug’;
+dlog(‘upload: ’ + fname + ’ (’ + file.size + ‘b)’, 0);
 
 var reader = new FileReader();
 reader.onload = function(e) {
 var b64 = e.target.result.split(’,’)[1];
-dbg(’base64 ready, length: ’ + b64.length, ‘ok’);
-
-```
-if (filename.endsWith('.xml')) {
-  var tr = new FileReader();
-  tr.onload = function(te) { storeAsset(m.id, filename, te.target.result); };
-  tr.readAsText(file);
+// Cache for preview
+if (fname.indexOf(’.xml’) >= 0) {
+var tr = new FileReader();
+tr.onload = function(te) { stA(m.id, fname, te.target.result); };
+tr.readAsText(file);
 } else {
-  storeAsset(m.id, filename, b64);
+stA(m.id, fname, b64);
 }
-
-pushToGH(m, filename, b64, row);
-```
-
+pushGH(m, fname, b64, row);
 };
-reader.onerror = function() { dbg(‘FileReader error!’, ‘err’); };
+reader.onerror = function() { dlog(‘read err’, 2); row.className = ‘sr er’; };
 reader.readAsDataURL(file);
 }
 
-function pushToGH(m, filename, b64, row) {
-var gh = ghLoad();
-if (!gh.token || !gh.user || !gh.repo) {
-toast(‘Configure GitHub settings first’, ‘error’);
-dbg(‘GitHub not configured’, ‘warn’);
-if (row) row.className = ‘sprite-row error’;
+function pushGH(m, fname, b64, row) {
+var g = ghl();
+if (!g.token || !g.user || !g.repo) {
+toast(‘Set GitHub settings first’, false);
+row.className = ‘sr er’;
 return;
 }
+var path = ‘resources/pokemon/’ + fld(m.name) + ‘/sprites/’ + fname;
+var br = g.branch || ‘main’;
+var hd = { ‘Authorization’: ’token ’ + g.token, ‘Content-Type’: ‘application/json’ };
+dlog(’push: ’ + path, 0);
 
-var path = ‘resources/pokemon/’ + toFolder(m.name) + ‘/sprites/’ + filename;
-var branch = gh.branch || ‘main’;
-var headers = { ‘Authorization’: ’token ’ + gh.token, ‘Content-Type’: ‘application/json’ };
-dbg(’pushing to: ’ + path, ‘info’);
-
-fetch(‘https://api.github.com/repos/’ + gh.user + ‘/’ + gh.repo + ‘/contents/’ + path + ‘?ref=’ + branch, { headers: headers })
+fetch(‘https://api.github.com/repos/’ + g.user + ‘/’ + g.repo + ‘/contents/’ + path + ‘?ref=’ + br, { headers: hd })
 .then(function(r) { return r.ok ? r.json() : null; })
 .catch(function() { return null; })
-.then(function(existing) {
-var body = { message: ’Update ’ + filename + ’ for ’ + m.name, content: b64, branch: branch };
-if (existing && existing.sha) body.sha = existing.sha;
-
-```
-  return fetch('https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/contents/' + path, {
-    method: 'PUT',
-    headers: headers,
-    body: JSON.stringify(body)
-  });
+.then(function(ex) {
+var body = { message: ‘Update ’ + fname + ’ for ’ + m.name, content: b64, branch: br };
+if (ex && ex.sha) body.sha = ex.sha;
+return fetch(‘https://api.github.com/repos/’ + g.user + ‘/’ + g.repo + ‘/contents/’ + path, {
+method: ‘PUT’, headers: hd, body: JSON.stringify(body)
+});
 })
 .then(function(r) {
-  if (!r.ok) return r.json().then(function(d) { throw new Error(d.message || 'HTTP ' + r.status); });
-  if (!m.sprites) m.sprites = {};
-  m.sprites[filename] = true;
-  save();
-  if (row) { row.className = 'sprite-row uploaded'; row.querySelector('.sprite-icon').textContent = '\u2713'; }
-  toast(filename + ' committed', 'success');
-  dbg(filename + ' committed OK', 'ok');
-  if (filename === 'Walk-Anim.png' || filename === 'AnimData.xml') {
-    setTimeout(function() { renderEditor(); }, 300);
-  }
+if (!r.ok) return r.json().then(function(d) { throw new Error(d.message || r.status); });
+if (!m.sprites) m.sprites = {};
+m.sprites[fname] = true;
+sv();
+row.className = ‘sr up’;
+row.querySelector(’.si’).textContent = ‘\u2713’;
+toast(fname + ’ committed’, true);
+dlog(fname + ’ OK’, 1);
+if (fname === ‘Walk-Anim.png’ || fname === ‘AnimData.xml’) {
+setTimeout(function() { renderEdit(); }, 300);
+}
 })
 .catch(function(err) {
-  if (row) row.className = 'sprite-row error';
-  toast('Failed: ' + err.message, 'error');
-  dbg('GH push failed: ' + err.message, 'err');
+row.className = ‘sr er’;
+toast(’Failed: ’ + err.message, false);
+dlog(’push fail: ’ + err.message, 2);
 });
-```
-
 }
 
 // ── Asset cache ──
-function storeAsset(mid, f, data) {
-try { localStorage.setItem(‘asset_’ + mid + ‘*’ + f, data); } catch(e) { dbg(’storeAsset fail: ’ + e.message, ‘err’); }
-}
-function getAsset(mid, f) {
-return localStorage.getItem(’asset*’ + mid + ‘_’ + f);
-}
+function stA(mid, f, d) { try { localStorage.setItem(‘a_’ + mid + ‘*’ + f, d); } catch(e) {} }
+function getA(mid, f) { return localStorage.getItem(’a*’ + mid + ‘_’ + f); }
 
 // ── Animation ──
-function stopAnim() {
-if (animState && animState.timer) clearInterval(animState.timer);
-animState = null;
-}
-function restartAnim() {
-var m = getMon(selectedMonId);
-if (!m) return;
-stopAnim();
-startAnim(m);
-}
-function startAnim(m) {
-var canvas = document.getElementById(‘prevCanvas’);
-if (!canvas) return;
-var ctx = canvas.getContext(‘2d’);
-var xmlData = getAsset(m.id, ‘AnimData.xml’);
-if (!xmlData) return;
-
+function stopA() { if (anim && anim.t) clearInterval(anim.t); anim = null; }
+function startA(m) {
+var cv = document.getElementById(‘prevC’);
+if (!cv) return;
+var ctx = cv.getContext(‘2d’);
+var xd = getA(m.id, ‘AnimData.xml’);
+if (!xd) return;
 var sel = document.getElementById(‘animSel’);
-var animType = sel ? sel.value : ‘Walk’;
-var spriteB64 = getAsset(m.id, animType + ‘-Anim.png’);
-if (!spriteB64) { spriteB64 = getAsset(m.id, ‘Walk-Anim.png’); animType = ‘Walk’; }
-if (!spriteB64) return;
+var at = sel ? sel.value : ‘Walk’;
+var sb = getA(m.id, at + ‘-Anim.png’);
+if (!sb) { sb = getA(m.id, ‘Walk-Anim.png’); at = ‘Walk’; }
+if (!sb) return;
 
-var parser = new DOMParser();
-var xml = parser.parseFromString(xmlData, ‘text/xml’);
-var animNode = null;
-var anims = xml.querySelectorAll(‘Anim’);
-for (var i = 0; i < anims.length; i++) {
-var nm = anims[i].querySelector(‘Name’);
-if (nm && nm.textContent === animType) { animNode = anims[i]; break; }
+var xml = new DOMParser().parseFromString(xd, ‘text/xml’);
+var an = null, al = xml.querySelectorAll(‘Anim’);
+for (var i = 0; i < al.length; i++) {
+var nm = al[i].querySelector(‘Name’);
+if (nm && nm.textContent === at) { an = al[i]; break; }
 }
-if (!animNode) animNode = xml.querySelector(‘Anim’);
-if (!animNode) return;
+if (!an) an = xml.querySelector(‘Anim’);
+if (!an) return;
+var fwe = an.querySelector(‘FrameWidth’), fhe = an.querySelector(‘FrameHeight’);
+if (!fwe || !fhe) return;
+var fw = parseInt(fwe.textContent), fh = parseInt(fhe.textContent);
+var dur = [], dn = an.querySelectorAll(‘Durations > Duration’);
+if (dn.length) { for (var j = 0; j < dn.length; j++) dur.push(parseInt(dn[j].textContent)); }
+else dur = [8, 8, 8, 8];
 
-var fwEl = animNode.querySelector(‘FrameWidth’);
-var fhEl = animNode.querySelector(‘FrameHeight’);
-if (!fwEl || !fhEl) return;
-var fw = parseInt(fwEl.textContent);
-var fh = parseInt(fhEl.textContent);
-
-var durations = [];
-var durNodes = animNode.querySelectorAll(‘Durations > Duration’);
-if (durNodes.length) {
-durNodes.forEach(function(d) { durations.push(parseInt(d.textContent)); });
-} else {
-durations = [8, 8, 8, 8];
-}
-
-var scale = 3;
-canvas.width = fw * scale;
-canvas.height = fh * scale;
+var sc = 3;
+cv.width = fw * sc; cv.height = fh * sc;
 ctx.imageSmoothingEnabled = false;
 
 var img = new Image();
-img.src = ‘data:image/png;base64,’ + spriteB64;
+img.src = ‘data:image/png;base64,’ + sb;
 img.onload = function() {
-var totalFrames = durations.length || Math.floor(img.width / fw);
-var curFrame = 0;
-var tick = 0;
-var dir = (animState && typeof animState.direction === ‘number’) ? animState.direction : 0;
+var tf = dur.length || Math.floor(img.width / fw);
+var cf = 0, tk = 0;
+var dir = (anim && typeof anim.d === ‘number’) ? anim.d : 0;
+anim = { t: null, d: dir };
 
 ```
-animState = { timer: null, direction: dir, img: img, fw: fw, fh: fh, scale: scale, ctx: ctx, canvas: canvas };
-
 function draw() {
-  var d = animState.direction;
-  var c = animState.ctx;
-  var cv = animState.canvas;
-  var s = animState.scale;
-  c.clearRect(0, 0, cv.width, cv.height);
-  var ts = 8 * s;
-  for (var y = 0; y < cv.height; y += ts) {
-    for (var x = 0; x < cv.width; x += ts) {
-      c.fillStyle = ((x / ts + y / ts) % 2 === 0) ? '#1a1a2e' : '#16162a';
-      c.fillRect(x, y, ts, ts);
-    }
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var ts = 8 * sc;
+  for (var y = 0; y < cv.height; y += ts) for (var x = 0; x < cv.width; x += ts) {
+    ctx.fillStyle = ((x / ts + y / ts) % 2 === 0) ? '#1a1a2e' : '#16162a';
+    ctx.fillRect(x, y, ts, ts);
   }
-  c.drawImage(animState.img, curFrame * fw, d * fh, fw, fh, 0, 0, fw * s, fh * s);
+  ctx.drawImage(img, cf * fw, anim.d * fh, fw, fh, 0, 0, fw * sc, fh * sc);
 }
-
-animState.timer = setInterval(function() {
-  tick++;
-  var dur = durations[curFrame % durations.length] || 8;
-  if (tick >= dur) { tick = 0; curFrame = (curFrame + 1) % totalFrames; }
+anim.t = setInterval(function() {
+  tk++;
+  if (tk >= (dur[cf % dur.length] || 8)) { tk = 0; cf = (cf + 1) % tf; }
   draw();
 }, 16);
-
 draw();
-updDir();
+var dl = document.getElementById('dirLbl');
+if (dl) dl.textContent = DIRS[anim.d] || 'South';
 ```
 
 };
 }
-function chgDir(d) {
-if (!animState) return;
-animState.direction = ((animState.direction + d) + 8) % 8;
-updDir();
-}
-function updDir() {
-var el = document.getElementById(‘dirLabel’);
-if (el && animState) el.textContent = PMD_DIRS[animState.direction] || ‘South’;
+function chgD(n) {
+if (!anim) return;
+anim.d = ((anim.d + n) + 8) % 8;
+var dl = document.getElementById(‘dirLbl’);
+if (dl) dl.textContent = DIRS[anim.d] || ‘South’;
 }
 
 // ── Portrait ──
-function loadPortrait(input) {
-if (!input.files || !input.files[0]) return;
+function doPortrait(inp) {
+if (!inp.files || !inp.files[0]) return;
 var reader = new FileReader();
 reader.onload = function(e) {
 var img = new Image();
 img.onload = function() {
-var fs = 40, cols = Math.floor(img.width / fs), rows = Math.floor(img.height / fs);
-var max = Math.min(cols * rows, 12), grid = document.getElementById(‘portraitGrid’);
+var fs = 40, co = Math.floor(img.width / fs);
+var mx = Math.min(co * Math.floor(img.height / fs), 12);
+var grid = document.getElementById(‘portGrid’);
 if (!grid) return;
 grid.innerHTML = ‘’;
-var sc = 3;
-for (var i = 0; i < max; i++) {
-var col = i % cols, row = Math.floor(i / cols);
+for (var i = 0; i < mx; i++) {
 var c = document.createElement(‘canvas’);
-c.width = fs * sc; c.height = fs * sc;
+c.width = fs * 3; c.height = fs * 3;
 var cx = c.getContext(‘2d’);
 cx.imageSmoothingEnabled = false;
-cx.drawImage(img, col * fs, row * fs, fs, fs, 0, 0, fs * sc, fs * sc);
+cx.drawImage(img, (i % co) * fs, Math.floor(i / co) * fs, fs, fs, 0, 0, fs * 3, fs * 3);
 grid.appendChild(c);
 }
 };
 img.src = e.target.result;
 };
-reader.readAsDataURL(input.files[0]);
+reader.readAsDataURL(inp.files[0]);
 }
 
 // ── Settings ──
-function openSettings() {
-dbg(‘openSettings() called’, ‘ok’);
-var g = ghLoad();
-document.getElementById(‘ghToken’).value = g.token || ‘’;
-document.getElementById(‘ghUser’).value = g.user || ‘’;
-document.getElementById(‘ghRepo’).value = g.repo || ‘’;
-document.getElementById(‘ghBranch’).value = g.branch || ‘main’;
-showTokenPreview(g.token);
-var modal = document.getElementById(‘settingsModal’);
-dbg(’modal element: ’ + (modal ? ‘found’ : ‘NOT FOUND’), modal ? ‘ok’ : ‘err’);
-dbg(’modal classes before: ’ + modal.className, ‘info’);
-modal.classList.add(‘open’);
-dbg(’modal classes after: ’ + modal.className, ‘ok’);
-}
-function closeSettings() {
-document.getElementById(‘settingsModal’).classList.remove(‘open’);
-}
-function saveSettings() {
-ghSave({
-token: document.getElementById(‘ghToken’).value.trim(),
-user: document.getElementById(‘ghUser’).value.trim(),
-repo: document.getElementById(‘ghRepo’).value.trim(),
-branch: document.getElementById(‘ghBranch’).value.trim() || ‘main’
-});
-closeSettings();
-toast(‘Settings saved’, ‘success’);
-dbg(‘Settings saved’, ‘ok’);
-}
-function showTokenPreview(t) {
-var el = document.getElementById(‘tokenPreview’);
-if (!el) return;
-el.textContent = (t && t.length > 8) ? ’Stored: ’ + t.substring(0, 4) + ‘…..’ + t.substring(t.length - 4) : ‘’;
+function openModal() {
+dlog(‘openModal()’, 1);
+var g = ghl();
+document.getElementById(‘ghTok’).value = g.token || ‘’;
+document.getElementById(‘ghUsr’).value = g.user || ‘’;
+document.getElementById(‘ghRep’).value = g.repo || ‘’;
+document.getElementById(‘ghBr’).value = g.branch || ‘main’;
+var tp = document.getElementById(‘tokPrev’);
+tp.textContent = (g.token && g.token.length > 8) ? g.token.substring(0, 4) + ‘…’ + g.token.substring(g.token.length - 4) : ‘’;
+document.getElementById(‘modal’).classList.add(‘open’);
 }
 
 // ── Export ──
-function exportJSON() {
-var data = mons.map(function(m) {
-return {
-name: m.name, behavior: m.behavior, biomes: m.biomes,
-moves: m.moves.filter(function(x) { return x.trim(); }),
-notes: m.notes,
-spriteFolder: m.name ? ‘resources/pokemon/’ + toFolder(m.name) + ‘/sprites/’ : null,
-assets: SPRITE_FILES.reduce(function(o, f) { o[f] = !!(m.sprites && m.sprites[f]); return o; }, {})
-};
-});
+function doExport() {
+var data = [];
+for (var i = 0; i < mons.length; i++) {
+var m = mons[i];
+var mv = [];
+for (var j = 0; j < m.moves.length; j++) { if (m.moves[j].trim()) mv.push(m.moves[j]); }
+var as = {};
+for (var k = 0; k < SPRITES.length; k++) as[SPRITES[k]] = !!(m.sprites && m.sprites[SPRITES[k]]);
+data.push({ name: m.name, behavior: m.behavior, biomes: m.biomes, moves: mv, notes: m.notes,
+spriteFolder: m.name ? ‘resources/pokemon/’ + fld(m.name) + ‘/sprites/’ : null, assets: as });
+}
 var blob = new Blob([JSON.stringify(data, null, 2)], { type: ‘application/json’ });
 var a = document.createElement(‘a’);
-a.href = URL.createObjectURL(blob);
-a.download = ‘mons.json’;
-a.click();
+a.href = URL.createObjectURL(blob); a.download = ‘mons.json’; a.click();
 URL.revokeObjectURL(a.href);
-toast(‘Exported ’ + data.length + ’ mons’, ‘success’);
+toast(‘Exported ’ + data.length + ’ mons’, true);
 }
 
-// ── Init ──
-dbg(‘About to run init()…’, ‘info’);
-function init() {
-try {
-dbg(‘init() started’, ‘ok’);
+// ── INIT — all listeners attached here ──
+dlog(‘Attaching listeners…’, 0);
 
-```
-dbg('Testing localStorage...', 'info');
-localStorage.setItem('_test', '1');
-localStorage.removeItem('_test');
-dbg('localStorage: OK', 'ok');
+document.getElementById(‘btnSettings’).addEventListener(‘click’, function() {
+dlog(‘Settings clicked’, 1);
+openModal();
+});
+document.getElementById(‘btnExport’).addEventListener(‘click’, function() {
+dlog(‘Export clicked’, 1);
+doExport();
+});
+document.getElementById(‘btnAdd’).addEventListener(‘click’, function() {
+dlog(‘Add clicked’, 1);
+var m = { id: gid(), name: ‘’, behavior: ‘’, biomes: [], moves: [’’], notes: ‘’, sprites: {} };
+mons.push(m); sv();
+selId = m.id;
+stopA(); showEdit(); renderEdit();
+});
+document.getElementById(‘btnBack’).addEventListener(‘click’, function() {
+stopA(); selId = null; showList(); renderList();
+});
+document.getElementById(‘btnDel’).addEventListener(‘click’, function() {
+if (!selId || !confirm(‘Delete this mon?’)) return;
+for (var i = mons.length - 1; i >= 0; i–) { if (mons[i].id === selId) { mons.splice(i, 1); break; } }
+for (var j = 0; j < SPRITES.length; j++) { try { localStorage.removeItem(‘a_’ + selId + ‘_’ + SPRITES[j]); } catch(e) {} }
+sv(); stopA(); selId = null; showList(); renderList();
+toast(‘Deleted’, false);
+});
+document.getElementById(‘btnCancel’).addEventListener(‘click’, function() {
+document.getElementById(‘modal’).classList.remove(‘open’);
+});
+document.getElementById(‘btnSave’).addEventListener(‘click’, function() {
+ghs({
+token: document.getElementById(‘ghTok’).value.trim(),
+user: document.getElementById(‘ghUsr’).value.trim(),
+repo: document.getElementById(‘ghRep’).value.trim(),
+branch: document.getElementById(‘ghBr’).value.trim() || ‘main’
+});
+document.getElementById(‘modal’).classList.remove(‘open’);
+toast(‘Settings saved’, true);
+dlog(‘Saved settings’, 1);
+});
+document.getElementById(‘searchIn’).addEventListener(‘input’, function() { renderList(); });
+document.getElementById(‘ghTok’).addEventListener(‘input’, function() {
+var v = this.value;
+document.getElementById(‘tokPrev’).textContent = (v && v.length > 8) ? v.substring(0, 4) + ‘…’ + v.substring(v.length - 4) : ‘’;
+});
 
-load();
-dbg('Data loaded, mons: ' + mons.length, 'ok');
+dlog(‘Listeners attached’, 1);
 
+ld();
 renderList();
-dbg('renderList() done', 'ok');
+dlog(’List rendered, mons: ’ + mons.length, 1);
 
-var g = ghLoad();
-dbg('GH settings: token=' + (g.token ? 'yes' : 'no') + ' user=' + (g.user || 'none'), 'info');
-
-if (!g.token && !g.user) {
-  dbg('No GH config, opening settings...', 'warn');
-  openSettings();
+var ig = ghl();
+if (!ig.token && !ig.user) {
+dlog(‘No GH config, opening modal…’, 0);
+openModal();
 }
 
-document.getElementById('ghToken').addEventListener('input', function() { showTokenPreview(this.value); });
-dbg('init() COMPLETE', 'ok');
-```
-
-} catch(e) {
-dbg(’init() CRASHED: ’ + e.message, ‘err’);
-dbg(’Stack: ’ + (e.stack || ‘n/a’).substring(0, 200), ‘err’);
-}
-}
-init();
-dbg(‘Script finished executing’, ‘ok’);
+dlog(‘INIT COMPLETE’, 1);
 </script>
 
 </body>
