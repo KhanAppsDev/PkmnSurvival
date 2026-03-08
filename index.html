@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v12 - Cloud</title>
+    <title>Island Mon Registry v12.1 - Cloud</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,6 +14,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; margin: 0; padding: 0; width: 100vw; overflow-x: hidden; }
         
+        /* CRT Overlay Effect */
         body::before { 
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; 
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
@@ -27,21 +28,25 @@
         #grid-view, #island-view, #cloud-view, #detail-view { padding: 15px; }
         .hidden { display: none !important; }
 
+        /* Search & Filters */
         .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-bar { background: #000; border: 1px solid var(--border); color: var(--accent-green); padding: 12px; width: 100%; font-family: inherit; font-size: 1rem; }
         .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
         .filter-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.7rem; white-space: nowrap; cursor: pointer;}
         .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.2); color: var(--accent-cyan); }
 
+        /* Grid Cards */
         .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
         .mon-card { background: var(--surface); border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; }
         .mon-card:hover { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
         .mon-card .name { font-size: 0.8rem; color: var(--accent-cyan); margin-top: 8px; text-align: center; }
 
+        /* Editor Sections */
         .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
         h3 { margin: 0 0 12px 0; font-size: 0.75rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); text-transform: uppercase; }
         input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; font-family: inherit; margin-bottom: 10px; }
 
+        /* Portraits & Sprites */
         .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
         .portrait-slot { aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
         .portrait-slot img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
@@ -49,7 +54,11 @@
         .upload-zone { background: #000; border: 1px dashed var(--border); padding: 10px; font-size: 0.65rem; margin-bottom: 5px; cursor: pointer; display: flex; justify-content: space-between; }
         .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
 
+        /* Canvas Areas */
+        #canvas-container { background: #000; border: 1px solid var(--border); display: flex; justify-content: center; align-items: center; min-height: 200px; position: relative; }
         canvas { image-rendering: pixelated; max-width: 100%; }
+
+        footer { padding: 10px; text-align: center; font-size: 0.65rem; color: #666; border-top: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -57,19 +66,20 @@
 <header>
     <div style="color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px;">REGISTRY_OS_V12</div>
     <div style="display: flex; gap: 8px;">
-        <button class="btn" onclick="showView('cloud')">Cloud</button>
-        <button class="btn" onclick="showView('island')">Island</button>
-        <button class="btn" onclick="addNewMon()">+ Add</button>
+        <button class="btn" onclick="showView('cloud')" style="border-color: var(--accent-cyan);">Cloud</button>
+        <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber);">Island</button>
+        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green);">+ Add</button>
     </div>
 </header>
 
 <div id="cloud-view" class="hidden">
     <div class="editor-section">
         <h3>CLOUD_SYNC_PROTOCOL</h3>
+        <p style="font-size: 0.7rem; color: #888; margin-bottom: 15px;">Input a Registry Code to sync with the Firebase global database.</p>
         <input type="text" id="cloud-code-input" placeholder="ENTER_CODE (e.g. ALPHA_7)">
         <div style="display: flex; gap: 10px; margin-top: 5px;">
             <button class="btn" onclick="loadFromCloud()" style="flex:1">LOAD_DATA</button>
-            <button class="btn" onclick="saveToCloud()" style="flex:1;">PUBLISH_CODE</button>
+            <button class="btn" onclick="saveToCloud()" style="flex:1; border-color: var(--accent-green); color: var(--accent-green);">PUBLISH_CODE</button>
         </div>
         <div id="cloud-status" style="margin-top: 15px; font-size: 0.7rem; color: var(--accent-amber);">SYSTEM_READY</div>
     </div>
@@ -88,13 +98,15 @@
         <button class="btn" onclick="showView('grid')">&lt; REGISTRY</button>
         <div style="display: flex; gap: 5px;">
             <input type="number" id="map-seed" value="12345" style="width: 80px; margin:0;">
-            <button class="btn" onclick="initIslandGen()">REGENERATE</button>
+            <button class="btn" onclick="initIslandGen()" style="border-color: var(--accent-green);">REGENERATE</button>
         </div>
     </div>
-    <canvas id="island-canvas" width="300" height="300" style="display:block; margin:0 auto; border:2px solid var(--border);"></canvas>
-    <div id="tile-panel" class="editor-section hidden">
+    <div style="position: relative; border: 2px solid var(--border); background: #000; width: 300px; height: 300px; margin: 0 auto;">
+        <canvas id="island-canvas" width="300" height="300" style="cursor: crosshair;"></canvas>
+    </div>
+    <div id="tile-panel" class="editor-section hidden" style="width: 100%; margin-top: 20px;">
         <h3 id="tile-terrain-label">TERRAIN_ANALYSIS</h3>
-        <canvas id="tile-detail-canvas" width="200" height="200" style="display:block; margin:0 auto;"></canvas>
+        <canvas id="tile-detail-canvas" width="200" height="200" style="background: #000; border: 1px solid var(--border); display: block; margin: 0 auto;"></canvas>
         <div id="tile-mon-list" style="margin-top: 10px; font-size: 0.75rem; color: var(--accent-cyan); text-align: center;"></div>
     </div>
 </div>
@@ -102,22 +114,26 @@
 <div id="detail-view" class="hidden">
     <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
         <button class="btn" onclick="showView('grid')">&lt; EXIT</button>
-        <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">DELETE</button>
+        <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">DELETE_RECORD</button>
     </div>
     <div class="editor-section">
         <h3>NAME_REGISTRY</h3>
         <input type="text" id="edit-name" onchange="updateCurrentMon('name', this.value)">
-        <h3>HABITAT</h3>
+        <h3>HABITAT_ASSIGNMENT</h3>
         <div id="habitat-select" class="filter-row"></div>
-        <h3>PORTRAITS</h3>
+        
+        <h3>PORTRAIT_DATA (IMGBB_HOSTED)</h3>
         <div class="portrait-manager" id="portrait-manager"></div>
-        <h3 style="margin-top:15px">SPRITES</h3>
+        
+        <h3 style="margin-top:15px">SPRITE_ASSETS</h3>
         <div id="upload-zones"></div>
     </div>
 </div>
 
 <input type="file" id="portrait-input" class="hidden" accept=".png">
 <input type="file" id="single-file-input" class="hidden">
+
+<footer>Island Mon Registry v12.1 • Firebase Cloud Sync • Procedural Island Generator</footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
@@ -134,7 +150,9 @@
 
   const app = initializeApp(firebaseConfig);
   window.db = getFirestore(app);
-  window.fbDoc = doc; window.fbGet = getDoc; window.fbSet = setDoc;
+  window.fbDoc = doc; 
+  window.fbGet = getDoc; 
+  window.fbSet = setDoc;
 </script>
 
 <script>
@@ -150,162 +168,425 @@
         OCEAN: { name: 'Ocean', color: '#00008b', biome: 'None' } 
     };
 
+    // STATE MANAGEMENT
     let mons = JSON.parse(localStorage.getItem('island_mons_v12') || '[]');
-    let currentMonId = null, activeHabitatFilter = null, currentIsland = null, islandLoop = null, detailRequest = null;
+    let currentMonId = null;
+    let activeHabitatFilter = null;
+    let currentIsland = null;
+    let islandLoop = null;
+    let detailRequest = null;
 
+    // VIEW MANAGEMENT
     function showView(viewId) {
-        ['grid-view', 'detail-view', 'island-view', 'cloud-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
-        if (viewId === 'detail') document.getElementById('detail-view').classList.remove('hidden');
-        else document.getElementById(viewId + '-view').classList.remove('hidden');
+        ['grid-view', 'detail-view', 'island-view', 'cloud-view'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+        
+        if (viewId === 'detail') {
+            document.getElementById('detail-view').classList.remove('hidden');
+        } else {
+            const target = document.getElementById(viewId + '-view');
+            if (target) target.classList.remove('hidden');
+        }
 
         if (islandLoop) cancelAnimationFrame(islandLoop);
         if (detailRequest) cancelAnimationFrame(detailRequest);
-
+        
         if (viewId === 'island') initIslandGen();
         if (viewId === 'grid') renderGrid();
     }
 
+    // IMGBB UPLOAD
     async function uploadToImgBB(file) {
+        const status = document.getElementById('cloud-status');
+        if(status) status.innerText = "UPLOADING ASSET TO IMGBB...";
+        
         const formData = new FormData();
         formData.append('image', file);
+        
         try {
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: formData });
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
             const data = await res.json();
+            if(status) status.innerText = "UPLOAD COMPLETE.";
             return data.data.url;
-        } catch (e) { return null; }
+        } catch (e) {
+            if(status) status.innerText = "IMG_UPLOAD_FAILED.";
+            console.error(e);
+            return null;
+        }
     }
 
-    function save() { localStorage.setItem('island_mons_v12', JSON.stringify(mons)); }
+    // LOCAL STORAGE
+    function save() {
+        localStorage.setItem('island_mons_v12', JSON.stringify(mons));
+    }
 
     function addNewMon() {
         const id = "MON_" + Date.now();
-        mons.push({ id, name: 'NEW_ENTITY', habitat: 'Forest', portraits: [null,null,null,null,null], assets: {}, xmlData: null });
+        const newMon = {
+            id,
+            name: 'NEW_ENTITY',
+            habitat: 'Forest',
+            portraits: [null, null, null, null, null],
+            assets: {},
+            xmlData: null
+        };
+        mons.push(newMon);
         save();
         openDetail(id);
     }
 
+    // CLOUD SYNC: FIRESTORE
     async function saveToCloud() {
         const code = document.getElementById('cloud-code-input').value.trim().toUpperCase();
-        if(!code) return alert("ENTER CODE");
+        if(!code) return alert("PLEASE ENTER A REGISTRY CODE NAME.");
+        
+        const status = document.getElementById('cloud-status');
+        status.innerText = "UPLOADING REGISTRY TO CLOUD...";
+        
         try {
-            await window.fbSet(window.fbDoc(window.db, "registries", code), { seed: document.getElementById('map-seed').value, mons: mons, timestamp: Date.now() });
-            document.getElementById('cloud-status').innerText = "PUBLISHED!";
-        } catch (e) { document.getElementById('cloud-status').innerText = "ERROR"; }
+            await window.fbSet(window.fbDoc(window.db, "registries", code), {
+                seed: document.getElementById('map-seed').value,
+                mons: mons,
+                timestamp: Date.now(),
+                version: "12.1"
+            });
+            status.innerText = `SUCCESS: REGISTRY [${code}] PUBLISHED.`;
+        } catch (e) {
+            console.error(e);
+            status.innerText = "CLOUD_ERROR: CHECK NETWORK OR PERMISSIONS.";
+        }
     }
 
     async function loadFromCloud() {
         const code = document.getElementById('cloud-code-input').value.trim().toUpperCase();
-        const snap = await window.fbGet(window.fbDoc(window.db, "registries", code));
-        if(snap.exists()) {
-            const data = snap.data();
-            mons = data.mons; save(); showView('grid');
+        if(!code) return alert("ENTER A CODE TO SEARCH.");
+        
+        const status = document.getElementById('cloud-status');
+        status.innerText = "SEARCHING DATABASE...";
+        
+        try {
+            const snap = await window.fbGet(window.fbDoc(window.db, "registries", code));
+            if(snap.exists()) {
+                const data = snap.data();
+                mons = data.mons;
+                document.getElementById('map-seed').value = data.seed;
+                save();
+                status.innerText = `SYNCED: WORLD [${code}] LOADED.`;
+                setTimeout(() => showView('grid'), 1000);
+            } else {
+                status.innerText = "ERROR: CODE NOT FOUND IN REGISTRY.";
+            }
+        } catch (e) {
+            console.error(e);
+            status.innerText = "FETCH_FAILED: CONNECTION INTERRUPTED.";
         }
     }
 
+    // REGISTRY UI
     function renderGrid() {
         const grid = document.getElementById('mon-grid');
+        const searchTerm = document.getElementById('search').value.toLowerCase();
         grid.innerHTML = '';
-        mons.filter(m => (!activeHabitatFilter || m.habitat === activeHabitatFilter)).forEach(mon => {
+        
+        const filtered = mons.filter(m => {
+            const matchesSearch = m.name.toLowerCase().includes(searchTerm);
+            const matchesHabitat = !activeHabitatFilter || m.habitat === activeHabitatFilter;
+            return matchesSearch && matchesHabitat;
+        });
+        
+        filtered.forEach(mon => {
             const card = document.createElement('div');
             card.className = 'mon-card';
             card.onclick = () => openDetail(mon.id);
-            const img = mon.portraits.find(p => p) || 'https://via.placeholder.com/64';
-            card.innerHTML = `<img src="${img}" style="width:64px;"><div class="name">${mon.name}</div>`;
+            
+            const portraitUrl = mon.portraits.find(p => p !== null) || 'https://via.placeholder.com/64?text=?';
+            
+            card.innerHTML = `
+                <img src="${portraitUrl}" style="width:64px; height:64px; image-rendering: pixelated;">
+                <div class="name">${mon.name}</div>
+                <div style="font-size:0.6rem; color:#666;">${mon.habitat.toUpperCase()}</div>
+            `;
             grid.appendChild(card);
         });
-        renderHabitatFilters();
     }
 
     function renderHabitatFilters() {
         const container = document.getElementById('habitat-filters');
-        container.innerHTML = HABITATS.map(h => `<div class="filter-chip ${activeHabitatFilter === h ? 'active' : ''}" onclick="activeHabitatFilter=(activeHabitatFilter==='${h}'?null:'${h}');renderGrid();">${h}</div>`).join('');
+        container.innerHTML = HABITATS.map(h => `
+            <div class="filter-chip ${activeHabitatFilter === h ? 'active' : ''}" 
+                 onclick="toggleHabitatFilter('${h}')">${h}</div>
+        `).join('');
     }
 
+    function toggleHabitatFilter(h) {
+        activeHabitatFilter = (activeHabitatFilter === h) ? null : h;
+        renderHabitatFilters();
+        renderGrid();
+    }
+
+    // DETAIL VIEW
     function openDetail(id) {
-        currentMonId = id; const mon = mons.find(m => m.id === id);
+        currentMonId = id;
+        const mon = mons.find(m => m.id === id);
         showView('detail');
+        
         document.getElementById('edit-name').value = mon.name;
-        renderHabitatSelectors(); renderPortraitManager(); setupUploadZones(); updateUploadCheckmarks();
+        renderHabitatSelectors();
+        renderPortraitManager();
+        setupUploadZones();
+        updateUploadCheckmarks();
+    }
+
+    function updateCurrentMon(field, value) {
+        const index = mons.findIndex(m => m.id === currentMonId);
+        if (index !== -1) {
+            mons[index][field] = value;
+            save();
+        }
     }
 
     function renderHabitatSelectors() {
         const mon = mons.find(m => m.id === currentMonId);
-        document.getElementById('habitat-select').innerHTML = HABITATS.map(h => `<div class="filter-chip ${mon.habitat === h ? 'active' : ''}" onclick="updateCurrentMon('habitat','${h}');renderHabitatSelectors();">${h}</div>`).join('');
+        const container = document.getElementById('habitat-select');
+        container.innerHTML = HABITATS.map(h => `
+            <div class="filter-chip ${mon.habitat === h ? 'active' : ''}" 
+                 onclick="updateCurrentMon('habitat', '${h}'); renderHabitatSelectors();">${h}</div>
+        `).join('');
     }
 
-    function updateCurrentMon(f, v) { const i = mons.findIndex(m => m.id === currentMonId); mons[i][f] = v; save(); }
-
+    // PORTRAIT MANAGEMENT
     function renderPortraitManager() {
         const mon = mons.find(m => m.id === currentMonId);
-        const container = document.getElementById('portrait-manager'); container.innerHTML = '';
+        const container = document.getElementById('portrait-manager');
+        container.innerHTML = '';
+
         for (let i = 0; i < 5; i++) {
-            const slot = document.createElement('div'); slot.className = `portrait-slot ${mon.portraits[i]?'active':''}`;
-            slot.onclick = () => { window.currentTargetSlot = i; document.getElementById('portrait-input').click(); };
-            slot.innerHTML = mon.portraits[i] ? `<img src="${mon.portraits[i]}">` : `+`;
+            const slot = document.createElement('div');
+            slot.className = `portrait-slot ${mon.portraits[i] ? 'active' : ''}`;
+            slot.onclick = () => {
+                window.currentTargetSlot = i;
+                document.getElementById('portrait-input').click();
+            };
+            
+            slot.innerHTML = mon.portraits[i] 
+                ? `<img src="${mon.portraits[i]}">` 
+                : `<span style="color:#333; font-size:1.2rem;">+</span>`;
+            
             container.appendChild(slot);
         }
     }
 
     document.getElementById('portrait-input').onchange = async (e) => {
+        if (!e.target.files[0]) return;
         const url = await uploadToImgBB(e.target.files[0]);
-        if (url) { mons.find(m => m.id === currentMonId).portraits[window.currentTargetSlot] = url; save(); renderPortraitManager(); }
+        if (url) {
+            const mon = mons.find(m => m.id === currentMonId);
+            mon.portraits[window.currentTargetSlot] = url;
+            save();
+            renderPortraitManager();
+        }
     };
 
+    // SPRITE & XML MANAGEMENT
     function setupUploadZones() {
+        const container = document.getElementById('upload-zones');
         const keys = [...ANIMS.map(a => a + '-Anim'), 'AnimData.xml'];
-        document.getElementById('upload-zones').innerHTML = keys.map(k => `<div class="upload-zone" id="z-${k}" onclick="triggerAssetUpload('${k}')"><span>${k}</span><span class="chk"></span></div>`).join('');
+        
+        container.innerHTML = keys.map(key => `
+            <div class="upload-zone" id="z-${key}" onclick="triggerAssetUpload('${key}')">
+                <span>${key}</span>
+                <span class="chk"></span>
+            </div>
+        `).join('');
     }
 
-    function triggerAssetUpload(k) {
-        const inp = document.getElementById('single-file-input');
-        inp.onchange = async (e) => {
+    function triggerAssetUpload(key) {
+        const input = document.getElementById('single-file-input');
+        input.onchange = async (e) => {
+            if (!e.target.files[0]) return;
             const mon = mons.find(m => m.id === currentMonId);
-            if (k === 'AnimData.xml') mon.xmlData = await e.target.files[0].text();
-            else { const url = await uploadToImgBB(e.target.files[0]); if (url) mon.assets[k] = url; }
-            save(); updateUploadCheckmarks();
-        }; inp.click();
+
+            if (key === 'AnimData.xml') {
+                const text = await e.target.files[0].text();
+                mon.xmlData = text;
+            } else {
+                const url = await uploadToImgBB(e.target.files[0]);
+                if (url) mon.assets[key] = url;
+            }
+            save();
+            updateUploadCheckmarks();
+        };
+        input.click();
     }
 
     function updateUploadCheckmarks() {
         const m = mons.find(mon => mon.id === currentMonId);
-        document.querySelectorAll('.upload-zone').forEach(z => {
-            const k = z.id.replace('z-', '');
-            const has = (k === 'AnimData.xml') ? !!m.xmlData : !!m.assets[k];
-            z.classList.toggle('loaded', has); z.querySelector('.chk').innerText = has ? '✓' : '';
+        if (!m) return;
+        
+        document.querySelectorAll('.upload-zone').forEach(zone => {
+            const key = zone.id.replace('z-', '');
+            const hasFile = (key === 'AnimData.xml') ? !!m.xmlData : !!m.assets[key];
+            zone.classList.toggle('loaded', hasFile);
+            zone.querySelector('.chk').innerText = hasFile ? '✓' : '';
         });
     }
 
-    function deleteCurrentMon() { if (confirm("DELETE?")) { mons = mons.filter(m => m.id !== currentMonId); save(); showView('grid'); } }
+    function deleteCurrentMon() {
+        if (confirm("ERASE THIS ENTITY FROM REGISTRY?")) {
+            mons = mons.filter(m => m.id !== currentMonId);
+            save();
+            showView('grid');
+        }
+    }
 
-    function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
+    // ISLAND GENERATOR - DETERMINISTIC SEED
+    function mulberry32(a) {
+        return function() {
+            var t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        }
+    }
 
     function initIslandGen() {
-        const random = mulberry32(parseInt(document.getElementById('map-seed').value) || 12345);
-        currentIsland = [];
-        for (let y = 0; y < 10; y++) for (let x = 0; x < 10; x++) {
-            let type = 'OPEN_FOREST'; if (x === 0 || x === 9 || y === 0 || y === 9) type = random() > 0.7 ? 'OCEAN' : 'SHORE';
-            currentIsland.push({ x, y, type, inhabitants: [] });
+        const seedInput = document.getElementById('map-seed').value;
+        const seed = parseInt(seedInput) || 12345;
+        const random = mulberry32(seed);
+        
+        currentIsland = generateIslandLayout(random);
+        spawnPopulations(random);
+        renderIslandMain();
+        
+        document.getElementById('tile-panel').classList.add('hidden');
+    }
+
+    function generateIslandLayout(rng) {
+        const size = 10;
+        let tiles = [];
+        
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                let type = 'OPEN_FOREST';
+                const edge = (x === 0 || x === 9 || y === 0 || y === 9);
+                
+                if (edge) {
+                    type = rng() > 0.7 ? 'OCEAN' : 'SHORE';
+                } else if (rng() > 0.9) {
+                    type = 'CAVE';
+                } else if (rng() > 0.7) {
+                    type = 'DENSE_FOREST';
+                }
+                
+                tiles.push({ x, y, type, inhabitants: [] });
+            }
         }
+        
+        // Random River
+        let rx = Math.floor(rng() * 6) + 2;
+        for (let ry = 0; ry < 10; ry++) {
+            tiles[ry * 10 + rx].type = 'RIVERBANK';
+            if (rng() > 0.5 && rx > 1 && rx < 8) {
+                rx += (rng() > 0.5 ? 1 : -1);
+            }
+        }
+        return tiles;
+    }
+
+    function spawnPopulations(rng) {
         currentIsland.forEach(tile => {
             const possible = mons.filter(m => m.habitat === TERRAIN[tile.type].biome);
-            if (possible.length > 0 && random() > 0.6) tile.inhabitants.push({ name: possible[0].name, lx: random()*20+5, ly: random()*20+5, vx: (random()-0.5)*0.1, vy: (random()-0.5)*0.1 });
+            if (possible.length > 0 && rng() > 0.5) {
+                const count = Math.floor(rng() * 3) + 1;
+                for (let i = 0; i < count; i++) {
+                    const species = possible[Math.floor(rng() * possible.length)];
+                    tile.inhabitants.push({
+                        id: species.id,
+                        name: species.name,
+                        lx: rng() * 20 + 2,
+                        ly: rng() * 20 + 2,
+                        vx: (rng() - 0.5) * 0.1,
+                        vy: (rng() - 0.5) * 0.1,
+                        isSleeping: rng() > 0.8
+                    });
+                }
+            }
         });
-        renderIslandMain();
     }
 
+    // ISLAND RENDERING
     function renderIslandMain() {
-        const ctx = document.getElementById('island-canvas').getContext('2d');
+        const canv = document.getElementById('island-canvas');
+        const ictx = canv.getContext('2d');
+        
         function loop() {
-            ctx.clearRect(0,0,300,300);
+            ictx.clearRect(0, 0, 300, 300);
+            
             currentIsland.forEach(t => {
-                ctx.fillStyle = TERRAIN[t.type].color; ctx.fillRect(t.x*30, t.y*30, 29, 29);
-                t.inhabitants.forEach(m => { m.lx += m.vx; m.ly += m.vy; ctx.fillStyle = '#000'; ctx.fillRect(t.x*30+m.lx, t.y*30+m.ly, 3, 3); });
+                ictx.fillStyle = TERRAIN[t.type].color;
+                ictx.fillRect(t.x * 30, t.y * 30, 29, 29);
+                
+                t.inhabitants.forEach(m => {
+                    if (!m.isSleeping) {
+                        m.lx += m.vx;
+                        m.ly += m.vy;
+                        if (m.lx < 2 || m.lx > 27) m.vx *= -1;
+                        if (m.ly < 2 || m.ly > 27) m.vy *= -1;
+                    }
+                    ictx.fillStyle = m.isSleeping ? '#fff' : '#000';
+                    ictx.fillRect(t.x * 30 + m.lx, t.y * 30 + m.ly, 3, 3);
+                });
             });
+            
             islandLoop = requestAnimationFrame(loop);
-        } loop();
+        }
+        loop();
     }
 
-    window.onload = () => { renderGrid(); };
+    // TILE INTERACTION
+    document.getElementById('island-canvas').onclick = function(e) {
+        const rect = this.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) / (rect.width / 10));
+        const y = Math.floor((e.clientY - rect.top) / (rect.height / 10));
+        const tile = currentIsland.find(t => t.x === x && t.y === y);
+        if (tile) openTileDetail(tile);
+    };
+
+    function openTileDetail(tile) {
+        const panel = document.getElementById('tile-panel');
+        panel.classList.remove('hidden');
+        document.getElementById('tile-terrain-label').innerText = `SECTOR_${tile.x}_${tile.y}: ${tile.type}`;
+        
+        const dctx = document.getElementById('tile-detail-canvas').getContext('2d');
+        const population = tile.inhabitants.map(m => m.name).join(', ') || 'NO_SIGNALS';
+        document.getElementById('tile-mon-list').innerText = `DETECTED: ${population}`;
+
+        function detailLoop(time) {
+            dctx.fillStyle = TERRAIN[tile.type].color;
+            dctx.fillRect(0, 0, 200, 200);
+            
+            tile.inhabitants.forEach((m, i) => {
+                const monData = mons.find(s => s.id === m.id);
+                dctx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
+                dctx.beginPath();
+                dctx.arc(m.lx * 6, m.ly * 6, 8, 0, Math.PI * 2);
+                dctx.fill();
+            });
+            detailRequest = requestAnimationFrame(detailLoop);
+        }
+        detailLoop(0);
+    }
+
+    // INITIALIZE
+    window.onload = () => {
+        renderHabitatFilters();
+        renderGrid();
+    };
 </script>
 </body>
 </html>
