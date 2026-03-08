@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry</title>
+    <title>Island Mon Registry v5</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -26,7 +26,6 @@
             margin: 0; padding: 0; width: 100vw; overflow-x: hidden;
         }
 
-        /* Scanline Overlay */
         body::before {
             content: " "; display: block; position: fixed;
             top: 0; left: 0; bottom: 0; right: 0;
@@ -54,167 +53,152 @@
             padding: 12px; width: 100%; font-family: inherit; font-size: 1rem;
         }
         .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
-        .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; }
+        .mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 12px; }
 
         .mon-card {
             background: var(--surface); border: 1px solid var(--border);
             padding: 12px; position: relative; display: flex; flex-direction: column; align-items: center;
         }
-        .mon-card .name { font-size: 1rem; color: var(--accent-cyan); margin: 8px 0; }
-        .status-light {
-            width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 8px; right: 8px;
-            background: #333;
-        }
-        .status-light.complete { background: var(--accent-green); box-shadow: 0 0 5px var(--accent-green); }
-
+        .mon-card .name { font-size: 0.95rem; color: var(--accent-cyan); margin: 6px 0; text-transform: uppercase; }
+        
         .card-previews {
-            display: flex; gap: 6px; margin-top: 10px; padding-top: 10px;
+            display: flex; gap: 4px; margin-top: 10px; padding-top: 10px;
             border-top: 1px solid var(--border); width: 100%; justify-content: center;
         }
         .mini-preview { 
-            width: 48px; height: 48px; background: #000; image-rendering: pixelated; 
+            width: 46px; height: 46px; background: #000; image-rendering: pixelated; 
             border: 1px solid #222; display: block;
         }
         .prev-label { font-size: 0.5rem; color: #666; text-align: center; margin-top: 2px; }
 
         #detail-view { display: none; padding: 15px; padding-bottom: 50px; }
-        .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 20px; }
-        h3 { margin: 0 0 12px 0; font-size: 0.85rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
+        .editor-section { background: var(--surface); padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
+        h3 { margin: 0 0 12px 0; font-size: 0.8rem; color: var(--accent-cyan); border-bottom: 1px solid var(--border); }
         
         .field-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.7rem; color: #888; margin-bottom: 4px; }
-        input[type="text"], textarea {
+        label { display: block; font-size: 0.65rem; color: #888; margin-bottom: 4px; text-transform: uppercase; }
+        input[type="text"] {
             width: 100%; background: #000; border: 1px solid var(--border); color: #fff; 
             padding: 10px; font-family: inherit; font-size: 0.9rem;
         }
 
-        .behavior-selector { display: flex; gap: 4px; }
-        .behavior-btn {
-            flex: 1; padding: 10px 0; border: 1px solid var(--border); text-align: center; font-size: 0.7rem; opacity: 0.4;
-        }
-        .behavior-btn.active { opacity: 1; border-color: currentColor; }
-        .behavior-btn[data-val="Docile"] { color: var(--accent-green); }
-        .behavior-btn[data-val="Curious"] { color: var(--accent-amber); }
-        .behavior-btn[data-val="Aggressive"] { color: var(--accent-red); }
-
         .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .upload-zone {
-            background: #000; border: 1px dashed var(--border); padding: 10px; font-size: 0.65rem;
+            background: #000; border: 1px dashed var(--border); padding: 8px; font-size: 0.6rem;
             display: flex; justify-content: space-between; align-items: center;
         }
         .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
 
         .tabs { display: flex; overflow-x: auto; gap: 6px; margin-bottom: 12px; padding-bottom: 4px; }
-        .tab { padding: 8px 14px; background: #000; border: 1px solid var(--border); font-size: 0.75rem; white-space: nowrap; }
+        .tab { padding: 8px 14px; background: #000; border: 1px solid var(--border); font-size: 0.7rem; white-space: nowrap; }
         .tab.active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
         
         #canvas-container {
-            background: #111; border: 1px solid var(--border); display: flex; 
+            background: #000; border: 1px solid var(--border); display: flex; 
             justify-content: center; align-items: center; width: 100%; 
             aspect-ratio: 1/1; position: relative; overflow: hidden;
         }
         canvas { image-rendering: pixelated; }
 
-        .dir-controls { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .filter-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 0.75rem; white-space: nowrap;}
-        .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.1); }
+        .filter-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.7rem; white-space: nowrap;}
+        .filter-chip.active { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.2); color: var(--accent-cyan); }
 
-        .move-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .batch-btn {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: rgba(0, 242, 255, 0.1); border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan); font-family: inherit; font-weight: bold;
+        }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.9rem;">MON_REGISTRY_V1</div>
+    <div style="color: var(--accent-cyan); font-weight: bold; font-size: 0.8rem;">REGISTRY_OS_V5</div>
     <div style="display: flex; gap: 8px;">
-        <button class="btn" onclick="exportData()">Export</button>
-        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ Add</button>
+        <button class="btn" onclick="exportData()">Exp</button>
+        <button class="btn" onclick="addNewMon()" style="border-color: var(--accent-green); color: var(--accent-green);">+ New</button>
     </div>
 </header>
 
 <div id="grid-view">
     <div class="controls">
-        <input type="text" id="search" class="search-bar" placeholder="SEARCH_BY_NAME..." oninput="renderGrid()">
-        <div id="biome-filters" class="filter-row"></div>
+        <input type="text" id="search" class="search-bar" placeholder="SEARCH_DATABASE..." oninput="renderGrid()">
+        <div id="habitat-filters" class="filter-row"></div>
     </div>
     <div class="mon-grid" id="mon-grid"></div>
 </div>
 
 <div id="detail-view">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-        <button class="btn" onclick="showGrid()">&lt; REGISTRY</button>
-        <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">DELETE</button>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <button class="btn" onclick="showGrid()">&lt; BACK</button>
+        <button class="btn" onclick="deleteCurrentMon()" style="border-color: var(--accent-red); color: var(--accent-red);">WIPE</button>
     </div>
 
+    <button class="batch-btn" onclick="document.getElementById('batch-input').click()">UPLOAD BATCH (FILES + XML)</button>
+    <input type="file" id="batch-input" class="hidden" multiple onchange="handleBatchUpload(this.files)">
+
     <div class="editor-section">
-        <h3>CORE_DATA</h3>
+        <h3>ENTITY_DATA</h3>
         <div class="field-group">
-            <label>NAME</label>
+            <label>IDENTIFIER</label>
             <input type="text" id="edit-name" onchange="updateCurrentMon('name', this.value)">
         </div>
         <div class="field-group">
-            <label>BEHAVIOR</label>
-            <div class="behavior-selector">
-                <div class="behavior-btn" data-val="Docile" onclick="setBehavior('Docile')">DOCILE</div>
-                <div class="behavior-btn" data-val="Curious" onclick="setBehavior('Curious')">CURIOUS</div>
-                <div class="behavior-btn" data-val="Aggressive" onclick="setBehavior('Aggressive')">AGGRESSIVE</div>
-            </div>
+            <label>PRIMARY_HABITAT</label>
+            <div id="habitat-select" class="filter-row"></div>
         </div>
-        <div class="field-group">
-            <label>BIOMES</label>
-            <div id="biome-select" class="filter-row"></div>
-        </div>
-        <div class="field-group">
-            <label>MOVES</label>
-            <div id="moves-list"></div>
-            <button class="btn" onclick="addMove()" style="margin-top:8px; width:100%">+ ADD MOVE</button>
-        </div>
-        <h3>FILES</h3>
+        
+        <h3>ASSET_STATUS</h3>
         <div class="upload-grid" id="upload-zones"></div>
-        <input type="file" id="file-input" class="hidden" accept=".png,.xml">
+        <input type="file" id="single-file-input" class="hidden">
     </div>
 
     <div class="editor-section">
-        <h3>ANIM_PREVIEW</h3>
+        <h3>VISUALIZER</h3>
         <div class="tabs" id="preview-tabs"></div>
         <div id="canvas-container">
             <canvas id="sprite-canvas"></canvas>
             <div id="portrait-view" class="hidden" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:2px; width:100%;"></div>
         </div>
-        <div class="dir-controls" id="anim-controls">
+        <div id="anim-controls" style="display:flex; justify-content: space-between; margin-top:10px; align-items: center;">
             <button class="btn" onclick="changeDir(-1)">◀</button>
-            <div id="dir-label" style="font-size:0.75rem; color:var(--accent-cyan)">Down-Right</div>
+            <div id="dir-label" style="font-size:0.7rem; color:var(--accent-cyan)">Down-Right</div>
             <button class="btn" onclick="changeDir(1)">▶</button>
         </div>
     </div>
 </div>
 
 <script>
-    const BIOMES = ['Forest Floor', 'Canopy', 'Cave', 'Riverbank', 'Mountain'];
+    const HABITATS = ['Forest', 'Canopy', 'Cave', 'River', 'Mountain', 'Desert'];
     const ANIMS = ['Walk', 'Hop', 'Idle', 'Sleep', 'Hurt', 'Attack', 'Charge', 'Shoot', 'Strike'];
     const DIRS = ['Down-Right', 'Right', 'Up-Right', 'Up', 'Up-Left', 'Left', 'Down-Left', 'Down'];
     
-    let mons = JSON.parse(localStorage.getItem('island_mons_v4') || '[]');
+    let mons = JSON.parse(localStorage.getItem('island_mons_v5') || '[]');
     let currentMonId = null;
     let activeTab = 'Portrait';
     let currentDir = 0;
+    
     let globalDirRow = 0;
+    let globalPortraitIdx = 0;
     let gridAnims = [];
-    let lastRotationTime = 0;
+    let lastRotation = 0;
+    let lastPortraitShift = 0;
+    let activeHabitatFilter = null;
 
     const canvas = document.getElementById('sprite-canvas');
     const ctx = canvas.getContext('2d');
     let detailLoop = null;
 
     function init() {
-        renderBiomeFilters();
+        renderHabitatFilters();
         renderGrid();
         setupUploadZones();
         renderTabs();
         requestAnimationFrame(runGlobalLoop);
     }
 
+    // --- SMART PARSER ---
     function getAnimData(xmlString, animName) {
         if (!xmlString) return null;
         const parser = new DOMParser();
@@ -233,6 +217,39 @@
         };
     }
 
+    // --- BATCH UPLOAD ENGINE ---
+    async function handleBatchUpload(files) {
+        const mon = mons.find(m => m.id === currentMonId);
+        if (!mon) return;
+
+        for (let file of files) {
+            const name = file.name.toLowerCase();
+            const reader = new FileReader();
+
+            if (name.endsWith('.xml')) {
+                mon.xmlData = await file.text();
+            } else if (name.endsWith('.png')) {
+                const dataUrl = await new Promise(res => {
+                    reader.onload = e => res(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+
+                if (name.includes('portrait')) {
+                    if (!mon.portraits) mon.portraits = [];
+                    if (mon.portraits.length < 5) mon.portraits.push(dataUrl);
+                } else {
+                    const matchedAnim = ANIMS.find(a => name.includes(a.toLowerCase()));
+                    if (matchedAnim) mon.assets[matchedAnim + '-Anim'] = dataUrl;
+                }
+            }
+        }
+        save();
+        updateUploadCheckmarks();
+        renderGrid();
+        setPreviewTab(activeTab);
+    }
+
+    // --- REGISTRY ENGINE ---
     function renderGrid() {
         const grid = document.getElementById('mon-grid');
         const search = document.getElementById('search').value.toLowerCase();
@@ -240,18 +257,21 @@
 
         mons.filter(m => {
             const matchS = m.name.toLowerCase().includes(search);
-            const matchB = biomeFilter.length === 0 || biomeFilter.every(b => m.biomes.includes(b));
-            return matchS && matchB;
+            const matchH = !activeHabitatFilter || m.habitat === activeHabitatFilter;
+            return matchS && matchH;
         }).forEach(mon => {
             const card = document.createElement('div');
             card.className = 'mon-card';
             card.onclick = () => openDetail(mon.id);
-            const complete = mon.name && mon.assets.Portrait && mon.assets['Walk-Anim'] && mon.xmlData;
+            
+            // Portrait cycling logic
+            const currentPortrait = (mon.portraits && mon.portraits.length > 0) 
+                ? mon.portraits[globalPortraitIdx % mon.portraits.length] 
+                : '';
 
             card.innerHTML = `
-                <span class="status-light ${complete ? 'complete' : ''}"></span>
-                <img src="${mon.assets.Portrait || ''}" style="width:40px; height:40px; object-fit:none; border:1px solid #333;">
-                <div class="name">${mon.name || 'NEW_MON'}</div>
+                <img src="${currentPortrait}" style="width:48px; height:48px; object-fit:none; border:1px solid #333; image-rendering: pixelated;">
+                <div class="name">${mon.name || 'UNKNOWN'}</div>
                 <div class="card-previews">
                     ${['Walk','Hop','Attack'].map(t => `
                         <div style="text-align:center">
@@ -274,46 +294,42 @@
     }
 
     function runGlobalLoop(now) {
-        // Handle Automatic Rotation (Spin) every 1.5 seconds
-        if (now - lastRotationTime > 1500) {
-            globalDirRow = (globalDirRow + 1) % 8;
-            lastRotationTime = now;
+        // Spin rotations every 1.5s
+        if (now - lastRotation > 1500) { globalDirRow = (globalDirRow + 1) % 8; lastRotation = now; }
+        // Cycle portraits every 2s
+        if (now - lastPortraitShift > 2000) { 
+            globalPortraitIdx++; 
+            lastPortraitShift = now;
+            renderGrid(); // Redraw grid to update portraits
         }
 
         gridAnims.forEach(a => {
             const data = getAnimData(a.mon.xmlData, a.type);
             if (!data) return;
-
             if (now - a.last >= data.durs[a.frame] * 16) {
                 a.frame = (a.frame + 1) % data.durs.length; a.last = now;
             }
-
-            const c = a.canvas; c.width = 48; c.height = 48;
+            const c = a.canvas; c.width = 46; c.height = 46;
             const cx = c.getContext('2d');
-            cx.imageSmoothingEnabled = false; cx.clearRect(0,0,48,48);
+            cx.imageSmoothingEnabled = false; cx.clearRect(0,0,46,46);
 
-            // Scale logic: Ensure same scale by fitting to the box while maintaining center
+            // AUTO-SCALE CENTERED
             const scale = Math.min(c.width / data.fw, c.height / data.fh);
-            const drawW = data.fw * scale;
-            const drawH = data.fh * scale;
-            const offsetX = (c.width - drawW) / 2;
-            const offsetY = (c.height - drawH) / 2;
+            const dw = data.fw * scale; const dh = data.fh * scale;
+            const ox = (c.width - dw) / 2; const oy = (c.height - dh) / 2;
 
-            cx.drawImage(
-                a.img, 
-                a.frame * data.fw, globalDirRow * data.fh, data.fw, data.fh, 
-                offsetX, offsetY, drawW, drawH
-            );
+            cx.drawImage(a.img, a.frame * data.fw, globalDirRow * data.fh, data.fw, data.fh, ox, oy, dw, dh);
         });
         requestAnimationFrame(runGlobalLoop);
     }
 
+    // --- DETAIL & NAVIGATION ---
     function openDetail(id) {
         currentMonId = id; const mon = mons.find(m => m.id === id);
         document.getElementById('grid-view').classList.add('hidden');
         document.getElementById('detail-view').style.display = 'block';
         document.getElementById('edit-name').value = mon.name;
-        setBehavior(mon.behavior); renderBiomeSelectors(); renderMoves();
+        renderHabitatSelectors();
         updateUploadCheckmarks(); setPreviewTab('Portrait'); window.scrollTo(0,0);
     }
 
@@ -343,23 +359,21 @@
         const mon = mons.find(m => m.id === currentMonId);
         cancelAnimationFrame(detailLoop);
         const data = getAnimData(mon.xmlData, activeTab);
-        if (!data || !mon.assets[activeTab + '-Anim']) return;
+        if (!data || !mon.assets[activeTab + '-Anim']) {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            return;
+        }
 
         const img = new Image(); img.src = mon.assets[activeTab + '-Anim'];
         img.onload = () => {
-            // Keep preview box consistent
-            const displaySize = 160;
-            canvas.width = displaySize; canvas.height = displaySize;
+            canvas.width = 160; canvas.height = 160;
             let frame = 0; let last = performance.now();
             function loop(now) {
                 if (now - last >= data.durs[frame] * 16) { frame = (frame + 1) % data.durs.length; last = now; }
-                ctx.imageSmoothingEnabled = false; ctx.clearRect(0,0,canvas.width,canvas.height);
-                
-                const scale = Math.min(canvas.width / data.fw, canvas.height / data.fh);
+                ctx.imageSmoothingEnabled = false; ctx.clearRect(0,0,160,160);
+                const scale = Math.min(160 / data.fw, 160 / data.fh);
                 const dw = data.fw * scale; const dh = data.fh * scale;
-                const ox = (canvas.width - dw) / 2; const oy = (canvas.height - dh) / 2;
-
-                ctx.drawImage(img, frame * data.fw, currentDir * data.fh, data.fw, data.fh, ox, oy, dw, dh);
+                ctx.drawImage(img, frame * data.fw, currentDir * data.fh, data.fw, data.fh, (160-dw)/2, (160-dh)/2, dw, dh);
                 detailLoop = requestAnimationFrame(loop);
             }
             detailLoop = requestAnimationFrame(loop);
@@ -369,61 +383,68 @@
     function renderPortrait() {
         const mon = mons.find(m => m.id === currentMonId);
         const view = document.getElementById('portrait-view'); view.innerHTML = '';
-        if (!mon.assets.Portrait) return;
+        const pSource = (mon.portraits && mon.portraits.length > 0) ? mon.portraits[0] : null;
+        if (!pSource) return;
         for (let i = 0; i < 16; i++) {
             const f = document.createElement('div');
-            f.style.aspectRatio = '1/1'; f.style.background = `url(${mon.assets.Portrait})`;
+            f.style.aspectRatio = '1/1'; f.style.background = `url(${pSource})`;
             f.style.backgroundSize = '400% 400%'; f.style.imageRendering = 'pixelated';
             f.style.backgroundPosition = `${(i % 4) * 33.3}% ${Math.floor(i / 4) * 33.3}%`;
             f.style.border = '1px solid #222'; view.appendChild(f);
         }
     }
 
+    // --- STORAGE & UI ---
     function setupUploadZones() {
         const zones = ['Portrait', ...ANIMS.map(a => a + '-Anim'), 'AnimData.xml'];
         document.getElementById('upload-zones').innerHTML = zones.map(z => `
-            <div class="upload-zone" id="z-${z}" onclick="triggerUpload('${z}')">
+            <div class="upload-zone" id="z-${z}">
                 <span>${z.replace('-Anim','')}</span><span class="chk"></span>
             </div>
         `).join('');
     }
 
-    function triggerUpload(z) {
-        const input = document.getElementById('file-input');
-        input.onchange = (e) => {
-            const file = e.target.files[0]; if (!file) return;
-            const r = new FileReader();
-            r.onload = (ev) => {
-                const mon = mons.find(m => m.id === currentMonId);
-                if (z === 'AnimData.xml') mon.xmlData = ev.target.result;
-                else mon.assets[z] = ev.target.result;
-                save(); updateUploadCheckmarks(); setPreviewTab(activeTab);
-            };
-            z === 'AnimData.xml' ? r.readAsText(file) : r.readAsDataURL(file);
-        };
-        input.click();
-    }
-
     function updateUploadCheckmarks() {
         const mon = mons.find(m => m.id === currentMonId);
+        if (!mon) return;
         document.querySelectorAll('.upload-zone').forEach(z => {
             const key = z.id.replace('z-', '');
-            const has = key === 'AnimData.xml' ? !!mon.xmlData : !!mon.assets[key];
+            let has = false;
+            if (key === 'AnimData.xml') has = !!mon.xmlData;
+            else if (key === 'Portrait') has = mon.portraits && mon.portraits.length > 0;
+            else has = !!mon.assets[key];
             z.classList.toggle('loaded', has); z.querySelector('.chk').innerText = has ? '✓' : '';
         });
     }
 
     function addNewMon() {
         const id = Date.now().toString();
-        mons.push({ id, name: 'NEW_MON', behavior: 'Docile', biomes: [], moves: ['Tackle'], notes: '', assets: {}, xmlData: null });
+        mons.push({ id, name: 'NEW_ENTITY', habitat: null, portraits: [], assets: {}, xmlData: null });
         save(); openDetail(id);
     }
 
-    function save() { localStorage.setItem('island_mons_v4', JSON.stringify(mons)); }
+    function save() { localStorage.setItem('island_mons_v5', JSON.stringify(mons)); }
     function updateCurrentMon(k, v) { const idx = mons.findIndex(m => m.id === currentMonId); mons[idx][k] = v; save(); }
-    function setBehavior(v) { updateCurrentMon('behavior', v); document.querySelectorAll('.behavior-btn').forEach(b => b.classList.toggle('active', b.dataset.val === v)); }
     function changeDir(d) { currentDir = (currentDir + d + 8) % 8; document.getElementById('dir-label').innerText = DIRS[currentDir]; }
-    function deleteCurrentMon() { if(confirm('DELETE?')) { mons = mons.filter(m => m.id !== currentMonId); save(); showGrid(); } }
+    function deleteCurrentMon() { if(confirm('ERASE RECORD?')) { mons = mons.filter(m => m.id !== currentMonId); save(); showGrid(); } }
+
+    function renderHabitatFilters() {
+        document.getElementById('habitat-filters').innerHTML = HABITATS.map(h => `
+            <div class="filter-chip ${activeHabitatFilter === h ? 'active' : ''}" onclick="toggleHFilter('${h}')">${h}</div>
+        `).join('');
+    }
+    function toggleHFilter(h) {
+        activeHabitatFilter = (activeHabitatFilter === h) ? null : h;
+        renderHabitatFilters(); renderGrid();
+    }
+
+    function renderHabitatSelectors() {
+        const mon = mons.find(m => m.id === currentMonId);
+        document.getElementById('habitat-select').innerHTML = HABITATS.map(h => `
+            <div class="filter-chip ${mon.habitat === h ? 'active' : ''}" onclick="setHabitat('${h}')">${h}</div>
+        `).join('');
+    }
+    function setHabitat(h) { updateCurrentMon('habitat', h); renderHabitatSelectors(); }
 
     function renderTabs() {
         document.getElementById('preview-tabs').innerHTML = ['Portrait', ...ANIMS].map(t => `
@@ -431,43 +452,9 @@
         `).join('');
     }
 
-    function renderBiomeFilters() {
-        document.getElementById('biome-filters').innerHTML = BIOMES.map(b => `<div class="filter-chip" onclick="toggleFilter(this, '${b}')">${b}</div>`).join('');
-    }
-
-    let biomeFilter = [];
-    function toggleFilter(el, b) {
-        el.classList.toggle('active'); biomeFilter = biomeFilter.includes(b) ? biomeFilter.filter(x => x !== b) : [...biomeFilter, b]; renderGrid();
-    }
-
-    function renderBiomeSelectors() {
-        const mon = mons.find(m => m.id === currentMonId);
-        document.getElementById('biome-select').innerHTML = BIOMES.map(b => `
-            <div class="filter-chip ${mon?.biomes.includes(b) ? 'active' : ''}" onclick="toggleBiome('${b}')">${b}</div>
-        `).join('');
-    }
-
-    function toggleBiome(b) {
-        const mon = mons.find(m => m.id === currentMonId);
-        mon.biomes = mon.biomes.includes(b) ? mon.biomes.filter(x => x !== b) : [...mon.biomes, b];
-        save(); renderBiomeSelectors();
-    }
-
-    function renderMoves() {
-        const mon = mons.find(m => m.id === currentMonId);
-        document.getElementById('moves-list').innerHTML = mon.moves.map((m, i) => `
-            <div class="move-row"><input type="text" value="${m}" onchange="updateMove(${i}, this.value)"><button class="btn" onclick="removeMove(${i})" style="color:var(--accent-red)">X</button></div>
-        `).join('');
-    }
-
-    function addMove() { const m = mons.find(x => x.id === currentMonId); m.moves.push(''); save(); renderMoves(); }
-    function updateMove(i, v) { const m = mons.find(x => x.id === currentMonId); m.moves[i] = v; save(); }
-    function removeMove(i) { const m = mons.find(x => x.id === currentMonId); m.moves.splice(i, 1); save(); renderMoves(); }
-
     function exportData() {
-        const clean = mons.map(({assets, xmlData, ...rest}) => ({...rest, hasAssets: Object.keys(assets)}));
-        const blob = new Blob([JSON.stringify(clean, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mons.json'; a.click();
+        const blob = new Blob([JSON.stringify(mons, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'island_registry.json'; a.click();
     }
 
     init();
