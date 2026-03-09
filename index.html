@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v12.3 - Cloud</title>
+    <title>Island Mon Registry v12.4 - Cloud</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -70,7 +70,7 @@
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px;">REGISTRY_OS_V12.3</div>
+    <div style="color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px;">REGISTRY_OS_V12.4</div>
     <div style="display: flex; gap: 8px;">
         <button class="btn" onclick="showView('cloud')" style="border-color: var(--accent-cyan);">Cloud</button>
         <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber);">Island</button>
@@ -142,7 +142,7 @@
 <input type="file" id="portrait-input" class="hidden" accept=".png">
 <input type="file" id="single-file-input" class="hidden">
 
-<footer>Island Mon Registry v12.3 • Spritesheet Auto-Parse • Multi-Habitat • Animated Sprites • Persistent Cache</footer>
+<footer>Island Mon Registry v12.4 • XML-Driven Sprites • Directional Animation • Sleep Mode</footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
@@ -184,8 +184,49 @@
     let currentIsland = null;
     let islandLoop = null;
     let detailRequest = null;
-    let spriteCache = {}; // Cache loaded sprite frames as data URLs
-    let spriteImages = {}; // Cache Image objects for rendering
+    let globalDirRow = 0;
+    let lastRotation = 0;
+    let gridAnimData = [];
+
+    // XML PARSING (from v9)
+    function getAnimData(xmlString, animName) {
+        if (!xmlString) return null;
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlString, "text/xml");
+        const anims = Array.from(xml.getElementsByTagName('Anim'));
+        let target = anims.find(a => a.querySelector('Name') && a.querySelector('Name').textContent === animName);
+        if (!target) return null;
+        
+        const copyOf = target.querySelector('CopyOf');
+        if (copyOf) return getAnimData(xmlString, copyOf.textContent);
+        
+        const fwNode = target.querySelector('FrameWidth');
+        const fhNode = target.querySelector('FrameHeight');
+        if (!fwNode || !fhNode) return null;
+        
+        return {
+            fw: parseInt(fwNode.textContent),
+            fh: parseInt(fhNode.textContent),
+            durs: Array.from(target.getElementsByTagName('Duration')).map(d => parseInt(d.textContent))
+        };
+    }
+
+    // DIRECTION CALCULATION
+    function getDirectionRow(vx, vy) {
+        const angle = Math.atan2(vy, vx);
+        const deg = angle * 180 / Math.PI;
+        const normalized = (deg + 360) % 360;
+        
+        // 8 directions: Down-Right(0), Right(1), Up-Right(2), Up(3), Up-Left(4), Left(5), Down-Left(6), Down(7)
+        if (normalized >= 337.5 || normalized < 22.5) return 1; // Right
+        if (normalized >= 22.5 && normalized < 67.5) return 0; // Down-Right
+        if (normalized >= 67.5 && normalized < 112.5) return 7; // Down
+        if (normalized >= 112.5 && normalized < 157.5) return 6; // Down-Left
+        if (normalized >= 157.5 && normalized < 202.5) return 5; // Left
+        if (normalized >= 202.5 && normalized < 247.5) return 4; // Up-Left
+        if (normalized >= 247.5 && normalized < 292.5) return 3; // Up
+        return 2; // Up-Right
+    }
 
     // VIEW MANAGEMENT
     function showView(viewId) {
@@ -241,10 +282,9 @@
         const newMon = {
             id,
             name: 'NEW_ENTITY',
-            habitats: ['Forest'], // Array format
+            habitats: ['Forest'],
             portraits: [],
             assets: {},
-            spriteFrames: {}, // Store actual frame data
             xmlData: null
         };
         mons.push(newMon);
@@ -252,7 +292,7 @@
         openDetail(id);
     }
 
-    // CLOUD SYNC: FIRESTORE
+    // CLOUD SYNC
     async function saveToCloud() {
         const code = document.getElementById('cloud-code-input').value.trim().toUpperCase();
         if(!code) return alert("PLEASE ENTER A REGISTRY CODE NAME.");
@@ -265,7 +305,7 @@
                 seed: document.getElementById('map-seed').value,
                 mons: mons,
                 timestamp: Date.now(),
-                version: "12.3"
+                version: "12.4"
             });
             status.innerText = `SUCCESS: REGISTRY [${code}] PUBLISHED.`;
         } catch (e) {
@@ -304,101 +344,21 @@
         }
     }
 
-    // SPRITE PARSING & ANIMATION
+    // SPRITE PARSING
     async function parseSpritesheetToFrames(file) {
         return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                const frames = [];
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                let tileW = 32, tileH = 32;
-                
-                const commonSizes = [
-                    {w: 24, h: 24}, {w: 32, h: 32}, {w: 40, h: 48},
-                    {w: 64, h: 64}, {w: 32, h: 80}, {w: 72, h: 72}
-                ];
-                
-                for (let size of commonSizes) {
-                    if (img.width % size.w === 0 && img.height % size.h === 0) {
-                        tileW = size.w;
-                        tileH = size.h;
-                        break;
-                    }
-                }
-                
-                const cols = Math.floor(img.width / tileW);
-                const rows = Math.floor(img.height / tileH);
-                
-                canvas.width = tileW;
-                canvas.height = tileH;
-                
-                for (let y = 0; y < rows; y++) {
-                    for (let x = 0; x < cols; x++) {
-                        ctx.clearRect(0, 0, tileW, tileH);
-                        ctx.drawImage(img, x * tileW, y * tileH, tileW, tileH, 0, 0, tileW, tileH);
-                        
-                        if (!isTileBlank(ctx, tileW, tileH)) {
-                            const dataUrl = canvas.toDataURL('image/png');
-                            frames.push(dataUrl);
-                        }
-                    }
-                }
-                
-                resolve(frames);
-            };
-            img.src = URL.createObjectURL(file);
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
         });
     }
-    
-    function isTileBlank(ctx, w, h) {
-        const imgData = ctx.getImageData(0, 0, w, h);
-        const pixels = imgData.data;
-        
-        for (let i = 0; i < pixels.length; i += 4) {
-            const a = pixels[i + 3];
-            if (a > 10) return false;
-        }
-        return true;
-    }
 
-    // SPRITE ANIMATOR
-    function createSpriteAnimator(frames, canvas, fps = 8) {
-        if (!frames || frames.length === 0) return null;
-        
-        const ctx = canvas.getContext('2d');
-        let currentFrame = 0;
-        const images = frames.map(dataUrl => {
-            const img = new Image();
-            img.src = dataUrl;
-            return img;
-        });
-        
-        let lastTime = 0;
-        const frameDelay = 1000 / fps;
-        
-        function animate(time) {
-            if (time - lastTime > frameDelay) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const img = images[currentFrame];
-                if (img.complete) {
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                }
-                currentFrame = (currentFrame + 1) % frames.length;
-                lastTime = time;
-            }
-            return requestAnimationFrame(animate);
-        }
-        
-        return animate(0);
-    }
-
-    // REGISTRY UI
+    // GRID RENDERING WITH SPRITE ANIMATION
     function renderGrid() {
         const grid = document.getElementById('mon-grid');
         const searchTerm = document.getElementById('search').value.toLowerCase();
         grid.innerHTML = '';
+        gridAnimData = [];
         
         const filtered = mons.filter(m => {
             const matchesSearch = m.name.toLowerCase().includes(searchTerm);
@@ -412,31 +372,11 @@
             card.className = 'mon-card';
             card.onclick = () => openDetail(mon.id);
             
-            // Check mon-specific sprite frames first
-            const walkFrames = mon.spriteFrames && mon.spriteFrames['Walk-Anim'];
-            const sleepFrames = mon.spriteFrames && mon.spriteFrames['Sleep-Anim'];
-            
-            if (walkFrames && walkFrames.length > 0) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 64;
-                canvas.height = 64;
-                createSpriteAnimator(walkFrames, canvas, 8);
-                card.appendChild(canvas);
-            } else if (sleepFrames && sleepFrames.length > 0) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 64;
-                canvas.height = 64;
-                createSpriteAnimator(sleepFrames, canvas, 4);
-                card.appendChild(canvas);
-            } else if (mon.portraits && mon.portraits.length > 0) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 64;
-                canvas.height = 64;
-                createSpriteAnimator(mon.portraits, canvas, 4);
-                card.appendChild(canvas);
-            } else {
-                card.innerHTML = `<img src="https://via.placeholder.com/64?text=?" style="width:64px; height:64px;">`;
-            }
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            canvas.id = `grid-canvas-${mon.id}`;
+            card.appendChild(canvas);
             
             const nameDiv = document.createElement('div');
             nameDiv.className = 'name';
@@ -451,7 +391,66 @@
             card.appendChild(habitatDiv);
             
             grid.appendChild(card);
+            
+            // Setup animation data
+            const walkSheet = mon.assets['Walk-Anim'];
+            if (walkSheet && mon.xmlData) {
+                const img = new Image();
+                img.src = walkSheet;
+                const animData = getAnimData(mon.xmlData, 'Walk');
+                if (animData) {
+                    gridAnimData.push({
+                        canvas: canvas,
+                        img: img,
+                        data: animData,
+                        frame: 0,
+                        lastFrameTime: 0
+                    });
+                }
+            }
         });
+    }
+
+    // GRID ANIMATION LOOP
+    function runGridAnimLoop(time) {
+        // Rotate direction every 1.5 seconds
+        if (time - lastRotation > 1500) {
+            globalDirRow = (globalDirRow + 1) % 8;
+            lastRotation = time;
+        }
+        
+        gridAnimData.forEach(anim => {
+            if (!anim.data || !anim.img.complete) return;
+            
+            const elapsed = time - anim.lastFrameTime;
+            const frameDuration = anim.data.durs[anim.frame] * 16;
+            
+            if (elapsed >= frameDuration) {
+                anim.frame = (anim.frame + 1) % anim.data.durs.length;
+                anim.lastFrameTime = time;
+            }
+            
+            const ctx = anim.canvas.getContext('2d');
+            ctx.clearRect(0, 0, 64, 64);
+            
+            const scale = Math.min(64 / anim.data.fw, 64 / anim.data.fh);
+            const offsetX = (64 - anim.data.fw * scale) / 2;
+            const offsetY = (64 - anim.data.fh * scale) / 2;
+            
+            ctx.drawImage(
+                anim.img,
+                anim.frame * anim.data.fw,
+                globalDirRow * anim.data.fh,
+                anim.data.fw,
+                anim.data.fh,
+                offsetX,
+                offsetY,
+                anim.data.fw * scale,
+                anim.data.fh * scale
+            );
+        });
+        
+        requestAnimationFrame(runGridAnimLoop);
     }
 
     function renderHabitatFilters() {
@@ -534,7 +533,21 @@
             const canvas = document.createElement('canvas');
             canvas.width = 128;
             canvas.height = 128;
-            createSpriteAnimator(mon.portraits, canvas, 4);
+            
+            let portraitFrame = 0;
+            function animatePortrait() {
+                if (mon.portraits.length === 0) return;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, 128, 128);
+                const img = new Image();
+                img.src = mon.portraits[portraitFrame];
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, 128, 128);
+                };
+                portraitFrame = (portraitFrame + 1) % mon.portraits.length;
+                setTimeout(animatePortrait, 250);
+            }
+            animatePortrait();
             
             slot.appendChild(canvas);
             container.appendChild(slot);
@@ -555,14 +568,14 @@
         const file = e.target.files[0];
         const mon = mons.find(m => m.id === currentMonId);
         
-        const frames = await parseSpritesheetToFrames(file);
+        const dataUrl = await parseSpritesheetToFrames(file);
         
-        if (frames.length > 0) {
-            mon.portraits = frames;
-            save();
-            renderPortraitManager();
-            renderGrid();
-        }
+        if (!mon.portraits) mon.portraits = [];
+        mon.portraits.push(dataUrl);
+        
+        save();
+        renderPortraitManager();
+        renderGrid();
     };
 
     // SPRITE & XML MANAGEMENT
@@ -588,13 +601,8 @@
                 const text = await e.target.files[0].text();
                 mon.xmlData = text;
             } else {
-                const frames = await parseSpritesheetToFrames(e.target.files[0]);
-                if (frames.length > 0) {
-                    if (!mon.spriteFrames) mon.spriteFrames = {};
-                    mon.spriteFrames[key] = frames; // Save to mon data
-                    spriteCache[key] = frames; // Also cache globally
-                    mon.assets[key] = key;
-                }
+                const dataUrl = await parseSpritesheetToFrames(e.target.files[0]);
+                mon.assets[key] = dataUrl;
             }
             save();
             updateUploadCheckmarks();
@@ -695,11 +703,11 @@
                         name: species.name,
                         lx: rng() * 20 + 2,
                         ly: rng() * 20 + 2,
-                        vx: (rng() - 0.5) * 0.1,
-                        vy: (rng() - 0.5) * 0.1,
+                        vx: (rng() - 0.5) * 0.15,
+                        vy: (rng() - 0.5) * 0.15,
                         isSleeping: rng() > 0.8,
                         frame: 0,
-                        frameTime: 0
+                        lastFrameTime: 0
                     });
                 }
             }
@@ -710,10 +718,23 @@
     function renderIslandMain() {
         const canv = document.getElementById('island-canvas');
         const ictx = canv.getContext('2d');
-        let lastTime = 0;
+        const spriteImages = {};
+        
+        // Preload sprite images
+        mons.forEach(mon => {
+            if (mon.assets['Walk-Anim']) {
+                const img = new Image();
+                img.src = mon.assets['Walk-Anim'];
+                spriteImages[`${mon.id}_Walk`] = img;
+            }
+            if (mon.assets['Sleep-Anim']) {
+                const img = new Image();
+                img.src = mon.assets['Sleep-Anim'];
+                spriteImages[`${mon.id}_Sleep`] = img;
+            }
+        });
         
         function loop(time) {
-            const deltaTime = time - lastTime;
             ictx.clearRect(0, 0, 300, 300);
             
             currentIsland.forEach(t => {
@@ -721,52 +742,43 @@
                 ictx.fillRect(t.x * 30, t.y * 30, 29, 29);
                 
                 t.inhabitants.forEach(m => {
+                    const monData = mons.find(s => s.id === m.id);
+                    if (!monData) return;
+                    
                     if (!m.isSleeping) {
                         m.lx += m.vx;
                         m.ly += m.vy;
                         if (m.lx < 2 || m.lx > 27) m.vx *= -1;
                         if (m.ly < 2 || m.ly > 27) m.vy *= -1;
-                        
-                        m.frameTime += deltaTime;
-                        if (m.frameTime > 125) {
-                            const frames = spriteCache['Walk-Anim'];
-                            if (frames && frames.length > 0) {
-                                m.frame = (m.frame + 1) % frames.length;
-                            }
-                            m.frameTime = 0;
-                        }
-                    } else {
-                        m.frameTime += deltaTime;
-                        if (m.frameTime > 250) {
-                            const frames = spriteCache['Sleep-Anim'];
-                            if (frames && frames.length > 0) {
-                                m.frame = (m.frame + 1) % frames.length;
-                            }
-                            m.frameTime = 0;
-                        }
                     }
                     
-                    const animKey = m.isSleeping ? 'Sleep-Anim' : 'Walk-Anim';
-                    const monData = mons.find(s => s.id === m.id);
-                    const frames = (monData && monData.spriteFrames && monData.spriteFrames[animKey]) || spriteCache[animKey];
+                    const animKey = m.isSleeping ? 'Sleep' : 'Walk';
+                    const animName = m.isSleeping ? 'Sleep-Anim' : 'Walk-Anim';
+                    const img = spriteImages[`${m.id}_${animKey}`];
+                    const animData = getAnimData(monData.xmlData, animKey);
                     
-                    if (frames && frames.length > 0) {
-                        const cacheKey = `${m.id}_${animKey}`;
-                        if (!spriteImages[cacheKey]) {
-                            spriteImages[cacheKey] = frames.map(dataUrl => {
-                                const img = new Image();
-                                img.src = dataUrl;
-                                return img;
-                            });
+                    if (img && img.complete && animData) {
+                        const elapsed = time - m.lastFrameTime;
+                        const frameDuration = animData.durs[m.frame] * 16;
+                        
+                        if (elapsed >= frameDuration) {
+                            m.frame = (m.frame + 1) % animData.durs.length;
+                            m.lastFrameTime = time;
                         }
                         
-                        const img = spriteImages[cacheKey] && spriteImages[cacheKey][m.frame];
-                        if (img && img.complete) {
-                            ictx.drawImage(img, t.x * 30 + m.lx - 4, t.y * 30 + m.ly - 4, 8, 8);
-                        } else {
-                            ictx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
-                            ictx.fillRect(t.x * 30 + m.lx, t.y * 30 + m.ly, 3, 3);
-                        }
+                        const dirRow = m.isSleeping ? 7 : getDirectionRow(m.vx, m.vy);
+                        
+                        ictx.drawImage(
+                            img,
+                            m.frame * animData.fw,
+                            dirRow * animData.fh,
+                            animData.fw,
+                            animData.fh,
+                            t.x * 30 + m.lx - 4,
+                            t.y * 30 + m.ly - 4,
+                            8,
+                            8
+                        );
                     } else {
                         ictx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
                         ictx.fillRect(t.x * 30 + m.lx, t.y * 30 + m.ly, 3, 3);
@@ -774,7 +786,6 @@
                 });
             });
             
-            lastTime = time;
             islandLoop = requestAnimationFrame(loop);
         }
         loop(0);
@@ -798,42 +809,54 @@
         const population = tile.inhabitants.map(m => m.name).join(', ') || 'NO_SIGNALS';
         document.getElementById('tile-mon-list').innerText = `DETECTED: ${population}`;
 
-        let lastDetailTime = 0;
+        const spriteImages = {};
+        mons.forEach(mon => {
+            if (mon.assets['Walk-Anim']) {
+                const img = new Image();
+                img.src = mon.assets['Walk-Anim'];
+                spriteImages[`${mon.id}_Walk`] = img;
+            }
+            if (mon.assets['Sleep-Anim']) {
+                const img = new Image();
+                img.src = mon.assets['Sleep-Anim'];
+                spriteImages[`${mon.id}_Sleep`] = img;
+            }
+        });
+
         function detailLoop(time) {
             dctx.fillStyle = TERRAIN[tile.type].color;
             dctx.fillRect(0, 0, 200, 200);
             
             tile.inhabitants.forEach(m => {
-                const animKey = m.isSleeping ? 'Sleep-Anim' : 'Walk-Anim';
                 const monData = mons.find(s => s.id === m.id);
-                const frames = (monData && monData.spriteFrames && monData.spriteFrames[animKey]) || spriteCache[animKey];
-                const cacheKey = `${m.id}_${animKey}`;
+                if (!monData) return;
                 
-                if (frames && frames.length > 0) {
-                    if (!spriteImages[cacheKey]) {
-                        spriteImages[cacheKey] = frames.map(dataUrl => {
-                            const img = new Image();
-                            img.src = dataUrl;
-                            return img;
-                        });
+                const animKey = m.isSleeping ? 'Sleep' : 'Walk';
+                const img = spriteImages[`${m.id}_${animKey}`];
+                const animData = getAnimData(monData.xmlData, animKey);
+                
+                if (img && img.complete && animData) {
+                    const elapsed = time - m.lastFrameTime;
+                    const frameDuration = animData.durs[m.frame] * 16;
+                    
+                    if (elapsed >= frameDuration) {
+                        m.frame = (m.frame + 1) % animData.durs.length;
+                        m.lastFrameTime = time;
                     }
                     
-                    if (spriteImages[cacheKey] && spriteImages[cacheKey][m.frame]) {
-                        const img = spriteImages[cacheKey][m.frame];
-                        if (img.complete) {
-                            dctx.drawImage(img, m.lx * 6 - 12, m.ly * 6 - 12, 24, 24);
-                        } else {
-                            dctx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
-                            dctx.beginPath();
-                            dctx.arc(m.lx * 6, m.ly * 6, 8, 0, Math.PI * 2);
-                            dctx.fill();
-                        }
-                    } else {
-                        dctx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
-                        dctx.beginPath();
-                        dctx.arc(m.lx * 6, m.ly * 6, 8, 0, Math.PI * 2);
-                        dctx.fill();
-                    }
+                    const dirRow = m.isSleeping ? 7 : getDirectionRow(m.vx, m.vy);
+                    
+                    dctx.drawImage(
+                        img,
+                        m.frame * animData.fw,
+                        dirRow * animData.fh,
+                        animData.fw,
+                        animData.fh,
+                        m.lx * 6 - 12,
+                        m.ly * 6 - 12,
+                        24,
+                        24
+                    );
                 } else {
                     dctx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
                     dctx.beginPath();
@@ -854,18 +877,13 @@
                 m.habitats = m.habitat ? [m.habitat] : ['Forest'];
                 delete m.habitat;
             }
-            // Rebuild sprite cache from saved data
-            if (m.spriteFrames) {
-                Object.keys(m.spriteFrames).forEach(key => {
-                    spriteCache[key] = m.spriteFrames[key];
-                });
-            }
             return m;
         });
         save();
         
         renderHabitatFilters();
         renderGrid();
+        requestAnimationFrame(runGridAnimLoop);
     };
 </script>
 
