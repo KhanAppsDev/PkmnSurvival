@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v12.5 - Cloud</title>
+    <title>Island Mon Registry v12.6 - Cloud</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -50,17 +50,23 @@
     input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; font-family: inherit; margin-bottom: 10px; }
 
     /* Portraits & Sprites */
-    .portrait-manager { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .portrait-manager { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
     .portrait-slot { aspect-ratio: 1/1; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer; }
     .portrait-slot img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
-    .portrait-slot canvas { image-rendering: pixelated; }
+    .portrait-slot.active { border-color: var(--accent-green); }
     
     .upload-zone { background: #000; border: 1px dashed var(--border); padding: 10px; font-size: 0.65rem; margin-bottom: 5px; cursor: pointer; display: flex; justify-content: space-between; }
     .upload-zone.loaded { border-color: var(--accent-green); color: var(--accent-green); }
 
     /* Canvas Areas */
-    #canvas-container { background: #000; border: 1px solid var(--border); display: flex; justify-content: center; align-items: center; min-height: 200px; position: relative; }
     canvas { image-rendering: pixelated; max-width: 100%; }
+
+    /* Island Controls */
+    .ctrl-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; background: var(--surface); padding: 10px; border: 1px solid var(--border); }
+    .ctrl-row { display: flex; justify-content: space-between; align-items: center; }
+    .ctrl-label { font-size: 0.65rem; color: #888; }
+    .ctrl-input { width: 60px; background: #000; border: 1px solid var(--border); color: var(--accent-cyan); padding: 4px 6px; font-family: inherit; text-align: center; }
+    .ctrl-checkbox { margin-left: 8px; }
 
     footer { padding: 10px; text-align: center; font-size: 0.65rem; color: #666; border-top: 1px solid var(--border); }
 </style>
@@ -70,7 +76,7 @@
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px;">REGISTRY_OS_V12.5</div>
+    <div style="color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px;">REGISTRY_OS_V12.6</div>
     <div style="display: flex; gap: 8px;">
         <button class="btn" onclick="showView('cloud')" style="border-color: var(--accent-cyan);">Cloud</button>
         <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber);">Island</button>
@@ -107,40 +113,44 @@
             <button class="btn" onclick="initIslandGen()" style="border-color: var(--accent-green);">REGENERATE</button>
         </div>
     </div>
-    <div style="position: relative; border: 2px solid var(--border); background: #000; width: 300px; height: 300px; margin: 0 auto;">
-        <canvas id="island-canvas" width="300" height="300" style="cursor: crosshair;"></canvas>
-    </div>
-    <div id="tile-panel" class="editor-section hidden" style="width: 100%; margin-top: 20px;">
-        <h3 id="tile-terrain-label">TERRAIN_ANALYSIS</h3>
 
 ```
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 0.65rem;">
-        <label style="display: flex; align-items: center; gap: 5px;">
-            <input type="checkbox" id="ctrl-cross-tiles" checked style="width: auto; margin: 0;">
-            <span>Cross Tiles</span>
-        </label>
-        <label style="display: flex; flex-direction: column; gap: 2px;">
-            <span>Sprite Scale</span>
-            <input type="range" id="ctrl-sprite-scale" min="1" max="2.5" step="0.1" value="1.5" style="width: 100%; margin: 0;">
-            <span id="scale-value" style="color: var(--accent-cyan);">1.5x</span>
-        </label>
-        <label style="display: flex; flex-direction: column; gap: 2px;">
-            <span>Sleep Rate (%)</span>
-            <input type="range" id="ctrl-sleep-rate" min="0" max="100" step="5" value="20" style="width: 100%; margin: 0;">
-            <span id="sleep-value" style="color: var(--accent-cyan);">20%</span>
-        </label>
-        <label style="display: flex; flex-direction: column; gap: 2px;">
-            <span>Collision Chance (%)</span>
-            <input type="range" id="ctrl-collision-rate" min="0" max="100" step="5" value="30" style="width: 100%; margin: 0;">
-            <span id="collision-value" style="color: var(--accent-cyan);">30%</span>
-        </label>
+<div class="ctrl-group">
+    <h3 style="margin: 0 0 8px 0;">ISLAND CONTROLS</h3>
+    <div class="ctrl-row">
+        <span class="ctrl-label">Sleep Rate (%)</span>
+        <input type="number" id="ctrl-sleep-rate" class="ctrl-input" value="20" min="0" max="100">
     </div>
-    
-    <div style="margin-bottom: 10px;">
-        <label style="font-size: 0.65rem; color: #888;">Interaction Animations:</label>
-        <div id="interaction-anim-controls" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;"></div>
+    <div class="ctrl-row">
+        <span class="ctrl-label">Sprite Scale</span>
+        <input type="number" id="ctrl-sprite-scale" class="ctrl-input" value="1.5" min="1" max="2.5" step="0.1">
     </div>
-    
+    <div class="ctrl-row">
+        <span class="ctrl-label">Cross-Tile Movement</span>
+        <input type="checkbox" id="ctrl-cross-tile" class="ctrl-checkbox" checked>
+    </div>
+    <div class="ctrl-row">
+        <span class="ctrl-label">Collision Frequency (%)</span>
+        <input type="number" id="ctrl-collision-rate" class="ctrl-input" value="30" min="0" max="100">
+    </div>
+    <div class="ctrl-row">
+        <span class="ctrl-label">Allowed Interactions</span>
+        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <label style="font-size: 0.6rem;"><input type="checkbox" class="interaction-anim" value="Hop" checked> Hop</label>
+            <label style="font-size: 0.6rem;"><input type="checkbox" class="interaction-anim" value="Attack" checked> Attack</label>
+            <label style="font-size: 0.6rem;"><input type="checkbox" class="interaction-anim" value="Hurt" checked> Hurt</label>
+            <label style="font-size: 0.6rem;"><input type="checkbox" class="interaction-anim" value="Charge"> Charge</label>
+            <label style="font-size: 0.6rem;"><input type="checkbox" class="interaction-anim" value="Shoot"> Shoot</label>
+            <label style="font-size: 0.6rem;"><input type="checkbox" class="interaction-anim" value="Strike"> Strike</label>
+        </div>
+    </div>
+</div>
+
+<div style="position: relative; border: 2px solid var(--border); background: #000; width: 300px; height: 300px; margin: 0 auto;">
+    <canvas id="island-canvas" width="300" height="300" style="cursor: crosshair;"></canvas>
+</div>
+<div id="tile-panel" class="editor-section hidden" style="width: 100%; margin-top: 20px;">
+    <h3 id="tile-terrain-label">TERRAIN_ANALYSIS</h3>
     <canvas id="tile-detail-canvas" width="200" height="200" style="background: #000; border: 1px solid var(--border); display: block; margin: 0 auto;"></canvas>
     <div id="tile-mon-list" style="margin-top: 10px; font-size: 0.75rem; color: var(--accent-cyan); text-align: center;"></div>
 </div>
@@ -160,7 +170,7 @@
         <div id="habitat-select" class="filter-row"></div>
 
 ```
-    <h3>PORTRAIT_DATA (AUTO-PARSE SPRITESHEET)</h3>
+    <h3>PORTRAIT_DATA (5 SLOTS)</h3>
     <div class="portrait-manager" id="portrait-manager"></div>
     
     <h3 style="margin-top:15px">SPRITE_ASSETS</h3>
@@ -173,7 +183,7 @@
 <input type="file" id="portrait-input" class="hidden" accept=".png">
 <input type="file" id="single-file-input" class="hidden">
 
-<footer>Island Mon Registry v12.5 • Collision Interactions • Cross-Tile Movement • 1.5x Zoom Sprites</footer>
+<footer>Island Mon Registry v12.6 • Island Controls • 5 Portrait Slots • Smooth Interactions</footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
@@ -218,8 +228,9 @@
     let globalDirRow = 0;
     let lastRotation = 0;
     let gridAnimData = [];
+    let currentPortraitSlot = 0;
 
-    // XML PARSING (from v9)
+    // XML PARSING
     function getAnimData(xmlString, animName) {
         if (!xmlString) return null;
         const parser = new DOMParser();
@@ -248,15 +259,14 @@
         const deg = angle * 180 / Math.PI;
         const normalized = (deg + 360) % 360;
         
-        // 8 directions: Down-Right(0), Right(1), Up-Right(2), Up(3), Up-Left(4), Left(5), Down-Left(6), Down(7)
-        if (normalized >= 337.5 || normalized < 22.5) return 1; // Right
-        if (normalized >= 22.5 && normalized < 67.5) return 0; // Down-Right
-        if (normalized >= 67.5 && normalized < 112.5) return 7; // Down
-        if (normalized >= 112.5 && normalized < 157.5) return 6; // Down-Left
-        if (normalized >= 157.5 && normalized < 202.5) return 5; // Left
-        if (normalized >= 202.5 && normalized < 247.5) return 4; // Up-Left
-        if (normalized >= 247.5 && normalized < 292.5) return 3; // Up
-        return 2; // Up-Right
+        if (normalized >= 337.5 || normalized < 22.5) return 1;
+        if (normalized >= 22.5 && normalized < 67.5) return 0;
+        if (normalized >= 67.5 && normalized < 112.5) return 7;
+        if (normalized >= 112.5 && normalized < 157.5) return 6;
+        if (normalized >= 157.5 && normalized < 202.5) return 5;
+        if (normalized >= 202.5 && normalized < 247.5) return 4;
+        if (normalized >= 247.5 && normalized < 292.5) return 3;
+        return 2;
     }
 
     // VIEW MANAGEMENT
@@ -314,7 +324,7 @@
             id,
             name: 'NEW_ENTITY',
             habitats: ['Forest'],
-            portraits: [],
+            portraits: [null, null, null, null, null],
             assets: {},
             xmlData: null
         };
@@ -336,7 +346,7 @@
                 seed: document.getElementById('map-seed').value,
                 mons: mons,
                 timestamp: Date.now(),
-                version: "12.5"
+                version: "12.6"
             });
             status.innerText = `SUCCESS: REGISTRY [${code}] PUBLISHED.`;
         } catch (e) {
@@ -359,6 +369,9 @@
                 mons = data.mons.map(m => {
                     if (!Array.isArray(m.habitats)) {
                         m.habitats = m.habitat ? [m.habitat] : ['Forest'];
+                    }
+                    if (!m.portraits || !Array.isArray(m.portraits)) {
+                        m.portraits = [null, null, null, null, null];
                     }
                     return m;
                 });
@@ -384,7 +397,7 @@
         });
     }
 
-    // GRID RENDERING WITH SPRITE ANIMATION
+    // GRID RENDERING
     function renderGrid() {
         const grid = document.getElementById('mon-grid');
         const searchTerm = document.getElementById('search').value.toLowerCase();
@@ -417,13 +430,12 @@
             const habitatDiv = document.createElement('div');
             habitatDiv.style.fontSize = '0.6rem';
             habitatDiv.style.color = '#666';
-            const habitats = Array.isArray(mon.habitats) ? mon.habitats : (mon.habitat ? [mon.habitat] : ['Forest']);
+            const habitats = Array.isArray(mon.habitats) ? m.habitats : (mon.habitat ? [mon.habitat] : ['Forest']);
             habitatDiv.textContent = habitats.join(', ').toUpperCase();
             card.appendChild(habitatDiv);
             
             grid.appendChild(card);
             
-            // Setup animation data
             const walkSheet = mon.assets['Walk-Anim'];
             if (walkSheet && mon.xmlData) {
                 const img = new Image();
@@ -444,7 +456,6 @@
 
     // GRID ANIMATION LOOP
     function runGridAnimLoop(time) {
-        // Rotate direction every 1.5 seconds
         if (time - lastRotation > 1500) {
             globalDirRow = (globalDirRow + 1) % 8;
             lastRotation = time;
@@ -508,6 +519,10 @@
             delete mon.habitat;
         }
         
+        if (!mon.portraits || !Array.isArray(mon.portraits)) {
+            mon.portraits = [null, null, null, null, null];
+        }
+        
         showView('detail');
         
         document.getElementById('edit-name').value = mon.name;
@@ -548,47 +563,28 @@
         renderHabitatSelectors();
     }
 
-    // PORTRAIT MANAGEMENT
+    // PORTRAIT MANAGEMENT (5 SLOTS)
     function renderPortraitManager() {
         const mon = mons.find(m => m.id === currentMonId);
         const container = document.getElementById('portrait-manager');
         container.innerHTML = '';
         
-        if (mon.portraits && mon.portraits.length > 0) {
+        for (let i = 0; i < 5; i++) {
             const slot = document.createElement('div');
-            slot.className = 'portrait-slot active';
+            slot.className = `portrait-slot ${mon.portraits[i] ? 'active' : ''}`;
             slot.onclick = () => {
+                currentPortraitSlot = i;
                 document.getElementById('portrait-input').click();
             };
             
-            const canvas = document.createElement('canvas');
-            canvas.width = 128;
-            canvas.height = 128;
-            
-            let portraitFrame = 0;
-            function animatePortrait() {
-                if (mon.portraits.length === 0) return;
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, 128, 128);
-                const img = new Image();
-                img.src = mon.portraits[portraitFrame];
-                img.onload = () => {
-                    ctx.drawImage(img, 0, 0, 128, 128);
-                };
-                portraitFrame = (portraitFrame + 1) % mon.portraits.length;
-                setTimeout(animatePortrait, 250);
+            if (mon.portraits[i]) {
+                const img = document.createElement('img');
+                img.src = mon.portraits[i];
+                slot.appendChild(img);
+            } else {
+                slot.innerHTML = `<span style="color:#666; font-size:1.2rem;">+</span>`;
             }
-            animatePortrait();
             
-            slot.appendChild(canvas);
-            container.appendChild(slot);
-        } else {
-            const slot = document.createElement('div');
-            slot.className = 'portrait-slot';
-            slot.onclick = () => {
-                document.getElementById('portrait-input').click();
-            };
-            slot.innerHTML = `<span style="color:#666; font-size:2rem;">+ UPLOAD SPRITESHEET</span>`;
             container.appendChild(slot);
         }
     }
@@ -600,9 +596,7 @@
         const mon = mons.find(m => m.id === currentMonId);
         
         const dataUrl = await parseSpritesheetToFrames(file);
-        
-        if (!mon.portraits) mon.portraits = [];
-        mon.portraits.push(dataUrl);
+        mon.portraits[currentPortraitSlot] = dataUrl;
         
         save();
         renderPortraitManager();
@@ -716,6 +710,8 @@
     }
 
     function spawnPopulations(rng) {
+        const sleepRate = parseInt(document.getElementById('ctrl-sleep-rate')?.value || 20) / 100;
+        
         currentIsland.forEach(tile => {
             const terrainData = TERRAIN[tile.type];
             const biomes = terrainData.biomes || [terrainData.biome];
@@ -729,14 +725,13 @@
                 const count = Math.floor(rng() * 3) + 1;
                 for (let i = 0; i < count; i++) {
                     const species = possible[Math.floor(rng() * possible.length)];
-                    const sleepRate = parseInt(document.getElementById('ctrl-sleep-rate')?.value || 20) / 100;
                     tile.inhabitants.push({
                         id: species.id,
                         name: species.name,
-                        lx: rng() * 160 + 20,  // 20-180 range for 200px canvas
+                        lx: rng() * 160 + 20,
                         ly: rng() * 160 + 20,
-                        vx: (rng() - 0.5) * 0.8,
-                        vy: (rng() - 0.5) * 0.8,
+                        vx: (rng() - 0.5) * 0.4,
+                        vy: (rng() - 0.5) * 0.4,
                         isSleeping: rng() < sleepRate,
                         frame: 0,
                         lastFrameTime: 0
@@ -746,25 +741,10 @@
         });
     }
 
-    // ISLAND RENDERING WITH SPRITES
+    // ISLAND RENDERING (DOTS ONLY)
     function renderIslandMain() {
         const canv = document.getElementById('island-canvas');
         const ictx = canv.getContext('2d');
-        const spriteImages = {};
-        
-        // Preload sprite images
-        mons.forEach(mon => {
-            if (mon.assets['Walk-Anim']) {
-                const img = new Image();
-                img.src = mon.assets['Walk-Anim'];
-                spriteImages[`${mon.id}_Walk`] = img;
-            }
-            if (mon.assets['Sleep-Anim']) {
-                const img = new Image();
-                img.src = mon.assets['Sleep-Anim'];
-                spriteImages[`${mon.id}_Sleep`] = img;
-            }
-        });
         
         function loop(time) {
             ictx.clearRect(0, 0, 300, 300);
@@ -777,13 +757,15 @@
                     if (!m.isSleeping) {
                         m.lx += m.vx;
                         m.ly += m.vy;
-                        if (m.lx < 2 || m.lx > 27) m.vx *= -1;
-                        if (m.ly < 2 || m.ly > 27) m.vy *= -1;
+                        
+                        // Simple bounce (will be replaced in tile detail)
+                        if (m.lx < 10 || m.lx > 190) m.vx *= -1;
+                        if (m.ly < 10 || m.ly > 190) m.vy *= -1;
                     }
                     
-                    // Always show as dots on main map
+                    // Show as dots on island map
                     ictx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
-                    ictx.fillRect(t.x * 30 + m.lx, t.y * 30 + m.ly, 3, 3);
+                    ictx.fillRect(t.x * 30 + (m.lx / 200 * 29), t.y * 30 + (m.ly / 200 * 29), 3, 3);
                 });
             });
             
@@ -810,43 +792,11 @@
         const population = tile.inhabitants.map(m => m.name).join(', ') || 'NO_SIGNALS';
         document.getElementById('tile-mon-list').innerText = `DETECTED: ${population}`;
 
-        // Setup interaction animation checkboxes
-        const animControlsContainer = document.getElementById('interaction-anim-controls');
-        if (animControlsContainer.children.length === 0) {
-            ANIMS.filter(a => a !== 'Walk' && a !== 'Sleep').forEach(a => {
-                const label = document.createElement('label');
-                label.style.fontSize = '0.6rem';
-                label.style.display = 'flex';
-                label.style.alignItems = 'center';
-                label.style.gap = '3px';
-                label.style.padding = '2px 6px';
-                label.style.border = '1px solid var(--border)';
-                label.style.borderRadius = '3px';
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'interaction-anim';
-                checkbox.value = a;
-                checkbox.checked = true;
-                checkbox.style.width = 'auto';
-                checkbox.style.margin = '0';
-                
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(a));
-                animControlsContainer.appendChild(label);
-            });
-        }
-
-        // Setup control listeners
-        document.getElementById('ctrl-sprite-scale').oninput = (e) => {
-            document.getElementById('scale-value').innerText = e.target.value + 'x';
-        };
-        document.getElementById('ctrl-sleep-rate').oninput = (e) => {
-            document.getElementById('sleep-value').innerText = e.target.value + '%';
-        };
-        document.getElementById('ctrl-collision-rate').oninput = (e) => {
-            document.getElementById('collision-value').innerText = e.target.value + '%';
-        };
+        // Get controls
+        const spriteScale = parseFloat(document.getElementById('ctrl-sprite-scale')?.value || 1.5);
+        const crossTile = document.getElementById('ctrl-cross-tile')?.checked || false;
+        const collisionRate = parseInt(document.getElementById('ctrl-collision-rate')?.value || 30) / 100;
+        const allowedAnims = Array.from(document.querySelectorAll('.interaction-anim:checked')).map(cb => cb.value);
 
         const spriteImages = {};
         mons.forEach(mon => {
@@ -859,7 +809,6 @@
             });
         });
 
-        // Initialize interaction state
         tile.inhabitants.forEach(m => {
             if (!m.interactionState) {
                 m.interactionState = 'normal';
@@ -872,15 +821,10 @@
             dctx.fillStyle = TERRAIN[tile.type].color;
             dctx.fillRect(0, 0, 200, 200);
             
-            const canCrossTiles = document.getElementById('ctrl-cross-tiles').checked;
-            const spriteScale = parseFloat(document.getElementById('ctrl-sprite-scale').value);
-            const collisionChance = parseInt(document.getElementById('ctrl-collision-rate').value) / 100;
-            
             tile.inhabitants.forEach((m, idx) => {
                 const monData = mons.find(s => s.id === m.id);
                 if (!monData) return;
                 
-                // Check if interaction should end
                 if (m.interactionState === 'interacting' && time > m.interactionEndTime) {
                     m.interactionState = 'normal';
                     m.interactionAnim = null;
@@ -897,92 +841,61 @@
                     animKey = 'Sleep';
                     dirRow = 7;
                 } else {
-                    // Normal movement
                     m.lx += m.vx;
                     m.ly += m.vy;
                     
-                    // Boundary checking
-                    let hitBoundary = false;
+                    let canCrossX = false, canCrossY = false;
                     
-                    if (canCrossTiles) {
-                        // Check if can cross to neighbor
+                    if (crossTile) {
                         if (m.lx < 10) {
                             const leftTile = currentIsland.find(t => t.x === tile.x - 1 && t.y === tile.y);
-                            if (leftTile && leftTile.type === tile.type) {
-                                m.lx = 190;
-                            } else {
-                                m.vx *= -1;
-                                m.lx = 10;
-                            }
+                            canCrossX = leftTile && leftTile.type === tile.type;
                         } else if (m.lx > 190) {
                             const rightTile = currentIsland.find(t => t.x === tile.x + 1 && t.y === tile.y);
-                            if (rightTile && rightTile.type === tile.type) {
-                                m.lx = 10;
-                            } else {
-                                m.vx *= -1;
-                                m.lx = 190;
-                            }
+                            canCrossX = rightTile && rightTile.type === tile.type;
                         }
                         
                         if (m.ly < 10) {
                             const topTile = currentIsland.find(t => t.x === tile.x && t.y === tile.y - 1);
-                            if (topTile && topTile.type === tile.type) {
-                                m.ly = 190;
-                            } else {
-                                m.vy *= -1;
-                                m.ly = 10;
-                            }
+                            canCrossY = topTile && topTile.type === tile.type;
                         } else if (m.ly > 190) {
                             const bottomTile = currentIsland.find(t => t.x === tile.x && t.y === tile.y + 1);
-                            if (bottomTile && bottomTile.type === tile.type) {
-                                m.ly = 10;
-                            } else {
-                                m.vy *= -1;
-                                m.ly = 190;
-                            }
-                        }
-                    } else {
-                        // Simple bounce
-                        if (m.lx < 10 || m.lx > 190) {
-                            m.vx *= -1;
-                            m.lx = Math.max(10, Math.min(190, m.lx));
-                        }
-                        if (m.ly < 10 || m.ly > 190) {
-                            m.vy *= -1;
-                            m.ly = Math.max(10, Math.min(190, m.ly));
+                            canCrossY = bottomTile && bottomTile.type === tile.type;
                         }
                     }
                     
+                    if ((m.lx < 10 || m.lx > 190) && !canCrossX) m.vx *= -1;
+                    if ((m.ly < 10 || m.ly > 190) && !canCrossY) m.vy *= -1;
+                    
+                    if (canCrossX) {
+                        if (m.lx < 10) m.lx = 190;
+                        if (m.lx > 190) m.lx = 10;
+                    }
+                    if (canCrossY) {
+                        if (m.ly < 10) m.ly = 190;
+                        if (m.ly > 190) m.ly = 10;
+                    }
+                    
                     // Collision detection
-                    if (Math.random() < collisionChance) {
-                        for (let j = 0; j < tile.inhabitants.length; j++) {
-                            if (j === idx) continue;
-                            const other = tile.inhabitants[j];
-                            if (other.interactionState !== 'normal') continue;
+                    for (let j = 0; j < tile.inhabitants.length; j++) {
+                        if (j === idx) continue;
+                        const other = tile.inhabitants[j];
+                        const dx = m.lx - other.lx;
+                        const dy = m.ly - other.ly;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < 25 && m.interactionState === 'normal' && other.interactionState === 'normal' && Math.random() < collisionRate) {
+                            const availableAnims = allowedAnims.filter(a => monData.assets[a + '-Anim']);
                             
-                            const dx = m.lx - other.lx;
-                            const dy = m.ly - other.ly;
-                            const dist = Math.sqrt(dx * dx + dy * dy);
-                            
-                            if (dist < 25) {
-                                // Get enabled animations
-                                const enabledAnims = Array.from(document.querySelectorAll('.interaction-anim:checked'))
-                                    .map(cb => cb.value);
-                                const availableAnims = enabledAnims.filter(a => monData.assets[a + '-Anim']);
-                                
-                                if (availableAnims.length > 0) {
-                                    const randomAnim = availableAnims[Math.floor(Math.random() * availableAnims.length)];
-                                    m.interactionState = 'interacting';
-                                    m.interactionAnim = randomAnim;
-                                    m.interactionEndTime = time + 2000;
-                                    m.frame = 0;
-                                    m.lastFrameTime = time;
-                                } else {
-                                    m.vx *= -1;
-                                    m.vy *= -1;
-                                }
-                                break;
+                            if (availableAnims.length > 0) {
+                                const randomAnim = availableAnims[Math.floor(Math.random() * availableAnims.length)];
+                                m.interactionState = 'interacting';
+                                m.interactionAnim = randomAnim;
+                                m.interactionEndTime = time + 2000;
+                                m.frame = 0;
+                                m.lastFrameTime = time;
                             }
+                            break;
                         }
                     }
                     
@@ -1002,9 +915,8 @@
                         m.lastFrameTime = time;
                     }
                     
-                    const size = Math.max(animData.fw, animData.fh) * spriteScale;
-                    const offsetX = size / 2;
-                    const offsetY = size / 2;
+                    const spriteSize = Math.max(animData.fw, animData.fh) * spriteScale;
+                    const halfSize = spriteSize / 2;
                     
                     dctx.drawImage(
                         img,
@@ -1012,15 +924,15 @@
                         dirRow * animData.fh,
                         animData.fw,
                         animData.fh,
-                        m.lx - offsetX,
-                        m.ly - offsetY,
-                        animData.fw * spriteScale,
-                        animData.fh * spriteScale
+                        m.lx - halfSize,
+                        m.ly - halfSize,
+                        spriteSize,
+                        spriteSize
                     );
                 } else {
                     dctx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
                     dctx.beginPath();
-                    dctx.arc(m.lx, m.ly, 8, 0, Math.PI * 2);
+                    dctx.arc(m.lx, m.ly, 6, 0, Math.PI * 2);
                     dctx.fill();
                 }
             });
@@ -1036,6 +948,9 @@
             if (!Array.isArray(m.habitats)) {
                 m.habitats = m.habitat ? [m.habitat] : ['Forest'];
                 delete m.habitat;
+            }
+            if (!m.portraits || !Array.isArray(m.portraits)) {
+                m.portraits = [null, null, null, null, null];
             }
             return m;
         });
