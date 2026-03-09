@@ -112,9 +112,40 @@
     </div>
     <div id="tile-panel" class="editor-section hidden" style="width: 100%; margin-top: 20px;">
         <h3 id="tile-terrain-label">TERRAIN_ANALYSIS</h3>
-        <canvas id="tile-detail-canvas" width="200" height="200" style="background: #000; border: 1px solid var(--border); display: block; margin: 0 auto;"></canvas>
-        <div id="tile-mon-list" style="margin-top: 10px; font-size: 0.75rem; color: var(--accent-cyan); text-align: center;"></div>
+
+```
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 0.65rem;">
+        <label style="display: flex; align-items: center; gap: 5px;">
+            <input type="checkbox" id="ctrl-cross-tiles" checked style="width: auto; margin: 0;">
+            <span>Cross Tiles</span>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 2px;">
+            <span>Sprite Scale</span>
+            <input type="range" id="ctrl-sprite-scale" min="1" max="2.5" step="0.1" value="1.5" style="width: 100%; margin: 0;">
+            <span id="scale-value" style="color: var(--accent-cyan);">1.5x</span>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 2px;">
+            <span>Sleep Rate (%)</span>
+            <input type="range" id="ctrl-sleep-rate" min="0" max="100" step="5" value="20" style="width: 100%; margin: 0;">
+            <span id="sleep-value" style="color: var(--accent-cyan);">20%</span>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 2px;">
+            <span>Collision Chance (%)</span>
+            <input type="range" id="ctrl-collision-rate" min="0" max="100" step="5" value="30" style="width: 100%; margin: 0;">
+            <span id="collision-value" style="color: var(--accent-cyan);">30%</span>
+        </label>
     </div>
+    
+    <div style="margin-bottom: 10px;">
+        <label style="font-size: 0.65rem; color: #888;">Interaction Animations:</label>
+        <div id="interaction-anim-controls" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;"></div>
+    </div>
+    
+    <canvas id="tile-detail-canvas" width="200" height="200" style="background: #000; border: 1px solid var(--border); display: block; margin: 0 auto;"></canvas>
+    <div id="tile-mon-list" style="margin-top: 10px; font-size: 0.75rem; color: var(--accent-cyan); text-align: center;"></div>
+</div>
+```
+
 </div>
 
 <div id="detail-view" class="hidden">
@@ -698,14 +729,15 @@
                 const count = Math.floor(rng() * 3) + 1;
                 for (let i = 0; i < count; i++) {
                     const species = possible[Math.floor(rng() * possible.length)];
+                    const sleepRate = parseInt(document.getElementById('ctrl-sleep-rate')?.value || 20) / 100;
                     tile.inhabitants.push({
                         id: species.id,
                         name: species.name,
-                        lx: rng() * 20 + 2,
-                        ly: rng() * 20 + 2,
-                        vx: (rng() - 0.5) * 0.15,
-                        vy: (rng() - 0.5) * 0.15,
-                        isSleeping: rng() > 0.8,
+                        lx: rng() * 160 + 20,  // 20-180 range for 200px canvas
+                        ly: rng() * 160 + 20,
+                        vx: (rng() - 0.5) * 0.8,
+                        vy: (rng() - 0.5) * 0.8,
+                        isSleeping: rng() < sleepRate,
                         frame: 0,
                         lastFrameTime: 0
                     });
@@ -778,21 +810,48 @@
         const population = tile.inhabitants.map(m => m.name).join(', ') || 'NO_SIGNALS';
         document.getElementById('tile-mon-list').innerText = `DETECTED: ${population}`;
 
+        // Setup interaction animation checkboxes
+        const animControlsContainer = document.getElementById('interaction-anim-controls');
+        if (animControlsContainer.children.length === 0) {
+            ANIMS.filter(a => a !== 'Walk' && a !== 'Sleep').forEach(a => {
+                const label = document.createElement('label');
+                label.style.fontSize = '0.6rem';
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                label.style.gap = '3px';
+                label.style.padding = '2px 6px';
+                label.style.border = '1px solid var(--border)';
+                label.style.borderRadius = '3px';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'interaction-anim';
+                checkbox.value = a;
+                checkbox.checked = true;
+                checkbox.style.width = 'auto';
+                checkbox.style.margin = '0';
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(a));
+                animControlsContainer.appendChild(label);
+            });
+        }
+
+        // Setup control listeners
+        document.getElementById('ctrl-sprite-scale').oninput = (e) => {
+            document.getElementById('scale-value').innerText = e.target.value + 'x';
+        };
+        document.getElementById('ctrl-sleep-rate').oninput = (e) => {
+            document.getElementById('sleep-value').innerText = e.target.value + '%';
+        };
+        document.getElementById('ctrl-collision-rate').oninput = (e) => {
+            document.getElementById('collision-value').innerText = e.target.value + '%';
+        };
+
         const spriteImages = {};
         mons.forEach(mon => {
-            if (mon.assets['Walk-Anim']) {
-                const img = new Image();
-                img.src = mon.assets['Walk-Anim'];
-                spriteImages[`${mon.id}_Walk`] = img;
-            }
-            if (mon.assets['Sleep-Anim']) {
-                const img = new Image();
-                img.src = mon.assets['Sleep-Anim'];
-                spriteImages[`${mon.id}_Sleep`] = img;
-            }
-            // Load other animations for interactions
             ANIMS.forEach(anim => {
-                if (anim !== 'Walk' && anim !== 'Sleep' && mon.assets[anim + '-Anim']) {
+                if (mon.assets[anim + '-Anim']) {
                     const img = new Image();
                     img.src = mon.assets[anim + '-Anim'];
                     spriteImages[`${mon.id}_${anim}`] = img;
@@ -800,7 +859,7 @@
             });
         });
 
-        // Enhanced inhabitants with interaction state
+        // Initialize interaction state
         tile.inhabitants.forEach(m => {
             if (!m.interactionState) {
                 m.interactionState = 'normal';
@@ -813,15 +872,18 @@
             dctx.fillStyle = TERRAIN[tile.type].color;
             dctx.fillRect(0, 0, 200, 200);
             
+            const canCrossTiles = document.getElementById('ctrl-cross-tiles').checked;
+            const spriteScale = parseFloat(document.getElementById('ctrl-sprite-scale').value);
+            const collisionChance = parseInt(document.getElementById('ctrl-collision-rate').value) / 100;
+            
             tile.inhabitants.forEach((m, idx) => {
                 const monData = mons.find(s => s.id === m.id);
                 if (!monData) return;
                 
-                // Check if interaction animation should end
+                // Check if interaction should end
                 if (m.interactionState === 'interacting' && time > m.interactionEndTime) {
                     m.interactionState = 'normal';
                     m.interactionAnim = null;
-                    // Turn around
                     m.vx *= -1;
                     m.vy *= -1;
                 }
@@ -829,7 +891,6 @@
                 let animKey, dirRow;
                 
                 if (m.interactionState === 'interacting') {
-                    // Play interaction animation
                     animKey = m.interactionAnim;
                     dirRow = getDirectionRow(m.vx, m.vy);
                 } else if (m.isSleeping) {
@@ -840,71 +901,88 @@
                     m.lx += m.vx;
                     m.ly += m.vy;
                     
-                    // Check tile boundaries and neighbor compatibility
-                    const normalizedX = m.lx / 200;
-                    const normalizedY = m.ly / 200;
+                    // Boundary checking
+                    let hitBoundary = false;
                     
-                    let canCrossX = false, canCrossY = false;
-                    
-                    // Check X boundary
-                    if (m.lx < 2) {
-                        const leftTile = currentIsland.find(t => t.x === tile.x - 1 && t.y === tile.y);
-                        canCrossX = leftTile && leftTile.type === tile.type;
-                    } else if (m.lx > 198) {
-                        const rightTile = currentIsland.find(t => t.x === tile.x + 1 && t.y === tile.y);
-                        canCrossX = rightTile && rightTile.type === tile.type;
-                    }
-                    
-                    // Check Y boundary
-                    if (m.ly < 2) {
-                        const topTile = currentIsland.find(t => t.x === tile.x && t.y === tile.y - 1);
-                        canCrossY = topTile && topTile.type === tile.type;
-                    } else if (m.ly > 198) {
-                        const bottomTile = currentIsland.find(t => t.x === tile.x && t.y === tile.y + 1);
-                        canCrossY = bottomTile && bottomTile.type === tile.type;
-                    }
-                    
-                    // Bounce if can't cross
-                    if ((m.lx < 2 || m.lx > 198) && !canCrossX) m.vx *= -1;
-                    if ((m.ly < 2 || m.ly > 198) && !canCrossY) m.vy *= -1;
-                    
-                    // Wrap to neighbor tile if can cross
-                    if (canCrossX) {
-                        if (m.lx < 2) m.lx = 198;
-                        if (m.lx > 198) m.lx = 2;
-                    }
-                    if (canCrossY) {
-                        if (m.ly < 2) m.ly = 198;
-                        if (m.ly > 198) m.ly = 2;
-                    }
-                    
-                    // Check collision with other mons
-                    for (let j = 0; j < tile.inhabitants.length; j++) {
-                        if (j === idx) continue;
-                        const other = tile.inhabitants[j];
-                        const dx = m.lx - other.lx;
-                        const dy = m.ly - other.ly;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (dist < 20 && m.interactionState === 'normal' && other.interactionState === 'normal') {
-                            // Collision detected! Play random animation
-                            const availableAnims = ANIMS.filter(a => 
-                                a !== 'Walk' && a !== 'Sleep' && monData.assets[a + '-Anim']
-                            );
-                            
-                            if (availableAnims.length > 0) {
-                                const randomAnim = availableAnims[Math.floor(Math.random() * availableAnims.length)];
-                                m.interactionState = 'interacting';
-                                m.interactionAnim = randomAnim;
-                                m.interactionEndTime = time + 2000; // 2 seconds
-                                m.frame = 0;
-                                m.lastFrameTime = time;
+                    if (canCrossTiles) {
+                        // Check if can cross to neighbor
+                        if (m.lx < 10) {
+                            const leftTile = currentIsland.find(t => t.x === tile.x - 1 && t.y === tile.y);
+                            if (leftTile && leftTile.type === tile.type) {
+                                m.lx = 190;
                             } else {
-                                // No animations available, just turn around
                                 m.vx *= -1;
-                                m.vy *= -1;
+                                m.lx = 10;
                             }
-                            break;
+                        } else if (m.lx > 190) {
+                            const rightTile = currentIsland.find(t => t.x === tile.x + 1 && t.y === tile.y);
+                            if (rightTile && rightTile.type === tile.type) {
+                                m.lx = 10;
+                            } else {
+                                m.vx *= -1;
+                                m.lx = 190;
+                            }
+                        }
+                        
+                        if (m.ly < 10) {
+                            const topTile = currentIsland.find(t => t.x === tile.x && t.y === tile.y - 1);
+                            if (topTile && topTile.type === tile.type) {
+                                m.ly = 190;
+                            } else {
+                                m.vy *= -1;
+                                m.ly = 10;
+                            }
+                        } else if (m.ly > 190) {
+                            const bottomTile = currentIsland.find(t => t.x === tile.x && t.y === tile.y + 1);
+                            if (bottomTile && bottomTile.type === tile.type) {
+                                m.ly = 10;
+                            } else {
+                                m.vy *= -1;
+                                m.ly = 190;
+                            }
+                        }
+                    } else {
+                        // Simple bounce
+                        if (m.lx < 10 || m.lx > 190) {
+                            m.vx *= -1;
+                            m.lx = Math.max(10, Math.min(190, m.lx));
+                        }
+                        if (m.ly < 10 || m.ly > 190) {
+                            m.vy *= -1;
+                            m.ly = Math.max(10, Math.min(190, m.ly));
+                        }
+                    }
+                    
+                    // Collision detection
+                    if (Math.random() < collisionChance) {
+                        for (let j = 0; j < tile.inhabitants.length; j++) {
+                            if (j === idx) continue;
+                            const other = tile.inhabitants[j];
+                            if (other.interactionState !== 'normal') continue;
+                            
+                            const dx = m.lx - other.lx;
+                            const dy = m.ly - other.ly;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (dist < 25) {
+                                // Get enabled animations
+                                const enabledAnims = Array.from(document.querySelectorAll('.interaction-anim:checked'))
+                                    .map(cb => cb.value);
+                                const availableAnims = enabledAnims.filter(a => monData.assets[a + '-Anim']);
+                                
+                                if (availableAnims.length > 0) {
+                                    const randomAnim = availableAnims[Math.floor(Math.random() * availableAnims.length)];
+                                    m.interactionState = 'interacting';
+                                    m.interactionAnim = randomAnim;
+                                    m.interactionEndTime = time + 2000;
+                                    m.frame = 0;
+                                    m.lastFrameTime = time;
+                                } else {
+                                    m.vx *= -1;
+                                    m.vy *= -1;
+                                }
+                                break;
+                            }
                         }
                     }
                     
@@ -924,16 +1002,20 @@
                         m.lastFrameTime = time;
                     }
                     
+                    const size = Math.max(animData.fw, animData.fh) * spriteScale;
+                    const offsetX = size / 2;
+                    const offsetY = size / 2;
+                    
                     dctx.drawImage(
                         img,
                         m.frame * animData.fw,
                         dirRow * animData.fh,
                         animData.fw,
                         animData.fh,
-                        m.lx - 18,
-                        m.ly - 18,
-                        36,
-                        36
+                        m.lx - offsetX,
+                        m.ly - offsetY,
+                        animData.fw * spriteScale,
+                        animData.fh * spriteScale
                     );
                 } else {
                     dctx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
