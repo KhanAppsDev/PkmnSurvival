@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Island Mon Registry v12.4 - Cloud</title>
+    <title>Island Mon Registry v12.5 - Cloud</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -70,7 +70,7 @@
 <body>
 
 <header>
-    <div style="color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px;">REGISTRY_OS_V12.4</div>
+    <div style="color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px;">REGISTRY_OS_V12.5</div>
     <div style="display: flex; gap: 8px;">
         <button class="btn" onclick="showView('cloud')" style="border-color: var(--accent-cyan);">Cloud</button>
         <button class="btn" onclick="showView('island')" style="border-color: var(--accent-amber);">Island</button>
@@ -142,7 +142,7 @@
 <input type="file" id="portrait-input" class="hidden" accept=".png">
 <input type="file" id="single-file-input" class="hidden">
 
-<footer>Island Mon Registry v12.4 • XML-Driven Sprites • Directional Animation • Sleep Mode</footer>
+<footer>Island Mon Registry v12.5 • Collision Interactions • Cross-Tile Movement • 1.5x Zoom Sprites</footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
@@ -305,7 +305,7 @@
                 seed: document.getElementById('map-seed').value,
                 mons: mons,
                 timestamp: Date.now(),
-                version: "12.4"
+                version: "12.5"
             });
             status.innerText = `SUCCESS: REGISTRY [${code}] PUBLISHED.`;
         } catch (e) {
@@ -742,9 +742,6 @@
                 ictx.fillRect(t.x * 30, t.y * 30, 29, 29);
                 
                 t.inhabitants.forEach(m => {
-                    const monData = mons.find(s => s.id === m.id);
-                    if (!monData) return;
-                    
                     if (!m.isSleeping) {
                         m.lx += m.vx;
                         m.ly += m.vy;
@@ -752,37 +749,9 @@
                         if (m.ly < 2 || m.ly > 27) m.vy *= -1;
                     }
                     
-                    const animKey = m.isSleeping ? 'Sleep' : 'Walk';
-                    const animName = m.isSleeping ? 'Sleep-Anim' : 'Walk-Anim';
-                    const img = spriteImages[`${m.id}_${animKey}`];
-                    const animData = getAnimData(monData.xmlData, animKey);
-                    
-                    if (img && img.complete && animData) {
-                        const elapsed = time - m.lastFrameTime;
-                        const frameDuration = animData.durs[m.frame] * 16;
-                        
-                        if (elapsed >= frameDuration) {
-                            m.frame = (m.frame + 1) % animData.durs.length;
-                            m.lastFrameTime = time;
-                        }
-                        
-                        const dirRow = m.isSleeping ? 7 : getDirectionRow(m.vx, m.vy);
-                        
-                        ictx.drawImage(
-                            img,
-                            m.frame * animData.fw,
-                            dirRow * animData.fh,
-                            animData.fw,
-                            animData.fh,
-                            t.x * 30 + m.lx - 4,
-                            t.y * 30 + m.ly - 4,
-                            8,
-                            8
-                        );
-                    } else {
-                        ictx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
-                        ictx.fillRect(t.x * 30 + m.lx, t.y * 30 + m.ly, 3, 3);
-                    }
+                    // Always show as dots on main map
+                    ictx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
+                    ictx.fillRect(t.x * 30 + m.lx, t.y * 30 + m.ly, 3, 3);
                 });
             });
             
@@ -821,17 +790,128 @@
                 img.src = mon.assets['Sleep-Anim'];
                 spriteImages[`${mon.id}_Sleep`] = img;
             }
+            // Load other animations for interactions
+            ANIMS.forEach(anim => {
+                if (anim !== 'Walk' && anim !== 'Sleep' && mon.assets[anim + '-Anim']) {
+                    const img = new Image();
+                    img.src = mon.assets[anim + '-Anim'];
+                    spriteImages[`${mon.id}_${anim}`] = img;
+                }
+            });
+        });
+
+        // Enhanced inhabitants with interaction state
+        tile.inhabitants.forEach(m => {
+            if (!m.interactionState) {
+                m.interactionState = 'normal';
+                m.interactionAnim = null;
+                m.interactionEndTime = 0;
+            }
         });
 
         function detailLoop(time) {
             dctx.fillStyle = TERRAIN[tile.type].color;
             dctx.fillRect(0, 0, 200, 200);
             
-            tile.inhabitants.forEach(m => {
+            tile.inhabitants.forEach((m, idx) => {
                 const monData = mons.find(s => s.id === m.id);
                 if (!monData) return;
                 
-                const animKey = m.isSleeping ? 'Sleep' : 'Walk';
+                // Check if interaction animation should end
+                if (m.interactionState === 'interacting' && time > m.interactionEndTime) {
+                    m.interactionState = 'normal';
+                    m.interactionAnim = null;
+                    // Turn around
+                    m.vx *= -1;
+                    m.vy *= -1;
+                }
+                
+                let animKey, dirRow;
+                
+                if (m.interactionState === 'interacting') {
+                    // Play interaction animation
+                    animKey = m.interactionAnim;
+                    dirRow = getDirectionRow(m.vx, m.vy);
+                } else if (m.isSleeping) {
+                    animKey = 'Sleep';
+                    dirRow = 7;
+                } else {
+                    // Normal movement
+                    m.lx += m.vx;
+                    m.ly += m.vy;
+                    
+                    // Check tile boundaries and neighbor compatibility
+                    const normalizedX = m.lx / 200;
+                    const normalizedY = m.ly / 200;
+                    
+                    let canCrossX = false, canCrossY = false;
+                    
+                    // Check X boundary
+                    if (m.lx < 2) {
+                        const leftTile = currentIsland.find(t => t.x === tile.x - 1 && t.y === tile.y);
+                        canCrossX = leftTile && leftTile.type === tile.type;
+                    } else if (m.lx > 198) {
+                        const rightTile = currentIsland.find(t => t.x === tile.x + 1 && t.y === tile.y);
+                        canCrossX = rightTile && rightTile.type === tile.type;
+                    }
+                    
+                    // Check Y boundary
+                    if (m.ly < 2) {
+                        const topTile = currentIsland.find(t => t.x === tile.x && t.y === tile.y - 1);
+                        canCrossY = topTile && topTile.type === tile.type;
+                    } else if (m.ly > 198) {
+                        const bottomTile = currentIsland.find(t => t.x === tile.x && t.y === tile.y + 1);
+                        canCrossY = bottomTile && bottomTile.type === tile.type;
+                    }
+                    
+                    // Bounce if can't cross
+                    if ((m.lx < 2 || m.lx > 198) && !canCrossX) m.vx *= -1;
+                    if ((m.ly < 2 || m.ly > 198) && !canCrossY) m.vy *= -1;
+                    
+                    // Wrap to neighbor tile if can cross
+                    if (canCrossX) {
+                        if (m.lx < 2) m.lx = 198;
+                        if (m.lx > 198) m.lx = 2;
+                    }
+                    if (canCrossY) {
+                        if (m.ly < 2) m.ly = 198;
+                        if (m.ly > 198) m.ly = 2;
+                    }
+                    
+                    // Check collision with other mons
+                    for (let j = 0; j < tile.inhabitants.length; j++) {
+                        if (j === idx) continue;
+                        const other = tile.inhabitants[j];
+                        const dx = m.lx - other.lx;
+                        const dy = m.ly - other.ly;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < 20 && m.interactionState === 'normal' && other.interactionState === 'normal') {
+                            // Collision detected! Play random animation
+                            const availableAnims = ANIMS.filter(a => 
+                                a !== 'Walk' && a !== 'Sleep' && monData.assets[a + '-Anim']
+                            );
+                            
+                            if (availableAnims.length > 0) {
+                                const randomAnim = availableAnims[Math.floor(Math.random() * availableAnims.length)];
+                                m.interactionState = 'interacting';
+                                m.interactionAnim = randomAnim;
+                                m.interactionEndTime = time + 2000; // 2 seconds
+                                m.frame = 0;
+                                m.lastFrameTime = time;
+                            } else {
+                                // No animations available, just turn around
+                                m.vx *= -1;
+                                m.vy *= -1;
+                            }
+                            break;
+                        }
+                    }
+                    
+                    animKey = 'Walk';
+                    dirRow = getDirectionRow(m.vx, m.vy);
+                }
+                
                 const img = spriteImages[`${m.id}_${animKey}`];
                 const animData = getAnimData(monData.xmlData, animKey);
                 
@@ -844,23 +924,21 @@
                         m.lastFrameTime = time;
                     }
                     
-                    const dirRow = m.isSleeping ? 7 : getDirectionRow(m.vx, m.vy);
-                    
                     dctx.drawImage(
                         img,
                         m.frame * animData.fw,
                         dirRow * animData.fh,
                         animData.fw,
                         animData.fh,
-                        m.lx * 6 - 12,
-                        m.ly * 6 - 12,
-                        24,
-                        24
+                        m.lx - 18,
+                        m.ly - 18,
+                        36,
+                        36
                     );
                 } else {
                     dctx.fillStyle = m.isSleeping ? '#fff' : '#39ff14';
                     dctx.beginPath();
-                    dctx.arc(m.lx * 6, m.ly * 6, 8, 0, Math.PI * 2);
+                    dctx.arc(m.lx, m.ly, 8, 0, Math.PI * 2);
                     dctx.fill();
                 }
             });
